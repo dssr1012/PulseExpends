@@ -1,0 +1,127 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: pulse-expends-db
+    environment:
+      POSTGRES_USER: pulse
+      POSTGRES_PASSWORD: pulsepassword
+      POSTGRES_DB: pulse_expends
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pulse"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: pulse-expends-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: pulse-expends-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://pulse:pulsepassword@postgres:5432/pulse_expends
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=development_jwt_secret_change_in_production
+      - PORT=3000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: npm run dev
+
+  # Frontend Application
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: pulse-expends-frontend
+    depends_on:
+      - backend
+    environment:
+      - NODE_ENV=development
+      - REACT_APP_API_URL=http://localhost:3000/api
+      - PORT=3001
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev
+
+  # AI Engine
+  ai-engine:
+    build:
+      context: ./ai-engine
+      dockerfile: Dockerfile.dev
+    container_name: pulse-expends-ai
+    depends_on:
+      - backend
+      - redis
+    environment:
+      - NODE_ENV=development
+      - REDIS_URL=redis://redis:6379
+      - BACKEND_URL=http://backend:3000
+      - PORT=3002
+    ports:
+      - "3002:3002"
+    volumes:
+      - ./ai-engine:/app
+      - /app/node_modules
+    command: npm run dev
+
+  # Database Admin (Optional)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pulse-expends-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@pulse.com
+      PGADMIN_DEFAULT_PASSWORD: adminpassword
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+
+  # Redis Admin (Optional)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: pulse-expends-redis-commander
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+
+volumes:
+  postgres_data:
+  redis_data:
