@@ -1,5 +1,5 @@
-// PulseExpends Authentication System
-// Handles user authentication, registration, and session management
+// PulseExpends Authentication Module
+// Handles user authentication, sessions, and protected routes
 
 const AUTH_API_URL = window.location.hostname === 'pulseexpends.duckdns.org' ? 
     'http://api.pulseexpends.duckdns.org/api' : 
@@ -13,18 +13,34 @@ class AuthService {
     }
 
     // Check if user is authenticated
-    isLoggedIn() {
-        return this.isAuthenticated;
-    }
+    async checkAuth() {
+        if (!this.token) {
+            return false;
+        }
 
-    // Get current user
-    getCurrentUser() {
-        return this.user;
-    }
+        try {
+            const response = await fetch(`${AUTH_API_URL}/auth/profile`, {
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            });
 
-    // Get auth token
-    getToken() {
-        return this.token;
+            if (response.ok) {
+                const data = await response.json();
+                this.user = data.user;
+                localStorage.setItem('auth_user', JSON.stringify(data.user));
+                this.isAuthenticated = true;
+                return true;
+            } else {
+                // Token expired or invalid
+                this.logout();
+                return false;
+            }
+        } catch (error) {
+            console.error('Auth check failed:', error);
+            this.logout();
+            return false;
+        }
     }
 
     // Login with email/password
@@ -38,624 +54,361 @@ class AuthService {
                 body: JSON.stringify({ email, password })
             });
 
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Login failed');
-            }
-
             const data = await response.json();
-            
-            // Save token and user data
-            this.token = data.token;
-            this.user = data.user;
-            this.isAuthenticated = true;
-            
-            localStorage.setItem('auth_token', data.token);
-            localStorage.setItem('auth_user', JSON.stringify(data.user));
-            
-            return { success: true, data };
+
+            if (response.ok) {
+                this.token = data.token;
+                this.user = data.user;
+                this.isAuthenticated = true;
+                
+                localStorage.setItem('auth_token', data.token);
+                localStorage.setItem('auth_user', JSON.stringify(data.user));
+                
+                return { success: true, user: data.user };
+            } else {
+                return { success: false, error: data.message || 'Error al iniciar sesión' };
+            }
         } catch (error) {
-            console.error('Login error:', error);
-            return { success: false, error: error.message };
+            return { success: false, error: 'Error de conexión. Por favor, intenta nuevamente.' };
         }
     }
 
     // Register new user
-    async register(email, password, username, fullName) {
+    async register(userData) {
         try {
             const response = await fetch(`${AUTH_API_URL}/auth/register`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ email, password, username, fullName })
+                body: JSON.stringify(userData)
             });
 
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Registration failed');
-            }
-
             const data = await response.json();
-            
-            // Save token and user data
-            this.token = data.token;
-            this.user = data.user;
-            this.isAuthenticated = true;
-            
-            localStorage.setItem('auth_token', data.token);
-            localStorage.setItem('auth_user', JSON.stringify(data.user));
-            
-            return { success: true, data };
+
+            if (response.ok) {
+                this.token = data.token;
+                this.user = data.user;
+                this.isAuthenticated = true;
+                
+                localStorage.setItem('auth_token', data.token);
+                localStorage.setItem('auth_user', JSON.stringify(data.user));
+                
+                return { success: true, user: data.user };
+            } else {
+                return { success: false, error: data.message || 'Error al registrar usuario' };
+            }
         } catch (error) {
-            console.error('Registration error:', error);
-            return { success: false, error: error.message };
+            return { success: false, error: 'Error de conexión. Por favor, intenta nuevamente.' };
         }
     }
 
     // Login with Google
-    async loginWithGoogle() {
+    loginWithGoogle() {
         window.location.href = `${AUTH_API_URL}/auth/google`;
     }
 
-    // Logout
-    async logout() {
+    // Handle Google callback
+    async handleGoogleCallback(token) {
         try {
-            if (this.token) {
-                await fetch(`${AUTH_API_URL}/auth/logout`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
+            // Verify token with backend
+            const response = await fetch(`${AUTH_API_URL}/auth/verify-google`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ token })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                this.token = data.token;
+                this.user = data.user;
+                this.isAuthenticated = true;
+                
+                localStorage.setItem('auth_token', data.token);
+                localStorage.setItem('auth_user', JSON.stringify(data.user));
+                
+                return { success: true, user: data.user };
+            } else {
+                return { success: false, error: data.message || 'Error al verificar token de Google' };
             }
         } catch (error) {
-            console.error('Logout error:', error);
-        } finally {
-            // Clear local storage
-            localStorage.removeItem('auth_token');
-            localStorage.removeItem('auth_user');
-            
-            // Reset state
-            this.token = null;
-            this.user = null;
-            this.isAuthenticated = false;
-            
-            // Redirect to login
-            window.location.href = '/auth/login.html';
+            return { success: false, error: 'Error de conexión. Por favor, intenta nuevamente.' };
         }
     }
 
-    // Get user profile
-    async getProfile() {
-        if (!this.token) {
-            return { success: false, error: 'Not authenticated' };
-        }
-
-        try {
-            const response = await fetch(`${AUTH_API_URL}/auth/profile`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                if (response.status === 401) {
-                    this.logout();
-                    return { success: false, error: 'Session expired' };
-                }
-                throw new Error('Failed to fetch profile');
+    // Logout
+    logout() {
+        this.token = null;
+        this.user = null;
+        this.isAuthenticated = false;
+        
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('auth_user');
+        
+        // Call logout endpoint
+        fetch(`${AUTH_API_URL}/auth/logout`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${this.token}`
             }
+        }).catch(console.error);
+        
+        // Redirect to login
+        window.location.href = '/auth/login.html';
+    }
 
-            const data = await response.json();
-            this.user = data.user;
-            localStorage.setItem('auth_user', JSON.stringify(data.user));
-            
-            return { success: true, data };
-        } catch (error) {
-            console.error('Profile fetch error:', error);
-            return { success: false, error: error.message };
-        }
+    // Get current user
+    getCurrentUser() {
+        return this.user;
+    }
+
+    // Get auth token
+    getToken() {
+        return this.token;
+    }
+
+    // Check if user is authenticated
+    isLoggedIn() {
+        return this.isAuthenticated;
     }
 
     // Update user profile
-    async updateProfile(updates) {
-        if (!this.token) {
-            return { success: false, error: 'Not authenticated' };
-        }
-
+    async updateProfile(profileData) {
         try {
             const response = await fetch(`${AUTH_API_URL}/auth/profile`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(updates)
+                body: JSON.stringify(profileData)
             });
 
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Update failed');
-            }
-
             const data = await response.json();
-            this.user = data.user;
-            localStorage.setItem('auth_user', JSON.stringify(data.user));
-            
-            return { success: true, data };
+
+            if (response.ok) {
+                this.user = { ...this.user, ...data.user };
+                localStorage.setItem('auth_user', JSON.stringify(this.user));
+                return { success: true, user: data.user };
+            } else {
+                return { success: false, error: data.message || 'Error al actualizar perfil' };
+            }
         } catch (error) {
-            console.error('Profile update error:', error);
-            return { success: false, error: error.message };
+            return { success: false, error: 'Error de conexión. Por favor, intenta nuevamente.' };
         }
     }
 
     // Change password
     async changePassword(currentPassword, newPassword) {
-        if (!this.token) {
-            return { success: false, error: 'Not authenticated' };
-        }
-
         try {
             const response = await fetch(`${AUTH_API_URL}/auth/change-password`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ currentPassword, newPassword })
             });
 
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Password change failed');
-            }
-
-            return { success: true };
-        } catch (error) {
-            console.error('Password change error:', error);
-            return { success: false, error: error.message };
-        }
-    }
-
-    // Verify token validity
-    async verifyToken() {
-        if (!this.token) {
-            return { success: false, valid: false };
-        }
-
-        try {
-            const response = await fetch(`${AUTH_API_URL}/auth/verify`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            return { success: true, valid: response.ok };
-        } catch (error) {
-            console.error('Token verification error:', error);
-            return { success: false, valid: false };
-        }
-    }
-
-    // Get circles for current user
-    async getCircles() {
-        if (!this.token) {
-            return { success: false, error: 'Not authenticated' };
-        }
-
-        try {
-            const response = await fetch(`${AUTH_API_URL}/circles`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                if (response.status === 401) {
-                    this.logout();
-                    return { success: false, error: 'Session expired' };
-                }
-                throw new Error('Failed to fetch circles');
-            }
-
             const data = await response.json();
-            return { success: true, data };
+
+            if (response.ok) {
+                return { success: true, message: data.message };
+            } else {
+                return { success: false, error: data.message || 'Error al cambiar contraseña' };
+            }
         } catch (error) {
-            console.error('Circles fetch error:', error);
-            return { success: false, error: error.message };
+            return { success: false, error: 'Error de conexión. Por favor, intenta nuevamente.' };
         }
     }
 
-    // Create new circle
-    async createCircle(name, description, currency = 'USD', isPublic = false) {
-        if (!this.token) {
-            return { success: false, error: 'Not authenticated' };
-        }
-
+    // Forgot password
+    async forgotPassword(email) {
         try {
-            const response = await fetch(`${AUTH_API_URL}/circles`, {
+            const response = await fetch(`${AUTH_API_URL}/auth/forgot-password`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ name, description, currency, isPublic })
+                body: JSON.stringify({ email })
             });
 
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Failed to create circle');
-            }
-
             const data = await response.json();
-            return { success: true, data };
+
+            if (response.ok) {
+                return { success: true, message: data.message };
+            } else {
+                return { success: false, error: data.message || 'Error al solicitar recuperación' };
+            }
         } catch (error) {
-            console.error('Circle creation error:', error);
-            return { success: false, error: error.message };
+            return { success: false, error: 'Error de conexión. Por favor, intenta nuevamente.' };
         }
     }
 
-    // Join circle with invitation code
-    async joinCircle(code) {
-        if (!this.token) {
-            return { success: false, error: 'Not authenticated' };
-        }
-
+    // Reset password
+    async resetPassword(token, newPassword) {
         try {
-            const response = await fetch(`${AUTH_API_URL}/circles/join/${code}`, {
+            const response = await fetch(`${AUTH_API_URL}/auth/reset-password`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Failed to join circle');
-            }
-
-            const data = await response.json();
-            return { success: true, data };
-        } catch (error) {
-            console.error('Circle join error:', error);
-            return { success: false, error: error.message };
-        }
-    }
-
-    // Get circle members
-    async getCircleMembers(circleId) {
-        if (!this.token) {
-            return { success: false, error: 'Not authenticated' };
-        }
-
-        try {
-            const response = await fetch(`${AUTH_API_URL}/circles/${circleId}/members`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                if (response.status === 401) {
-                    this.logout();
-                    return { success: false, error: 'Session expired' };
-                }
-                throw new Error('Failed to fetch circle members');
-            }
-
-            const data = await response.json();
-            return { success: true, data };
-        } catch (error) {
-            console.error('Circle members fetch error:', error);
-            return { success: false, error: error.message };
-        }
-    }
-
-    // Add member to circle
-    async addCircleMember(circleId, userId, role = 'member') {
-        if (!this.token) {
-            return { success: false, error: 'Not authenticated' };
-        }
-
-        try {
-            const response = await fetch(`${AUTH_API_URL}/circles/${circleId}/members`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ userId, role })
+                body: JSON.stringify({ token, newPassword })
             });
 
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Failed to add member');
-            }
-
             const data = await response.json();
-            return { success: true, data };
+
+            if (response.ok) {
+                return { success: true, message: data.message };
+            } else {
+                return { success: false, error: data.message || 'Error al restablecer contraseña' };
+            }
         } catch (error) {
-            console.error('Add member error:', error);
-            return { success: false, error: error.message };
+            return { success: false, error: 'Error de conexión. Por favor, intenta nuevamente.' };
         }
     }
 
-    // Invite to circle by email
-    async inviteToCircle(circleId, email, role = 'member') {
-        if (!this.token) {
-            return { success: false, error: 'Not authenticated' };
-        }
-
+    // Get user sessions
+    async getSessions() {
         try {
-            const response = await fetch(`${AUTH_API_URL}/circles/${circleId}/invite`, {
-                method: 'POST',
+            const response = await fetch(`${AUTH_API_URL}/auth/sessions`, {
                 headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ email, role })
+                    'Authorization': `Bearer ${this.token}`
+                }
             });
 
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Failed to send invitation');
-            }
-
             const data = await response.json();
-            return { success: true, data };
+
+            if (response.ok) {
+                return { success: true, sessions: data.sessions };
+            } else {
+                return { success: false, error: data.message || 'Error al obtener sesiones' };
+            }
         } catch (error) {
-            console.error('Invite error:', error);
-            return { success: false, error: error.message };
+            return { success: false, error: 'Error de conexión. Por favor, intenta nuevamente.' };
         }
     }
 
-    // Get transactions
-    async getTransactions(filters = {}) {
-        if (!this.token) {
-            return { success: false, error: 'Not authenticated' };
-        }
-
+    // Revoke session
+    async revokeSession(sessionId) {
         try {
-            const queryParams = new URLSearchParams(filters).toString();
-            const url = `${AUTH_API_URL}/transactions${queryParams ? `?${queryParams}` : ''}`;
-            
-            const response = await fetch(url, {
-                method: 'GET',
+            const response = await fetch(`${AUTH_API_URL}/auth/sessions/${sessionId}`, {
+                method: 'DELETE',
                 headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
+                    'Authorization': `Bearer ${this.token}`
                 }
             });
 
-            if (!response.ok) {
-                if (response.status === 401) {
-                    this.logout();
-                    return { success: false, error: 'Session expired' };
-                }
-                throw new Error('Failed to fetch transactions');
-            }
-
             const data = await response.json();
-            return { success: true, data };
+
+            if (response.ok) {
+                return { success: true, message: data.message };
+            } else {
+                return { success: false, error: data.message || 'Error al revocar sesión' };
+            }
         } catch (error) {
-            console.error('Transactions fetch error:', error);
-            return { success: false, error: error.message };
+            return { success: false, error: 'Error de conexión. Por favor, intenta nuevamente.' };
         }
     }
 
-    // Create transaction
-    async createTransaction(transactionData) {
-        if (!this.token) {
-            return { success: false, error: 'Not authenticated' };
+    // Make authenticated API requests
+    async fetchWithAuth(url, options = {}) {
+        const headers = {
+            'Authorization': `Bearer ${this.token}`,
+            'Content-Type': 'application/json',
+            ...options.headers
+        };
+
+        const response = await fetch(url, {
+            ...options,
+            headers
+        });
+
+        // Handle 401 Unauthorized
+        if (response.status === 401) {
+            this.logout();
+            throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente.');
         }
 
-        try {
-            const response = await fetch(`${AUTH_API_URL}/transactions`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(transactionData)
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Failed to create transaction');
-            }
-
-            const data = await response.json();
-            return { success: true, data };
-        } catch (error) {
-            console.error('Transaction creation error:', error);
-            return { success: false, error: error.message };
-        }
-    }
-
-    // Get user stats
-    async getUserStats() {
-        if (!this.token) {
-            return { success: false, error: 'Not authenticated' };
-        }
-
-        try {
-            const response = await fetch(`${AUTH_API_URL}/stats`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                if (response.status === 401) {
-                    this.logout();
-                    return { success: false, error: 'Session expired' };
-                }
-                throw new Error('Failed to fetch stats');
-            }
-
-            const data = await response.json();
-            return { success: true, data };
-        } catch (error) {
-            console.error('Stats fetch error:', error);
-            return { success: false, error: error.message };
-        }
-    }
-
-    // Get circle stats
-    async getCircleStats(circleId) {
-        if (!this.token) {
-            return { success: false, error: 'Not authenticated' };
-        }
-
-        try {
-            const response = await fetch(`${AUTH_API_URL}/stats/circle/${circleId}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                if (response.status === 401) {
-                    this.logout();
-                    return { success: false, error: 'Session expired' };
-                }
-                throw new Error('Failed to fetch circle stats');
-            }
-
-            const data = await response.json();
-            return { success: true, data };
-        } catch (error) {
-            console.error('Circle stats fetch error:', error);
-            return { success: false, error: error.message };
-        }
-    }
-
-    // Check if we're in a callback from Google OAuth
-    checkOAuthCallback() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const token = urlParams.get('token');
-        
-        if (token) {
-            // Save token and redirect to dashboard
-            this.token = token;
-            this.isAuthenticated = true;
-            
-            // Get user profile
-            this.getProfile().then(result => {
-                if (result.success) {
-                    localStorage.setItem('auth_token', token);
-                    localStorage.setItem('auth_user', JSON.stringify(result.data.user));
-                    window.location.href = '/dashboard.html';
-                } else {
-                    console.error('Failed to get profile after OAuth:', result.error);
-                    window.location.href = '/auth/login.html';
-                }
-            });
-            
-            return true;
-        }
-        
-        return false;
+        return response;
     }
 }
 
 // Create global auth instance
-const auth = new AuthService();
+window.auth = new AuthService();
 
-// Export for use in other files
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = auth;
-} else {
-    window.auth = auth;
+// Protected route middleware
+function requireAuth() {
+    if (!window.auth.isLoggedIn()) {
+        // Store current URL to redirect back after login
+        const currentPath = window.location.pathname + window.location.search;
+        if (currentPath !== '/auth/login.html' && currentPath !== '/auth/register.html') {
+            sessionStorage.setItem('redirectAfterLogin', currentPath);
+        }
+        window.location.href = '/auth/login.html';
+        return false;
+    }
+    return true;
 }
 
-// Initialize auth on page load
+// Check Google callback on page load
 document.addEventListener('DOMContentLoaded', function() {
-    // Check for OAuth callback
-    if (auth.checkOAuthCallback()) {
-        return;
+    // Handle Google callback
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    
+    if (token && window.location.pathname.includes('callback')) {
+        window.auth.handleGoogleCallback(token).then(result => {
+            if (result.success) {
+                // Redirect to dashboard or stored URL
+                const redirectUrl = sessionStorage.getItem('redirectAfterLogin') || '/dashboard.html';
+                sessionStorage.removeItem('redirectAfterLogin');
+                window.location.href = redirectUrl;
+            } else {
+                alert('Error al iniciar sesión con Google: ' + result.error);
+                window.location.href = '/auth/login.html';
+            }
+        });
     }
     
-    // Check if user is authenticated and redirect if needed
-    const currentPath = window.location.pathname;
-    const isAuthPage = currentPath.includes('/auth/');
-    const isLoginPage = currentPath.endsWith('/auth/login.html');
-    const isRegisterPage = currentPath.endsWith('/auth/register.html');
+    // Check auth on protected pages
+    const protectedPages = ['dashboard.html', 'transactions.html', 'circles.html', 'upload.html', 'settings.html', 'profile.html'];
+    const currentPage = window.location.pathname.split('/').pop();
     
-    if (auth.isLoggedIn() && (isLoginPage || isRegisterPage)) {
-        // Redirect to dashboard if already logged in
-        window.location.href = '/dashboard.html';
-    } else if (!auth.isLoggedIn() && !isAuthPage && !currentPath.endsWith('/index.html')) {
-        // Redirect to login if not authenticated
-        window.location.href = '/auth/login.html';
+    if (protectedPages.includes(currentPage)) {
+        window.auth.checkAuth().then(isAuthenticated => {
+            if (!isAuthenticated) {
+                requireAuth();
+            } else {
+                // Update UI with user info
+                const user = window.auth.getCurrentUser();
+                if (user) {
+                    // Update user name in navbar if element exists
+                    const userNameElement = document.getElementById('userName');
+                    if (userNameElement && user.fullName) {
+                        userNameElement.textContent = user.fullName.split(' ')[0];
+                    }
+                    
+                    // Update user avatar if element exists
+                    const userAvatarElement = document.getElementById('userAvatar');
+                    if (userAvatarElement) {
+                        if (user.avatarURL) {
+                            userAvatarElement.style.backgroundImage = `url('${user.avatarURL}')`;
+                            userAvatarElement.innerHTML = '';
+                        } else {
+                            userAvatarElement.textContent = user.fullName ? user.fullName.charAt(0).toUpperCase() : 'U';
+                        }
+                    }
+                }
+            }
+        });
     }
-    
-    // Update UI based on auth state
-    updateAuthUI();
 });
 
-// Update UI based on authentication state
-function updateAuthUI() {
-    const user = auth.getCurrentUser();
-    
-    // Update user info in navbar if elements exist
-    const userAvatar = document.getElementById('userAvatar');
-    const userName = document.getElementById('userName');
-    const userEmail = document.getElementById('userEmail');
-    const loginBtn = document.getElementById('loginBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const userMenu = document.getElementById('userMenu');
-    
-    if (auth.isLoggedIn() && user) {
-        // User is logged in
-        if (userAvatar) {
-            if (user.avatarURL) {
-                userAvatar.src = user.avatarURL;
-                userAvatar.style.display = 'block';
-            } else {
-                userAvatar.style.display = 'none';
-            }
-        }
-        
-        if (userName) {
-            userName.textContent = user.fullName || user.username || user.email;
-        }
-        
-        if (userEmail) {
-            userEmail.textContent = user.email;
-        }
-        
-        if (loginBtn) loginBtn.style.display = 'none';
-        if (logoutBtn) logoutBtn.style.display = 'block';
-        if (userMenu) userMenu.style.display = 'flex';
-    } else {
-        // User is not logged in
-        if (loginBtn) loginBtn.style.display = 'block';
-        if (logoutBtn) logoutBtn.style.display = 'none';
-        if (userMenu) userMenu.style.display = 'none';
-    }
+// Export for module usage
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { AuthService, requireAuth };
 }
-
-// Logout handler
-function handleLogout() {
-    auth.logout();
-}
-
-// Make functions available globally
-window.handleLogout = handleLogout;
-window.auth = auth;
