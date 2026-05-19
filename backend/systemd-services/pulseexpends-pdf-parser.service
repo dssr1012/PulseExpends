@@ -1,0 +1,16 @@
+[Unit]
+Description=PulseExpends PDF Parser
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/opt/PulseExpends/python/pdf-parser/src
+ExecStart=/usr/bin/python3 /opt/PulseExpends/python/pdf-parser/src/main.py
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
