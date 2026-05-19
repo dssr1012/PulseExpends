@@ -1,9 +1,18 @@
 // PulseExpends Frontend Application
 // Main JavaScript file for the Fintonic-like expense management system
 
-// API Configuration
-const API_BASE_URL = '/api/mcp';
-const PDF_API_URL = '/api/pdf';
+// API Configuration with subdomains
+// In production, use subdomains
+// In development, fallback to relative paths
+const isProduction = window.location.hostname === 'pulseexpends.duckdns.org' || 
+                     window.location.hostname === 'www.pulseexpends.duckdns.org';
+
+const API_BASE_URL = isProduction ? 'http://api.pulseexpends.duckdns.org' : '/api/mcp';
+const PDF_API_URL = isProduction ? 'http://pdf.pulseexpends.duckdns.org' : '/api/pdf';
+
+// For local development, you can also use:
+// const API_BASE_URL = 'http://localhost:8080';
+// const PDF_API_URL = 'http://localhost:8000';
 
 // Global state
 let transactions = [];

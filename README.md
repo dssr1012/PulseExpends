@@ -46,6 +46,41 @@ PulseExpends/
 - **Python**: Versión 3.8+ (para PDF Parser)
 - **Node.js**: Opcional para desarrollo frontend
 
+## 🌐 Configuración de Subdominios
+
+PulseExpends utiliza subdominios para organizar los diferentes servicios:
+
+- **Frontend Principal**: `http://pulseexpends.duckdns.org`
+- **API MCP Server**: `http://api.pulseexpends.duckdns.org`
+- **PDF Parser API**: `http://pdf.pulseexpends.duckdns.org`
+- **Status Dashboard**: `http://status.pulseexpends.duckdns.org`
+
+### Configuración DNS
+
+1. **Configurar DuckDNS**:
+   ```bash
+   # Editar el script con tu token de DuckDNS
+   nano duckdns-config.sh
+   
+   # Ejecutar configuración
+   ./duckdns-config.sh
+   ```
+
+2. **Configurar Nginx con subdominios**:
+   ```bash
+   ./deploy-subdomains.sh
+   ```
+
+### Desarrollo Local
+
+Para desarrollo local, puedes configurar `/etc/hosts`:
+```
+127.0.0.1 pulseexpends.duckdns.org
+127.0.0.1 api.pulseexpends.duckdns.org
+127.0.0.1 pdf.pulseexpends.duckdns.org
+127.0.0.1 status.pulseexpends.duckdns.org
+```
+
 ## 🚀 Despliegue Rápido
 
 ### 1. Configurar servidor
@@ -239,6 +274,40 @@ Este proyecto está bajo la licencia MIT. Ver el archivo LICENSE para más detal
 ## 🤝 Contribuciones
 
 Las contribuciones son bienvenidas. Por favor, abre un issue o pull request en GitHub.
+
+## 🚀 Scripts de Despliegue
+
+### 1. Configurar DuckDNS
+```bash
+# Primero, edita el script con tu token de DuckDNS
+export DUCKDNS_TOKEN="tu_token_aqui"
+sed -i "s/TU_TOKEN_DE_DUCKDNS_AQUI/$DUCKDNS_TOKEN/" duckdns-config.sh
+
+# Luego ejecuta
+./duckdns-config.sh
+```
+
+### 2. Desplegar con Subdominios
+```bash
+./deploy-subdomains.sh
+```
+
+### 3. Verificar Servicios
+```bash
+# Ver estado de todos los servicios
+sudo systemctl status nginx pulseexpends-mcp-server pulseexpends-pdf-parser
+
+# Ver logs en tiempo real
+sudo journalctl -fu nginx
+sudo journalctl -fu pulseexpends-mcp-server
+sudo journalctl -fu pulseexpends-pdf-parser
+```
+
+### 4. Actualización Manual de DNS
+```bash
+# Script de actualización manual
+sudo /usr/local/bin/update-duckdns.sh
+```
 
 ## 📞 Soporte
 
