@@ -1,276 +1,254 @@
-# PulseExpends 💰
+# PulseExpends 💰🏗️
 
-A modern expense tracking and financial management application built with intelligent automation and AI-powered insights.
+**Modern Family Expense Tracker with Hybrid Go + Python Architecture and Huawei Cloud Deployment**
 
-## 🚀 Features
+A scalable, cloud-native expense tracking application built with Go for high-performance backend operations and Python for AI-powered document parsing. Designed to scale from 2 users to millions on Huawei Cloud.
 
-### Core Features
-- **📊 Expense Tracking** - Log and categorize expenses automatically
-- **🧠 AI-Powered Insights** - Smart spending analysis and recommendations
-- **📱 Multi-Platform** - Web, mobile, and CLI interfaces
-- **🔒 Secure** - End-to-end encryption for financial data
-- **🤖 Automation** - Automatic receipt processing and categorization
+## 🏗️ Architecture Overview
 
-### Advanced Features
-- **Budget Planning** - Intelligent budget creation and tracking
-- **Financial Goals** - Set and track savings goals
-- **Investment Tracking** - Monitor investments and portfolios
-- **Bill Reminders** - Never miss a payment deadline
-- **Tax Preparation** - Export data for tax filing
+### **Hybrid Language Architecture**
+- **Go (Golang)**: Core backend, MCP server, API, and business logic
+- **Python**: AI-powered PDF/image parsing microservice
+- **Repository Pattern**: Abstract data layer for evolutionary scaling
 
-### Integration Features
-- **Bank API Integration** - Connect to multiple financial institutions
-- **Receipt OCR** - Scan and process receipts automatically
-- **Export Options** - CSV, PDF, Excel, and tax software formats
-- **API Access** - Developer-friendly REST API
+### **Cloud Infrastructure**
+- **Primary Region**: Huawei Cloud Santiago, Chile (`la-south-2`)
+- **Phase 1**: OBS (Object Storage Service) for JSON ledger storage
+- **Phase 2**: Seamless migration to GaussDB/PostgreSQL or GeminiDB/MongoDB
+- **Compute**: ECS/CCI containers with CCE/ELB scaling path
 
-## 🏗️ Architecture
+## 📁 Repository Structure
 
+### **Application Repository (`dssr1012/PulseExpends`)**
 ```
-PulseExpends/
-├── frontend/          # Web and mobile interfaces
-├── backend/           # API and business logic
-├── ai-engine/         # AI/ML models and processing
-├── database/          # Data models and migrations
-├── shared/           # Shared utilities and types
-└── deployment/       # Docker, Kubernetes, CI/CD
+pulse-expends/
+├── cmd/
+│   └── mcp-server/          # Go MCP Server entry point
+├── internal/
+│   ├── repository/          # Repository pattern interfaces
+│   ├── service/            # Business logic services
+│   ├── handler/            # HTTP/API handlers
+│   ├── middleware/         # HTTP middleware
+│   ├── model/             # Data models
+│   └── mcp/               # MCP tool definitions
+├── pkg/
+│   ├── obs/               # OBS storage implementation
+│   ├── postgres/          # PostgreSQL implementation
+│   ├── mongodb/           # MongoDB implementation
+│   └── utils/             # Shared utilities
+├── python/
+│   └── pdf-parser/        # Python AI parsing microservice
+├── api/                   # OpenAPI/Swagger definitions
+├── configs/               # Configuration files
+├── deployments/
+│   ├── k8s/              # Kubernetes manifests
+│   └── docker/           # Docker configurations
+├── scripts/              # Migration and deployment scripts
+└── docs/                 # Documentation
 ```
 
-## 🛠️ Tech Stack
+### **Infrastructure Repository (`dssr1012/PulseExpends-Infra`)**
+```
+pulse-expends-infra/
+├── modules/
+│   ├── network/          # VPC, subnets, security groups
+│   ├── compute/          # ECS, CCI, CCE configurations
+│   ├── storage/          # OBS buckets, databases
+│   └── monitoring/       # Logging, metrics, alerts
+├── environments/
+│   ├── dev/             # Development environment
+│   ├── staging/         # Staging environment
+│   └── prod/            # Production environment
+└── terraform.tfvars     # Environment variables
+```
 
-### Frontend
-- **React 18** with TypeScript
-- **Tailwind CSS** for styling
-- **React Native** for mobile
-- **Vite** for build tooling
+## 🚀 Core Features
 
-### Backend
-- **Node.js** with Express/TypeScript
-- **PostgreSQL** with Prisma ORM
-- **Redis** for caching
-- **JWT** for authentication
+### **Family Expense Management**
+- **Family Circles**: Shared real-time expense and income tracking
+- **Multi-Method Ledger**: Cash, debit, and credit card tracking
+- **Real-time Collaboration**: Synchronized updates across family members
 
-### AI/ML
-- **Python** with FastAPI
-- **TensorFlow/PyTorch** for ML models
-- **OpenCV/Tesseract** for receipt OCR
-- **OpenClaw Integration** for intelligent automation
+### **AI-Powered Document Processing**
+- **Credit Card Statement Parsing**: PDF/Image to structured data
+- **Installment Detection**: Automatic installment plan identification
+- **Transaction Reconciliation**: Cross-reference with existing ledger data
+- **Anomaly Detection**: Identify irregular or unlisted transactions
 
-### DevOps
-- **Docker** and **Docker Compose**
-- **GitHub Actions** for CI/CD
-- **Kubernetes** for production deployment
-- **Prometheus/Grafana** for monitoring
+### **MCP (Model Context Protocol) Integration**
+- **OpenClaw Assistant Tools**: Natural language expense tracking
+- **Real-time Updates**: MCP server provides live data to AI assistants
+- **Secure Operations**: Authentication and authorization built-in
 
-## 📦 Getting Started
+## 🛠️ Technology Stack
 
-### Prerequisites
-- Node.js 18+
+### **Backend (Go)**
+- **Framework**: Chi Router / Gin / Fiber
+- **Database**: Repository pattern with OBS (Phase 1), PostgreSQL/MongoDB (Phase 2)
+- **Authentication**: JWT with Huawei Cloud IAM integration
+- **MCP Server**: Custom MCP server for OpenClaw integration
+- **Validation**: Go-validator with custom financial rules
+
+### **AI Microservice (Python)**
+- **Framework**: FastAPI
+- **OCR**: Tesseract, EasyOCR, or Huawei OCR Service
+- **PDF Processing**: PyPDF2, pdfplumber
+- **AI/ML**: Transformers for NLP, Custom models for financial data
+- **Queue Processing**: Redis/Celery for async processing
+
+### **Infrastructure (Huawei Cloud)**
+- **Compute**: Elastic Cloud Server (ECS), Container Engine (CCE)
+- **Storage**: Object Storage Service (OBS), GaussDB, GeminiDB
+- **Networking**: VPC, ELB, NAT Gateway, VPN
+- **Security**: IAM, Security Groups, Cloud Eye monitoring
+- **CI/CD**: CodeArts, SWR (Container Registry)
+
+## 📊 Data Architecture
+
+### **Phase 1: OBS-Based Storage**
+```json
+{
+  "family_circles": {
+    "circle_id": "uuid",
+    "name": "Family Name",
+    "members": ["user_id1", "user_id2"],
+    "settings": {...},
+    "created_at": "timestamp",
+    "updated_at": "timestamp"
+  },
+  "transactions": {
+    "transaction_id": "uuid",
+    "circle_id": "uuid",
+    "user_id": "uuid",
+    "amount": 100.50,
+    "currency": "CLP",
+    "category": "groceries",
+    "payment_method": "credit_card",
+    "description": "Supermarket purchase",
+    "date": "2024-01-15",
+    "metadata": {...},
+    "created_at": "timestamp"
+  }
+}
+```
+
+### **Phase 2: Database Migration Path**
+```go
+// Repository interface allows seamless storage migration
+type TransactionRepository interface {
+    Create(ctx context.Context, transaction *Transaction) error
+    FindByID(ctx context.Context, id string) (*Transaction, error)
+    FindByCircle(ctx context.Context, circleID string, filters Filter) ([]Transaction, error)
+    Update(ctx context.Context, transaction *Transaction) error
+    Delete(ctx context.Context, id string) error
+}
+```
+
+## 🔧 Getting Started
+
+### **Prerequisites**
+- Go 1.21+
 - Python 3.10+
-- PostgreSQL 14+
-- Redis 7+
-- Docker (optional)
+- Docker & Docker Compose
+- Huawei Cloud Account (la-south-2 region)
+- Terraform 1.5+
 
-### Quick Start
+### **Local Development**
 ```bash
 # Clone the repository
-git clone https://github.com/dssr1012/PulseExpends.git
+git clone git@github.com:dssr1012/PulseExpends.git
 cd PulseExpends
 
-# Install dependencies
-npm install
-
-# Set up environment variables
-cp .env.example .env
-
-# Start development servers
-npm run dev
-```
-
-### Docker Setup
-```bash
-# Build and start all services
+# Start development environment
 docker-compose up -d
 
-# View logs
-docker-compose logs -f
+# Run Go server
+go run cmd/mcp-server/main.go
+
+# Run Python parser
+cd python/pdf-parser
+uvicorn src.main:app --reload
+
+# Access services
+# MCP Server: http://localhost:8080
+# Python API: http://localhost:8000
+# API Docs: http://localhost:8000/docs
 ```
 
-## 🔧 Development
-
-### Environment Setup
+### **Huawei Cloud Deployment**
 ```bash
-# Copy example environment file
-cp .env.example .env
+# Clone infrastructure repository
+git clone git@github.com:dssr1012/PulseExpends-Infra.git
+cd PulseExpends-Infra
 
-# Edit with your configuration
-nano .env
-```
+# Initialize Terraform
+terraform init
 
-### Available Scripts
-```bash
-# Install dependencies
-npm install
+# Plan deployment
+terraform plan -var-file=environments/dev.tfvars
 
-# Development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Run tests
-npm test
-
-# Lint code
-npm run lint
-
-# Format code
-npm run format
+# Apply infrastructure
+terraform apply -var-file=environments/dev.tfvars
 ```
 
 ## 🧪 Testing
 
 ```bash
-# Run all tests
-npm test
+# Run Go tests
+go test ./internal/... -v
 
-# Run specific test suite
-npm test -- --grep "expense"
+# Run Python tests
+cd python/pdf-parser
+pytest tests/ -v
 
-# Run with coverage
-npm run test:coverage
+# Integration tests
+go test ./tests/integration/...
 
-# E2E tests
-npm run test:e2e
+# Load testing
+k6 run scripts/load-test.js
 ```
-
-## 📁 Project Structure
-
-```
-src/
-├── components/     # Reusable UI components
-├── pages/         # Page components
-├── hooks/         # Custom React hooks
-├── utils/         # Utility functions
-├── types/         # TypeScript definitions
-├── api/          # API client and endpoints
-├── store/        # State management (Redux/Zustand)
-└── styles/       # Global styles and themes
-```
-
-## 🔌 API Documentation
-
-### Authentication
-```http
-POST /api/auth/login
-POST /api/auth/register
-POST /api/auth/refresh
-GET  /api/auth/me
-```
-
-### Expenses
-```http
-GET    /api/expenses
-POST   /api/expenses
-GET    /api/expenses/:id
-PUT    /api/expenses/:id
-DELETE /api/expenses/:id
-GET    /api/expenses/categories
-GET    /api/expenses/summary
-```
-
-### Budgets
-```http
-GET    /api/budgets
-POST   /api/budgets
-GET    /api/budgets/:id
-PUT    /api/budgets/:id
-DELETE /api/budgets/:id
-GET    /api/budgets/:id/status
-```
-
-### Reports
-```http
-GET /api/reports/monthly
-GET /api/reports/categories
-GET /api/reports/trends
-GET /api/reports/export
-```
-
-## 🤖 AI Features
-
-### Intelligent Categorization
-- Automatically categorizes expenses based on merchant and description
-- Learns from user corrections to improve accuracy
-- Supports custom categories and rules
-
-### Spending Insights
-- Identifies spending patterns and trends
-- Provides personalized saving recommendations
-- Alerts for unusual spending activity
-
-### Receipt Processing
-- OCR extraction from receipt images
-- Automatic data entry
-- Duplicate detection
 
 ## 🔒 Security
 
-### Data Protection
+### **Data Protection**
 - End-to-end encryption for sensitive data
-- Secure password hashing with bcrypt
-- JWT-based authentication with refresh tokens
-- Rate limiting and brute force protection
+- Huawei Cloud KMS for key management
+- OBS server-side encryption
+- TLS 1.3 for all communications
 
-### Compliance
-- GDPR compliant data handling
-- Financial data encryption at rest and in transit
-- Regular security audits and penetration testing
+### **Authentication & Authorization**
+- JWT with short-lived tokens
+- Huawei Cloud IAM integration
+- Role-based access control (RBAC)
+- Audit logging for all operations
 
-## 🚀 Deployment
+### **Compliance**
+- GDPR compliance for EU users
+- Financial data protection standards
+- Regular security audits
+- Penetration testing
 
-### Production Deployment
-```bash
-# Build Docker images
-docker-compose -f docker-compose.prod.yml build
+## 📈 Scaling Strategy
 
-# Deploy to production
-docker-compose -f docker-compose.prod.yml up -d
+### **Phase 1 (2-100 users)**
+- Single ECS instance for Go MCP server
+- Python microservice as separate container
+- OBS for JSON storage
+- Basic monitoring with Cloud Eye
 
-# Run database migrations
-docker-compose -f docker-compose.prod.yml run --rm backend npm run db:migrate
-```
+### **Phase 2 (100-10,000 users)**
+- CCE (Container Engine) with auto-scaling
+- ELB (Elastic Load Balancer) distribution
+- GaussDB for PostgreSQL for relational data
+- GeminiDB for MongoDB for document storage
+- Advanced monitoring and alerting
 
-### Kubernetes (Optional)
-```bash
-# Apply Kubernetes manifests
-kubectl apply -f k8s/
-
-# View pods
-kubectl get pods
-
-# View services
-kubectl get services
-```
-
-## 📈 Monitoring
-
-### Health Checks
-```bash
-# API health
-GET /health
-
-# Database health
-GET /health/db
-
-# Cache health
-GET /health/cache
-```
-
-### Metrics
-- Prometheus metrics at `/metrics`
-- Grafana dashboards for visualization
-- Alert manager for notifications
+### **Phase 3 (10,000+ users)**
+- Multi-AZ deployment for high availability
+- Read replicas for database scaling
+- Redis cache for frequent queries
+- CDN for static assets
+- Advanced AI/ML pipeline for predictions
 
 ## 🤝 Contributing
 
@@ -280,12 +258,12 @@ GET /health/cache
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-### Development Guidelines
-- Follow TypeScript strict mode
+### **Development Guidelines**
+- Follow Go best practices and effective-go
+- Use Python type hints and mypy
 - Write comprehensive tests
 - Update documentation
 - Follow commit message conventions
-- Ensure all tests pass before submitting PR
 
 ## 📄 License
 
@@ -293,22 +271,48 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- [OpenClaw](https://openclaw.ai) for intelligent automation
-- [React](https://reactjs.org) for the frontend framework
-- [FastAPI](https://fastapi.tiangolo.com) for the Python backend
-- [Prisma](https://prisma.io) for database ORM
-- [Tailwind CSS](https://tailwindcss.com) for styling
+- [Huawei Cloud](https://www.huaweicloud.com/) for infrastructure
+- [OpenClaw](https://openclaw.ai/) for MCP integration
+- [Go](https://go.dev/) for high-performance backend
+- [FastAPI](https://fastapi.tiangolo.com/) for Python microservices
+- [Terraform](https://www.terraform.io/) for infrastructure as code
 
 ## 📞 Support
 
 - **Issues**: [GitHub Issues](https://github.com/dssr1012/PulseExpends/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/dssr1012/PulseExpends/discussions)
-- **Email**: dssr1012@github.com
+- **Documentation**: [Project Wiki](https://github.com/dssr1012/PulseExpends/wiki)
 
-## 🌟 Star History
+## 🌟 Roadmap
 
-[![Star History Chart](https://api.star-history.com/svg?repos=dssr1012/PulseExpends&type=Date)](https://star-history.com/#dssr1012/PulseExpends&Date)
+### **Q1 2024** - MVP Release
+- [ ] Core Go MCP server
+- [ ] Python PDF parser microservice
+- [ ] OBS storage implementation
+- [ ] Basic family circle management
+- [ ] Huawei Cloud deployment
+
+### **Q2 2024** - Feature Complete
+- [ ] Advanced transaction categorization
+- [ ] Budget planning and alerts
+- [ ] Multi-currency support
+- [ ] Mobile-responsive web interface
+- [ ] Database migration capability
+
+### **Q3 2024** - Scaling
+- [ ] GaussDB/PostgreSQL integration
+- [ ] Advanced AI/ML features
+- [ ] Real-time notifications
+- [ ] API rate limiting
+- [ ] Advanced security features
+
+### **Q4 2024** - Enterprise Ready
+- [ ] Multi-tenant support
+- [ ] Advanced reporting and analytics
+- [ ] Third-party integrations
+- [ ] Mobile applications
+- [ ] SOC 2 compliance
 
 ---
 
-Built with ❤️ by [DS SR](https://github.com/dssr1012)
+**Built with ❤️ by [DS SR](https://github.com/dssr1012) for modern family finance management**
