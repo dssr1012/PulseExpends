@@ -275,16 +275,39 @@ Este proyecto está bajo la licencia MIT. Ver el archivo LICENSE para más detal
 
 Las contribuciones son bienvenidas. Por favor, abre un issue o pull request en GitHub.
 
-## 🚀 Scripts de Despliegue
+## 🔐 Configuración Segura de DuckDNS
 
-### 1. Configurar DuckDNS
+### 1. Configurar Token (SIN SUBIR AL REPOSITORIO)
 ```bash
-# Primero, edita el script con tu token de DuckDNS
-export DUCKDNS_TOKEN="tu_token_aqui"
-sed -i "s/TU_TOKEN_DE_DUCKDNS_AQUI/$DUCKDNS_TOKEN/" duckdns-config.sh
+# Crear archivo de configuración seguro (NO SUBIR A GIT)
+cat > duckdns-token.sh << 'EOF'
+#!/bin/bash
+# Archivo seguro para token de DuckDNS
+# NO SUBIR ESTE ARCHIVO AL REPOSITORIO
 
-# Luego ejecuta
-./duckdns-config.sh
+export DUCKDNS_TOKEN="tu_token_real_aqui"  # Reemplazar con tu token real
+EOF
+
+chmod 700 duckdns-token.sh  # Solo el dueño puede leer/ejecutar
+source duckdns-token.sh
+
+# Agregar a .gitignore para evitar subirlo accidentalmente
+echo "duckdns-token.sh" >> .gitignore
+```
+
+### 2. Configurar DuckDNS
+```bash
+# Usar el script seguro (no incluye token)
+./configure-duckdns-secure.sh
+
+# O configurar manualmente
+curl "https://www.duckdns.org/update?domains=pulseexpends.duckdns.org,api.pulseexpends.duckdns.org,pdf.pulseexpends.duckdns.org,status.pulseexpends.duckdns.org&token=\$DUCKDNS_TOKEN&ip=\$(curl -s https://api.ipify.org)"
+```
+
+### 3. Configurar Actualización Automática
+```bash
+# Configurar cron job seguro
+./setup-duckdns-cron.sh
 ```
 
 ### 2. Desplegar con Subdominios

@@ -224,4 +224,9 @@ terraform.tfstate.d/
 override.tf
 override.tf.json
 *_override.tf
-*_override.tf.json
+*_override.tf.json-e 
+# Archivos sensibles de DuckDNS (NO SUBIR)
+duckdns-token.sh
+*.token
+*.secret
+
