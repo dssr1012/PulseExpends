@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PulseExpends - Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/auth.css">
+</head>
+<body>
+    <!-- Loading overlay -->
+    <div id="loading" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p>Cargando...</p>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                <span>PulseExpends</span>
+            </div>
+        </div>
+        
+        <div class="navbar-menu" id="userMenu" style="display: none;">
+            <div class="user-info">
+                <img id="userAvatar" src="" alt="Avatar" class="user-avatar" style="display: none;">
+                <div class="user-details">
+                    <span id="userName" class="user-name">Usuario</span>
+                    <span id="userEmail" class="user-email">usuario@ejemplo.com</span>
+                </div>
+                <div class="dropdown">
+                    <button class="dropdown-toggle">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="dropdown-menu">
+                        <a href="#" onclick="loadPage('settings')"><i class="fas fa-cog"></i> Configuración</a>
+                        <a href="#" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="navbar-actions">
+            <button id="loginBtn" class="btn btn-primary" onclick="window.location.href='/auth/login.html'" style="display: none;">
+                <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+            </button>
+            <button id="logoutBtn" class="btn btn-secondary" onclick="handleLogout()" style="display: none;">
+                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main container -->
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h3><i class="fas fa-bars"></i> Menú</h3>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-link active" data-page="dashboard">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                
+                <a href="#" class="nav-link" data-page="transactions">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Transacciones</span>
+                </a>
+                
+                <a href="#" class="nav-link" data-page="categories">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Categorías</span>
+                </a>
+                
+                <a href="#" class="nav-link" data-page="circles">
+                    <i class="fas fa-users"></i>
+                    <span>Círculos Familiares</span>
+                </a>
+                
+                <a href="#" class="nav-link" data-page="upload">
+                    <i class="fas fa-file-upload"></i>
+                    <span>Subir PDF</span>
+                </a>
+                
+                <a href="#" class="nav-link" data-page="alerts">
+                    <i class="fas fa-bell"></i>
+                    <span>Alertas</span>
+                </a>
+                
+                <a href="#" class="nav-link" data-page="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Configuración</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="quick-actions">
+                    <button class="btn btn-primary btn-block" onclick="addExpenseModal.classList.add('active')">
+                        <i class="fas fa-plus"></i> Agregar Gasto
+                    </button>
+                    <button class="btn btn-secondary btn-block" onclick="uploadModal.classList.add('active')">
+                        <i class="fas fa-file-upload"></i> Subir PDF
+                    </button>
+                </div>
+                
+                <div class="sidebar-info">
+                    <div class="info-item">
+                        <i class="fas fa-circle" style="color: #4CAF50;"></i>
+                        <span>Sistema activo</span>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-shield-alt" style="color: #2196F3;"></i>
+                        <span>Protegido</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main content -->
+        <main class="main-content" id="main-content">
+            <!-- Content will be loaded here dynamically -->
+        </main>
+    </div>
+
+    <!-- Add Expense Modal -->
+    <div id="addExpenseModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-plus"></i> Agregar Gasto/Ingreso</h3>
+                <button id="closeModal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="expenseForm">
+                    <div class="form-group">
+                        <label class="form-label">Descripción</label>
+                        <input type="text" id="description" class="form-input" placeholder="Ej: Supermercado, Salario, etc." required>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Monto</label>
+                            <input type="number" id="amount" class="form-input" step="0.01" min="0" placeholder="0.00" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Categoría</label>
+                            <select id="category" class="form-select" required>
+                                <option value="">Seleccionar categoría</option>
+                                <option value="Food">Alimentos</option>
+                                <option value="Transportation">Transporte</option>
+                                <option value="Shopping">Compras</option>
+                                <option value="Entertainment">Entretenimiento</option>
+                                <option value="Coffee">Café</option>
+                                <option value="Utilities">Servicios</option>
+                                <option value="Healthcare">Salud</option>
+                                <option value="Education">Educación</option>
+                                <option value="Other">Otros</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Fecha</label>
+                            <input type="date" id="date" class="form-input" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Tipo</label>
+                            <select id="type" class="form-select" required>
+                                <option value="expense">Gasto</option>
+                                <option value="income">Ingreso</option>
+                                <option value="transfer">Transferencia</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Círculo Familiar (opcional)</label>
+                        <select id="circle" class="form-select">
+                            <option value="">Personal (solo yo)</option>
+                            <!-- Circles will be loaded dynamically -->
+                        </select>
+                        <small class="form-help">Selecciona un círculo para compartir esta transacción</small>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="addExpenseModal.classList.remove('active')">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Guardar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload PDF Modal -->
+    <div id="uploadModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-file-upload"></i> Subir Resumen PDF</h3>
+                <button id="closeUploadModal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="dropArea" class="upload-area">
+                    <div class="upload-icon">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    <h3>Arrastra tu archivo PDF aquí</h3>
+                    <p class="upload-text">o haz clic para seleccionar</p>
+                    <input type="file" id="pdfFile" accept=".pdf" style="display: none;">
+                    <button class="upload-button" onclick="document.getElementById('pdfFile').click()">
+                        Seleccionar Archivo
+                    </button>
+                    <p class="upload-info">
+                        <i class="fas fa-info-circle"></i>
+                        Formatos soportados: PDF (máximo 10MB)
+                    </p>
+                </div>
+                
+                <div id="uploadStatus" style="display: none; margin-top: 20px;"></div>
+                
+                <div class="upload-tips">
+                    <h4><i class="fas fa-lightbulb"></i> Consejos para mejores resultados:</h4>
+                    <ul>
+                        <li>Asegúrate de que el PDF sea legible (no escaneado)</li>
+                        <li>Los resúmenes de bancos principales funcionan mejor</li>
+                        <li>Verifica que el texto sea seleccionable</li>
+                        <li>Evita archivos protegidos con contraseña</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="src/app-new.js"></script>
+    <script>
+        // Check for OAuth callback
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        
+        if (token) {
+            // Save token and redirect
+            localStorage.setItem('auth_token', token);
+            window.location.href = '/dashboard.html';
+        }
+    </script>
+</body>
+</html>

@@ -1,235 +1,108 @@
 version: '3.8'
 
 services:
-  # Go MCP Server
-  mcp-server:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: pulse-expends-mcp
+  # PostgreSQL database
+  postgres:
+    image: postgres:15-alpine
+    container_name: pulseexpends-postgres
     environment:
-      - SERVER_ADDRESS=:8080
-      - STORAGE_TYPE=obs
-      - OBS_ENDPOINT=${OBS_ENDPOINT:-https://obs.la-south-2.myhuaweicloud.com}
-      - OBS_ACCESS_KEY_ID=${OBS_ACCESS_KEY_ID}
-      - OBS_SECRET_ACCESS_KEY=${OBS_SECRET_ACCESS_KEY}
-      - OBS_BUCKET_NAME=${OBS_BUCKET_NAME:-pulse-expends}
-      - OBS_REGION=${OBS_REGION:-la-south-2}
-      - OBS_ENCRYPTION_KEY=${OBS_ENCRYPTION_KEY}
-      - PYTHON_SERVICE_URL=http://pdf-parser:8000
-      - JWT_SECRET=${JWT_SECRET:-change-this-in-production}
-      - LOG_LEVEL=info
+      POSTGRES_DB: pulseexpends
+      POSTGRES_USER: pulseexpends
+      POSTGRES_PASSWORD: pulseexpends_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/auth/database/migrations:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pulseexpends"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pulseexpends-network
+
+  # Auth API server
+  auth-api:
+    build: ./backend/auth
+    container_name: pulseexpends-auth-api
+    environment:
+      - DATABASE_URL=postgresql://pulseexpends:pulseexpends_password@postgres:5432/pulseexpends
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REDIRECT_URI=http://localhost:8082/api/auth/google/callback
+      - JWT_SECRET=${JWT_SECRET}
+      - PORT=8082
+    ports:
+      - "8082:8082"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend/auth:/app
+      - /app/go/pkg/mod
+    command: go run main.go
+    networks:
+      - pulseexpends-network
+
+  # MCP Server (existing)
+  mcp-server:
+    build: ./backend/mcp-server
+    container_name: pulseexpends-mcp-server
+    environment:
+      - DATABASE_URL=postgresql://pulseexpends:pulseexpends_password@postgres:5432/pulseexpends
+      - AUTH_API_URL=http://auth-api:8082
     ports:
       - "8080:8080"
     depends_on:
-      pdf-parser:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+      - postgres
+      - auth-api
     volumes:
-      - ./config:/app/config:ro
-      - ./data:/app/data
-    restart: unless-stopped
+      - ./backend/mcp-server:/app
+    networks:
+      - pulseexpends-network
 
-  # Python PDF Parser Microservice
+  # PDF Parser (existing)
   pdf-parser:
-    build:
-      context: ./python/pdf-parser
-      dockerfile: Dockerfile
-    container_name: pulse-expends-pdf-parser
-    environment:
-      - HOST=0.0.0.0
-      - PORT=8000
-      - OBS_ENDPOINT=${OBS_ENDPOINT:-https://obs.la-south-2.myhuaweicloud.com}
-      - OBS_ACCESS_KEY_ID=${OBS_ACCESS_KEY_ID}
-      - OBS_SECRET_ACCESS_KEY=${OBS_SECRET_ACCESS_KEY}
-      - OBS_BUCKET_NAME=${OBS_BUCKET_NAME:-pulse-expends-documents}
-      - OBS_REGION=${OBS_REGION:-la-south-2}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4}
-      - OPENAI_MAX_TOKENS=2000
-      - OPENAI_TEMPERATURE=0.1
-      - TESSERACT_PATH=/usr/bin/tesseract
-      - DEFAULT_LANGUAGE=spa+eng
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - REDIS_DB=0
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - API_KEY=${PDF_PARSER_API_KEY}
-      - JWT_SECRET=${JWT_SECRET:-change-this-in-production}
-      - JWT_ALGORITHM=HS256
-      - JWT_EXPIRATION_MINUTES=30
-      - RATE_LIMIT_PER_MINUTE=60
-      - RATE_LIMIT_PER_HOUR=1000
-      - LOG_LEVEL=info
-      - MAX_FILE_SIZE_MB=50
-      - MAX_PAGES_PER_DOCUMENT=50
-      - MAX_CONCURRENT_PROCESSES=4
-      - PROCESSING_TIMEOUT_SECONDS=300
+    build: ./backend/pdf-parser
+    container_name: pulseexpends-pdf-parser
     ports:
       - "8000:8000"
-    depends_on:
-      redis:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
     volumes:
-      - ./python/pdf-parser/config:/app/config:ro
-      - ./python/pdf-parser/data:/app/data
-      - ./python/pdf-parser/logs:/app/logs
-      - ./python/pdf-parser/temp:/app/temp
-    restart: unless-stopped
+      - ./backend/pdf-parser:/app
+    networks:
+      - pulseexpends-network
 
-  # Redis for caching and async processing
-  redis:
-    image: redis:7-alpine
-    container_name: pulse-expends-redis
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redispassword}
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redispassword}", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
-  # PostgreSQL Database (for Phase 2)
-  postgres:
-    image: postgres:16-alpine
-    container_name: pulse-expends-postgres
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-pulseexpends}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB:-pulseexpends}
-      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pulseexpends}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
-  # Celery Worker for async PDF processing
-  celery-worker:
-    build:
-      context: ./python/pdf-parser
-      dockerfile: Dockerfile
-    container_name: pulse-expends-celery-worker
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - OBS_ENDPOINT=${OBS_ENDPOINT:-https://obs.la-south-2.myhuaweicloud.com}
-      - OBS_ACCESS_KEY_ID=${OBS_ACCESS_KEY_ID}
-      - OBS_SECRET_ACCESS_KEY=${OBS_SECRET_ACCESS_KEY}
-      - OBS_BUCKET_NAME=${OBS_BUCKET_NAME:-pulse-expends-documents}
-      - OBS_REGION=${OBS_REGION:-la-south-2}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - TESSERACT_PATH=/usr/bin/tesseract
-      - LOG_LEVEL=info
-    depends_on:
-      redis:
-        condition: service_healthy
-      pdf-parser:
-        condition: service_healthy
-    volumes:
-      - ./python/pdf-parser/config:/app/config:ro
-      - ./python/pdf-parser/data:/app/data
-      - ./python/pdf-parser/logs:/app/logs
-      - ./python/pdf-parser/temp:/app/temp
-    command: celery -A src.celery_app worker --loglevel=info --concurrency=4
-    restart: unless-stopped
-
-  # Celery Beat for scheduled tasks
-  celery-beat:
-    build:
-      context: ./python/pdf-parser
-      dockerfile: Dockerfile
-    container_name: pulse-expends-celery-beat
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - LOG_LEVEL=info
-    depends_on:
-      redis:
-        condition: service_healthy
-    volumes:
-      - ./python/pdf-parser/config:/app/config:ro
-      - ./python/pdf-parser/data:/app/data
-      - ./python/pdf-parser/logs:/app/logs
-    command: celery -A src.celery_app beat --loglevel=info
-    restart: unless-stopped
-
-  # PostgreSQL Admin (Optional)
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: pulse-expends-pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@pulseexpends.com}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
-    ports:
-      - "5050:80"
-    depends_on:
-      - postgres
-    restart: unless-stopped
-
-  # Redis Admin (Optional)
-  redis-commander:
-    image: rediscommander/redis-commander:latest
-    container_name: pulse-expends-redis-commander
-    environment:
-      REDIS_HOSTS: local:redis:6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-redispassword}
-    ports:
-      - "8081:8081"
-    depends_on:
-      - redis
-    restart: unless-stopped
-
-  # Traefik Reverse Proxy (Optional)
-  traefik:
-    image: traefik:v2.10
-    container_name: pulse-expends-traefik
-    command:
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
-      - "--certificatesresolvers.myresolver.acme.email=${TRAEFIK_ACME_EMAIL}"
-      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+  # Frontend (Nginx)
+  frontend:
+    image: nginx:alpine
+    container_name: pulseexpends-frontend
     ports:
       - "80:80"
       - "443:443"
-      - "8080:8080"
     volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - "./traefik/letsencrypt:/letsencrypt"
-      - "./traefik/traefik.yml:/etc/traefik/traefik.yml"
+      - ./frontend/public:/usr/share/nginx/html
+      - ./backend/nginx-config/nginx-subdomains.conf:/etc/nginx/conf.d/default.conf
+      - ./ssl:/etc/nginx/ssl
     depends_on:
+      - auth-api
       - mcp-server
       - pdf-parser
-    restart: unless-stopped
+    networks:
+      - pulseexpends-network
+
+  # Status Dashboard (existing)
+  status-dashboard:
+    build: ./backend/status-dashboard
+    container_name: pulseexpends-status-dashboard
+    ports:
+      - "8081:8081"
+    networks:
+      - pulseexpends-network
 
 volumes:
   postgres_data:
-  redis_data:
-  letsencrypt:
+
+networks:
+  pulseexpends-network:
+    driver: bridge
