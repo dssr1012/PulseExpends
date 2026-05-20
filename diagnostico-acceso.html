@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnóstico de Acceso - PulseExpends</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .test {
+            margin: 20px 0;
+            padding: 15px;
+            border-left: 4px solid #4CAF50;
+            background-color: #f9f9f9;
+        }
+        .test h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .code {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .instructions {
+            background-color: #e8f4fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Diagnóstico de Acceso - PulseExpends</h1>
+        
+        <div class="instructions">
+            <h3>📋 Instrucciones:</h3>
+            <p>Comparte este enlace con las personas que no pueden acceder a la aplicación:</p>
+            <div class="code">http://pulseexpends.duckdns.org/diagnostico.html</div>
+            <p>O pídeles que visiten: <strong>http://182.160.24.205/diagnostico.html</strong></p>
+        </div>
+
+        <div class="test">
+            <h3>1. Prueba de Conexión Básica</h3>
+            <p>Esta prueba verifica si puedes conectarte al servidor:</p>
+            <div id="test1" class="result">Ejecutando prueba...</div>
+            <button onclick="runTest1()">Ejecutar Prueba 1</button>
+        </div>
+
+        <div class="test">
+            <h3>2. Prueba de DNS</h3>
+            <p>Esta prueba verifica si tu DNS resuelve correctamente el dominio:</p>
+            <div id="test2" class="result">Esperando ejecución...</div>
+            <button onclick="runTest2()">Ejecutar Prueba 2</button>
+        </div>
+
+        <div class="test">
+            <h3>3. Prueba de Puerto 80</h3>
+            <p>Esta prueba verifica si el puerto 80 está accesible:</p>
+            <div id="test3" class="result">Esperando ejecución...</div>
+            <button onclick="runTest3()">Ejecutar Prueba 3</button>
+        </div>
+
+        <div class="test">
+            <h3>4. Prueba de Aplicación Web</h3>
+            <p>Esta prueba verifica si la aplicación web responde:</p>
+            <div id="test4" class="result">Esperando ejecución...</div>
+            <button onclick="runTest4()">Ejecutar Prueba 4</button>
+        </div>
+
+        <div class="test">
+            <h3>5. Prueba de API de Autenticación</h3>
+            <p>Esta prueba verifica si la API de autenticación funciona:</p>
+            <div id="test5" class="result">Esperando ejecución...</div>
+            <button onclick="runTest5()">Ejecutar Prueba 5</button>
+        </div>
+
+        <div class="instructions">
+            <h3>🔧 Soluciones Comunes:</h3>
+            <ul>
+                <li><strong>Si la prueba 1 falla:</strong> Tu conexión a internet tiene problemas</li>
+                <li><strong>Si la prueba 2 falla:</strong> Problemas de DNS. Usa la IP directa: <code>182.160.24.205</code></li>
+                <li><strong>Si la prueba 3 falla:</strong> Firewall bloqueando el puerto 80. Contacta a tu administrador de red</li>
+                <li><strong>Si la prueba 4 falla:</strong> La aplicación no está respondiendo. Intenta más tarde</li>
+                <li><strong>Si la prueba 5 falla:</strong> La API de autenticación tiene problemas</li>
+            </ul>
+            
+            <h3>📞 Información Técnica:</h3>
+            <div class="code">
+                Servidor: 182.160.24.205 (Chile - Huawei Cloud)<br>
+                Puerto: 80 (HTTP)<br>
+                Dominio: pulseexpends.duckdns.org<br>
+                Subdominios: api.pulseexpends.duckdns.org, pdf.pulseexpends.duckdns.org, status.pulseexpends.duckdns.org<br>
+                Última actualización: 2026-05-20 08:30 GMT-4
+            </div>
+        </div>
+
+        <div id="summary" class="result" style="display: none;">
+            <h3>📊 Resumen de Diagnóstico</h3>
+            <div id="summaryContent"></div>
+        </div>
+    </div>
+
+    <script>
+        function updateResult(elementId, success, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = 'result ' + (success ? 'success' : 'error');
+        }
+
+        function runTest1() {
+            updateResult('test1', false, 'Probando conexión a internet...');
+            fetch('https://httpbin.org/get')
+                .then(response => response.ok)
+                .then(success => {
+                    if (success) {
+                        updateResult('test1', true, '✅ Conexión a internet: OK');
+                    } else {
+                        updateResult('test1', false, '❌ Conexión a internet: FALLÓ');
+                    }
+                })
+                .catch(() => {
+                    updateResult('test1', false, '❌ Conexión a internet: FALLÓ - Sin acceso a internet');
+                });
+        }
+
+        function runTest2() {
+            updateResult('test2', false, 'Resolviendo DNS...');
+            fetch('https://dns.google/resolve?name=pulseexpends.duckdns.org&type=A')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.Answer && data.Answer.length > 0) {
+                        const ip = data.Answer[0].data;
+                        updateResult('test2', true, `✅ DNS resuelto: ${ip}`);
+                    } else {
+                        updateResult('test2', false, '❌ DNS: No se pudo resolver');
+                    }
+                })
+                .catch(() => {
+                    // Fallback a fetch directo
+                    fetch('http://pulseexpends.duckdns.org/favicon.ico', { mode: 'no-cors' })
+                        .then(() => updateResult('test2', true, '✅ DNS: Resolución indirecta OK'))
+                        .catch(() => updateResult('test2', false, '❌ DNS: No se pudo resolver'));
+                });
+        }
+
+        function runTest3() {
+            updateResult('test3', false, 'Probando puerto 80...');
+            fetch('http://182.160.24.205/favicon.ico', { mode: 'no-cors' })
+                .then(() => updateResult('test3', true, '✅ Puerto 80: ACCESIBLE'))
+                .catch(() => {
+                    // Intentar con el dominio
+                    fetch('http://pulseexpends.duckdns.org/favicon.ico', { mode: 'no-cors' })
+                        .then(() => updateResult('test3', true, '✅ Puerto 80: ACCESIBLE (vía dominio)'))
+                        .catch(() => updateResult('test3', false, '❌ Puerto 80: BLOQUEADO'));
+                });
+        }
+
+        function runTest4() {
+            updateResult('test4', false, 'Probando aplicación web...');
+            fetch('http://pulseexpends.duckdns.org/')
+                .then(response => {
+                    if (response.ok) {
+                        updateResult('test4', true, `✅ Aplicación web: RESPONDE (HTTP ${response.status})`);
+                    } else {
+                        updateResult('test4', false, `❌ Aplicación web: ERROR (HTTP ${response.status})`);
+                    }
+                })
+                .catch(() => {
+                    // Intentar con IP
+                    fetch('http://182.160.24.205/')
+                        .then(response => {
+                            if (response.ok) {
+                                updateResult('test4', true, `✅ Aplicación web: RESPONDE por IP (HTTP ${response.status})`);
+                            } else {
+                                updateResult('test4', false, `❌ Aplicación web: ERROR por IP (HTTP ${response.status})`);
+                            }
+                        })
+                        .catch(() => updateResult('test4', false, '❌ Aplicación web: NO RESPONDE'));
+                });
+        }
+
+        function runTest5() {
+            updateResult('test5', false, 'Probando API de autenticación...');
+            fetch('http://pulseexpends.duckdns.org/api/auth/health')
+                .then(response => {
+                    if (response.ok) {
+                        return response.json().then(data => {
+                            updateResult('test5', true, `✅ API Auth: RESPONDE (${data.status || 'OK'})`);
+                        });
+                    } else {
+                        updateResult('test5', false, `❌ API Auth: ERROR (HTTP ${response.status})`);
+                    }
+                })
+                .catch(() => {
+                    // Intentar con IP
+                    fetch('http://182.160.24.205/api/auth/health')
+                        .then(response => {
+                            if (response.ok) {
+                                return response.json().then(data => {
+                                    updateResult('test5', true, `✅ API Auth: RESPONDE por IP (${data.status || 'OK'})`);
+                                });
+                            } else {
+                                updateResult('test5', false, `❌ API Auth: ERROR por IP (HTTP ${response.status})`);
+                            }
+                        })
+                        .catch(() => updateResult('test5', false, '❌ API Auth: NO RESPONDE'));
+                });
+        }
+
+        // Ejecutar todas las pruebas automáticamente
+        setTimeout(() => {
+            runTest1();
+            setTimeout(runTest2, 1000);
+            setTimeout(runTest3, 2000);
+            setTimeout(runTest4, 3000);
+            setTimeout(runTest5, 4000);
+            
+            // Mostrar resumen después de 6 segundos
+            setTimeout(() => {
+                const summary = document.getElementById('summary');
+                const summaryContent = document.getElementById('summaryContent');
+                summary.style.display = 'block';
+                
+                const tests = ['test1', 'test2', 'test3', 'test4', 'test5'];
+                let passed = 0;
+                let failed = 0;
+                
+                tests.forEach(testId => {
+                    const testElement = document.getElementById(testId);
+                    if (testElement.classList.contains('success')) {
+                        passed++;
+                    } else if (testElement.classList.contains('error')) {
+                        failed++;
+                    }
+                });
+                
+                summaryContent.innerHTML = `
+                    <p>✅ Pruebas pasadas: ${passed}</p>
+                    <p>❌ Pruebas fallidas: ${failed}</p>
+                    <p>📈 Tasa de éxito: ${Math.round((passed / tests.length) * 100)}%</p>
+                    <p><strong>Recomendación:</strong> ${failed === 0 ? 'Todo funciona correctamente' : 'Revisa las pruebas fallidas'}</p>
+                `;
+            }, 6000);
+        }, 1000);
+    </script>
+</body>
+</html>
