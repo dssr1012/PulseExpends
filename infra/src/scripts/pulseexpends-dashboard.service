@@ -1,0 +1,16 @@
+[Unit]
+Description=PulseExpends Infrastructure Dashboard
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/var/www/dashboard
+ExecStart=/usr/bin/python3 /var/www/dashboard/serve-dashboard.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

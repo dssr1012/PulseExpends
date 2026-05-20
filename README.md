@@ -1,337 +1,225 @@
-# PulseExpends - Sistema de Gestión de Gastos
+# PulseExpends Monorepo
 
-PulseExpends es un sistema completo de gestión de gastos inspirado en Fintonic, que permite a los usuarios gestionar sus finanzas personales, subir resúmenes de tarjetas de crédito en PDF y visualizar análisis financieros.
+A unified monorepo containing both infrastructure and application code for the PulseExpends financial management platform.
 
-## 🚀 Características Principales
-
-### Frontend (Aplicación Web)
-- **Dashboard interactivo** con estadísticas en tiempo real
-- **Gestión de transacciones** (agregar, editar, eliminar)
-- **Subida de PDFs** con drag-and-drop
-- **Análisis por categorías** con gráficos visuales
-- **Sistema de alertas** para gastos altos
-- **Diseño responsivo** mobile-first
-- **Interfaz en español** inspirada en Fintonic
-
-### Backend (APIs)
-- **Servidor MCP** (Go) - API REST para gestión de transacciones
-- **PDF Parser** (Python/FastAPI) - Extracción de transacciones de PDFs
-- **Nginx** - Reverse proxy unificado
-- **Systemd** - Gestión de servicios como demonios
-
-## 🏗️ Arquitectura
+## 📁 Repository Structure
 
 ```
-PulseExpends/
-├── frontend/              # Aplicación web completa
-│   ├── public/           # Archivos estáticos (HTML)
-│   │   └── index.html    # Página principal SPA
-│   ├── src/              # Código fuente JavaScript
-│   │   └── app.js        # Lógica principal de la aplicación
-│   └── styles/           # Estilos CSS
-│       └── main.css      # Estilos principales
-├── backend/              # Servicios backend
-│   ├── mcp-server/       # Servidor MCP (Go)
-│   ├── pdf-parser/       # Parser de PDFs (Python)
-│   ├── nginx-config/     # Configuración de Nginx
-│   └── systemd-services/ # Archivos de servicio systemd
-└── README.md             # Este archivo
+/
+├── .github/                    # CI/CD workflows and GitHub Actions
+├── infra/                      # Infrastructure as Code (Terraform, scripts)
+│   ├── main.tf                 # Main Terraform configuration
+│   ├── variables.tf            # Terraform variables
+│   ├── rds.tf                  # RDS PostgreSQL module
+│   ├── scripts/                # Deployment and management scripts
+│   ├── dashboard/              # Monitoring dashboard
+│   └── backup/                 # Backup configurations
+├── services/                   # Application services
+│   ├── backend/                # Backend services
+│   │   ├── auth/               # Authentication service (Go)
+│   │   ├── mcp-server/         # MCP server (Go)
+│   │   ├── pdf-parser/         # PDF parsing service (Python)
+│   │   └── config/             # Shared configuration
+│   └── frontend/               # Frontend application
+│       ├── src/                # Source code
+│       ├── public/             # Static assets
+│       └── styles/             # CSS styles
+├── monitoring/                 # Monitoring configurations
+└── tests/                      # Test files
 ```
 
-## 🛠️ Requisitos del Sistema
+## 🚀 Getting Started
 
-- **Servidor**: Ubuntu 20.04+ (o similar)
-- **Nginx**: Versión 1.18+
-- **Go**: Versión 1.21+ (para MCP Server)
-- **Python**: Versión 3.8+ (para PDF Parser)
-- **Node.js**: Opcional para desarrollo frontend
+### Prerequisites
+- Go 1.20+
+- Python 3.9+
+- Node.js 18+
+- Terraform 1.5+
+- Docker & Docker Compose
 
-## 🌐 Configuración de Subdominios
+### Quick Start
 
-PulseExpends utiliza subdominios para organizar los diferentes servicios:
-
-- **Frontend Principal**: `http://pulseexpends.duckdns.org`
-- **API MCP Server**: `http://api.pulseexpends.duckdns.org`
-- **PDF Parser API**: `http://pdf.pulseexpends.duckdns.org`
-- **Status Dashboard**: `http://status.pulseexpends.duckdns.org`
-
-### Configuración DNS
-
-1. **Configurar DuckDNS**:
-   ```bash
-   # Editar el script con tu token de DuckDNS
-   nano duckdns-config.sh
-   
-   # Ejecutar configuración
-   ./duckdns-config.sh
-   ```
-
-2. **Configurar Nginx con subdominios**:
-   ```bash
-   ./deploy-subdomains.sh
-   ```
-
-### Desarrollo Local
-
-Para desarrollo local, puedes configurar `/etc/hosts`:
-```
-127.0.0.1 pulseexpends.duckdns.org
-127.0.0.1 api.pulseexpends.duckdns.org
-127.0.0.1 pdf.pulseexpends.duckdns.org
-127.0.0.1 status.pulseexpends.duckdns.org
-```
-
-## 🚀 Despliegue Rápido
-
-### 1. Configurar servidor
+#### 1. Clone the Repository
 ```bash
-# Instalar dependencias
-sudo apt update
-sudo apt install -y nginx golang python3 python3-pip
-
-# Instalar dependencias de Python para PDF Parser
-pip3 install fastapi uvicorn pymupdf pytesseract Pillow python-multipart
+git clone https://github.com/dssr1012/PulseExpends.git
+cd PulseExpends
 ```
 
-### 2. Configurar Nginx
+#### 2. Set Up Environment Variables
 ```bash
-sudo cp backend/nginx-config/nginx.conf /etc/nginx/sites-available/pulseexpends
-sudo ln -s /etc/nginx/sites-available/pulseexpends /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl restart nginx
+cp services/backend/.env.example services/backend/.env
+# Edit .env with your configuration
 ```
 
-### 3. Configurar servicios systemd
+#### 3. Run with Docker Compose
 ```bash
-sudo cp backend/systemd-services/*.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable pulseexpends-mcp-server
-sudo systemctl enable pulseexpends-pdf-parser
-sudo systemctl start pulseexpends-mcp-server
-sudo systemctl start pulseexpends-pdf-parser
+cd services/backend
+docker-compose up -d
 ```
 
-### 4. Desplegar frontend
+#### 4. Deploy Infrastructure
 ```bash
-sudo mkdir -p /var/www/pulseexpends-frontend
-sudo cp -r frontend/* /var/www/pulseexpends-frontend/
-sudo chown -R www-data:www-data /var/www/pulseexpends-frontend
+cd infra
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your credentials
+terraform init
+terraform apply
 ```
 
-### 5. Desplegar backend
-```bash
-sudo mkdir -p /opt/PulseExpends
-sudo cp -r backend/mcp-server/* /opt/PulseExpends/
-sudo cp -r backend/pdf-parser/* /opt/PulseExpends/python/pdf-parser/src/
+## 🏗️ Infrastructure
 
-# Instalar dependencias de Go
-cd /opt/PulseExpends
-go mod download
-```
+### Terraform Modules
+The infrastructure is managed using Terraform with the following modules:
 
-## 🔧 Configuración de Servicios
+- **Compute**: ECS instances and auto-scaling
+- **Network**: VPC, subnets, security groups
+- **Storage**: OBS buckets, RDS PostgreSQL
+- **Security**: KMS keys, IAM policies
+- **Monitoring**: Cloud Eye, alarms
 
-### Servidor MCP
-- **Puerto**: 8080
-- **Endpoints**:
-  - `GET /transactions` - Listar transacciones
-  - `POST /transactions` - Agregar transacción
-  - `GET /summary` - Resumen por categoría
-  - `GET /health` - Health check
+### Deployment Scripts
+- `infra/deploy.sh` - Full infrastructure deployment
+- `infra/reactivate-infrastructure.sh` - Quick infrastructure reactivation
+- `infra/setup-ecs-subdomains.sh` - ECS deployment with subdomains
 
-### PDF Parser
-- **Puerto**: 8000
-- **Endpoints**:
-  - `POST /parse` - Procesar archivo PDF
-  - `GET /health` - Health check
+## 🛠️ Services
 
-### Nginx (Reverse Proxy)
-- **Frontend**: `http://dominio.com/`
-- **MCP API**: `http://dominio.com/api/mcp/`
-- **PDF API**: `http://dominio.com/api/pdf/`
+### Backend Services
 
-## 📁 Estructura de Datos
+#### Authentication Service (`services/backend/auth/`)
+- Go-based authentication with Google OAuth
+- JWT token management
+- User and family circle management
+- PostgreSQL database integration
 
-### Transacción
-```json
-{
-  "id": "uuid",
-  "amount": 75.50,
-  "currency": "USD",
-  "category": "Entertainment",
-  "description": "Movie tickets",
-  "type": "expense",
-  "date": "2024-05-19T00:00:00Z"
-}
-```
+#### MCP Server (`services/backend/mcp-server/`)
+- Go-based Model Context Protocol server
+- Transaction management
+- Financial data processing
+- REST API endpoints
 
-### Respuesta del PDF Parser
-```json
-{
-  "success": true,
-  "message": "PDF procesado exitosamente",
-  "data": {
-    "text": "Texto extraído del PDF...",
-    "transaction_count": 5
-  }
-}
-```
+#### PDF Parser (`services/backend/pdf-parser/`)
+- Python-based PDF processing
+- OCR integration for scanned documents
+- AI-powered data extraction
+- OBS storage integration
 
-## 🎨 Diseño Frontend
+### Frontend Application (`services/frontend/`)
+- Modern web interface
+- Real-time transaction tracking
+- Family circle management
+- Responsive design
 
-### Paleta de Colores (inspirada en Fintonic)
-- **Azul principal**: `#00a8ff`
-- **Azul oscuro**: `#0097e6`
-- **Verde éxito**: `#4cd137`
-- **Rojo error**: `#e84118`
-- **Amarillo advertencia**: `#fbc531`
-- **Gris claro**: `#f5f6fa`
-- **Gris oscuro**: `#7f8fa6`
+## 📊 Monitoring
 
-### Características de UI/UX
-- **Navegación SPA** sin recargas de página
-- **Modales** para agregar gastos y subir PDFs
-- **Drag-and-drop** para subida de archivos
-- **Filtros y búsqueda** en lista de transacciones
-- **Gráficos de categorías** visuales
-- **Diseño responsive** para móviles y desktop
-
-## 🔒 Seguridad
-
-- **Nginx** como reverse proxy con configuración segura
-- **CORS** configurado para el servidor MCP
-- **Límite de tamaño** de archivos PDF (10MB)
-- **Validación** de tipos de archivo
-- **Systemd** para gestión segura de servicios
-
-## 📊 Monitoreo
+### Dashboard
+Access the monitoring dashboard at `http://<server-ip>:8081/`
 
 ### Health Checks
-- MCP Server: `http://localhost:8080/health`
-- PDF Parser: `http://localhost:8000/health`
-- Nginx: `http://localhost/health`
+- Authentication: `GET /api/auth/health`
+- MCP Server: `GET /api/mcp/health`
+- PDF Parser: `GET /api/pdf/health`
 
-### Logs de Systemd
+## 🔧 Development
+
+### Backend Development
 ```bash
-# Ver logs del servidor MCP
-sudo journalctl -u pulseexpends-mcp-server -f
+cd services/backend/auth
+go run main.go
 
-# Ver logs del PDF Parser
-sudo journalctl -u pulseexpends-pdf-parser -f
+cd services/backend/mcp-server
+go run main.go
 
-# Ver logs de Nginx
-sudo tail -f /var/log/nginx/access.log
-sudo tail -f /var/log/nginx/error.log
+cd services/backend/pdf-parser
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python src/main.py
 ```
 
-## 🐛 Solución de Problemas
-
-### Servidor MCP no inicia
+### Frontend Development
 ```bash
-# Verificar si el puerto está en uso
-sudo netstat -tlnp | grep :8080
-
-# Verificar logs
-sudo journalctl -u pulseexpends-mcp-server --no-pager -n 50
+cd services/frontend
+npm install
+npm start
 ```
 
-### PDF Parser no procesa archivos
+### Testing
 ```bash
-# Verificar dependencias de Python
-pip3 list | grep -E "fastapi|uvicorn|pymupdf"
+cd services/backend
+./run_tests.sh
 
-# Verificar permisos de archivos
-ls -la /opt/PulseExpends/python/pdf-parser/
+cd services/backend/pdf-parser
+pytest tests/
 ```
 
-### Nginx no sirve el frontend
+## 🚢 Deployment
+
+### Manual Deployment
 ```bash
-# Verificar configuración
-sudo nginx -t
+# Deploy to ECS
+cd infra
+./setup-ecs-subdomains.sh
 
-# Verificar permisos
-ls -la /var/www/pulseexpends-frontend/
-
-# Recargar configuración
-sudo systemctl reload nginx
-```
-
-## 📈 Próximas Mejoras
-
-1. **Autenticación de usuarios** (login/registro)
-2. **Base de datos persistente** (PostgreSQL)
-3. **Notificaciones push/email** reales
-4. **Integración con APIs bancarias**
-5. **Aplicación móvil** (PWA o nativa)
-6. **Exportación de datos** (CSV, Excel, PDF)
-7. **Análisis predictivo** de gastos
-8. **Presupuestos personalizados** por categoría
-
-## 📄 Licencia
-
-Este proyecto está bajo la licencia MIT. Ver el archivo LICENSE para más detalles.
-
-## 🤝 Contribuciones
-
-Las contribuciones son bienvenidas. Por favor, abre un issue o pull request en GitHub.
-
-## 🔐 Configuración Segura de DuckDNS
-
-### 1. Configurar Token (SIN SUBIR AL REPOSITORIO)
-```bash
-# Crear archivo de configuración seguro (NO SUBIR A GIT)
-cat > duckdns-token.sh << 'EOF'
-#!/bin/bash
-# Archivo seguro para token de DuckDNS
-# NO SUBIR ESTE ARCHIVO AL REPOSITORIO
-
-export DUCKDNS_TOKEN="tu_token_real_aqui"  # Reemplazar con tu token real
-EOF
-
-chmod 700 duckdns-token.sh  # Solo el dueño puede leer/ejecutar
-source duckdns-token.sh
-
-# Agregar a .gitignore para evitar subirlo accidentalmente
-echo "duckdns-token.sh" >> .gitignore
-```
-
-### 2. Configurar DuckDNS
-```bash
-# Usar el script seguro (no incluye token)
+# Configure DuckDNS
 ./configure-duckdns-secure.sh
-
-# O configurar manualmente
-curl "https://www.duckdns.org/update?domains=pulseexpends.duckdns.org,api.pulseexpends.duckdns.org,pdf.pulseexpends.duckdns.org,status.pulseexpends.duckdns.org&token=\$DUCKDNS_TOKEN&ip=\$(curl -s https://api.ipify.org)"
 ```
 
-### 3. Configurar Actualización Automática
-```bash
-# Configurar cron job seguro
-./setup-duckdns-cron.sh
-```
+### Automated Deployment
+GitHub Actions workflows are available in `.github/workflows/` for:
+- CI/CD pipeline
+- Automated testing
+- Infrastructure deployment
+- Security scanning
 
-### 2. Desplegar con Subdominios
-```bash
-./deploy-subdomains.sh
-```
+## 📝 Documentation
 
-### 3. Verificar Servicios
-```bash
-# Ver estado de todos los servicios
-sudo systemctl status nginx pulseexpends-mcp-server pulseexpends-pdf-parser
+- [Infrastructure Guide](infra/README.md)
+- [Authentication System](services/backend/auth/README.md)
+- [Deployment Guide](infra/ECS-DEPLOYMENT-GUIDE.md)
+- [RDS PostgreSQL Setup](infra/RDS-README.md)
+- [API Documentation](services/backend/README.md)
 
-# Ver logs en tiempo real
-sudo journalctl -fu nginx
-sudo journalctl -fu pulseexpends-mcp-server
-sudo journalctl -fu pulseexpends-pdf-parser
-```
+## 🔐 Security
 
-### 4. Actualización Manual de DNS
-```bash
-# Script de actualización manual
-sudo /usr/local/bin/update-duckdns.sh
-```
+### Environment Variables
+All sensitive configuration is managed through environment variables:
+- Database credentials
+- API keys
+- OAuth credentials
+- Encryption keys
 
-## 📞 Soporte
+### Security Best Practices
+- All secrets are stored in environment variables
+- Database connections use SSL/TLS
+- API endpoints require authentication
+- Regular security updates and patches
 
-Para soporte o preguntas, abre un issue en el repositorio o contacta al equipo de desarrollo.
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+For issues and questions:
+1. Check the [documentation](infra/README.md)
+2. Search existing [issues](https://github.com/dssr1012/PulseExpends/issues)
+3. Create a new issue with detailed information
+
+## 📞 Contact
+
+Project Maintainer: [DS SR](https://github.com/dssr1012)
+
+---
+
+**Note**: This is a monorepo combining infrastructure and application code. For the previous separate repositories, see:
+- Infrastructure: https://github.com/dssr1012/PulseExpends-Infra (archived)
+- Application: https://github.com/dssr1012/PulseExpends (this repository)

@@ -1,0 +1,327 @@
+# ============================================================================
+# Huawei Cloud Credentials
+# ============================================================================
+
+# Required: Your Huawei Cloud credentials
+access_key = "your-huaweicloud-access-key-id"
+secret_key = "your-huaweicloud-secret-access-key"
+project_id = "your-project-id"
+
+# Optional: Agency for cross-account access
+# agency_name = "your-agency-name"
+# agency_domain_name = "your-domain-name"
+
+# ============================================================================
+# Deployment Configuration
+# ============================================================================
+
+# Environment: dev, staging, or prod
+environment = "dev"
+
+# Region: la-south-2 (Santiago, Chile) is recommended
+region = "la-south-2"
+
+# Project name for resource naming
+project_name = "pulseexpends"
+
+# ============================================================================
+# Network Configuration
+# ============================================================================
+
+# VPC CIDR block
+vpc_cidr = "10.0.0.0/16"
+
+# Public subnets (for load balancers, NAT gateways)
+public_subnets = ["10.0.1.0/24", "10.0.2.0/24"]
+
+# Private subnets (for ECS instances, databases)
+private_subnets = ["10.0.101.0/24", "10.0.102.0/24"]
+
+# Enable NAT Gateway for private subnets
+enable_nat_gateway = true
+single_nat_gateway = true
+
+# Enable VPC Flow Logs
+enable_flow_logs = true
+flow_log_bucket = "pulse-expends-flow-logs"
+
+# ============================================================================
+# Compute Configuration
+# ============================================================================
+
+# ECS instance type
+# Options: c6.large.2, c6.xlarge.2, c6.2xlarge.2, c6.4xlarge.2
+ecs_instance_type = "c6.large.2"
+
+# ECS image ID (leave empty for default Ubuntu 20.04)
+ecs_image_id = ""
+
+# SSH key pair name (must exist in Huawei Cloud)
+ecs_key_pair = "pulse-expends-key"
+
+# Number of ECS instances
+ecs_instance_count = 1
+
+# Auto scaling configuration
+enable_auto_scaling = false
+min_size = 1
+max_size = 3
+desired_capacity = 1
+
+# Load balancer configuration
+enable_load_balancer = false
+lb_listener_port = 80
+lb_protocol = "HTTP"
+
+# Application port on ECS instances
+application_port = 8080
+
+# ============================================================================
+# Storage Configuration
+# ============================================================================
+
+# OBS buckets configuration
+obs_buckets = {
+  main = {
+    name          = "pulse-expends-data"
+    storage_class = "STANDARD"
+    versioning    = true
+    encryption    = true
+    lifecycle_rules = [
+      {
+        name    = "temp-files"
+        prefix  = "temp/"
+        enabled = true
+        expiration_days = 7
+      },
+      {
+        name    = "logs"
+        prefix  = "logs/"
+        enabled = true
+        transition_days = 30
+        transition_storage_class = "GLACIER"
+      }
+    ]
+  },
+  documents = {
+    name          = "pulse-expends-documents"
+    storage_class = "STANDARD"
+    versioning    = true
+    encryption    = true
+  }
+}
+
+# OBS encryption and versioning
+obs_encryption_enabled = true
+obs_versioning_enabled = true
+
+# Database configuration (Phase 2)
+enable_database = false
+database_engine = "postgresql"
+database_version = "13"
+database_instance_class = "rds.pg.n1.large.2"
+database_storage = 100
+database_backup_retention = 7
+
+# Redis configuration
+enable_redis = false
+redis_instance_class = "redis.ha.xu1.large.r2.2"
+redis_engine_version = "5.0"
+
+# ============================================================================
+# Monitoring Configuration
+# ============================================================================
+
+# Alert recipients (email addresses)
+alert_recipients = ["admin@example.com"]
+
+# SMN topic ARNs for alerts
+alert_topics = []
+
+# Enable Cloud Eye dashboards
+enable_dashboards = true
+
+# ============================================================================
+# Security Configuration
+# ============================================================================
+
+# IAM users, groups, and policies
+iam_users = [
+  {
+    name        = "pulse-expends-admin"
+    description = "Administrator for PulseExpends"
+    groups      = ["admins"]
+    policies    = ["AdministratorAccess"]
+  },
+  {
+    name        = "pulse-expends-developer"
+    description = "Developer for PulseExpends"
+    groups      = ["developers"]
+    policies    = ["ReadOnlyAccess"]
+  }
+]
+
+iam_groups = [
+  {
+    name        = "admins"
+    description = "Administrators group"
+    policies    = ["AdministratorAccess"]
+  },
+  {
+    name        = "developers"
+    description = "Developers group"
+    policies    = ["ReadOnlyAccess"]
+  }
+]
+
+iam_policies = [
+  {
+    name        = "PulseExpendsReadOnly"
+    description = "Read-only access to PulseExpends resources"
+    policy      = <<EOF
+{
+  "Version": "1.1",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ecs:Describe*",
+        "vpc:Describe*",
+        "obs:List*",
+        "obs:Get*",
+        "rds:Describe*",
+        "dms:Describe*"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+  }
+]
+
+# KMS configuration
+enable_kms = true
+kms_key_alias = "alias/pulse-expends"
+
+# WAF configuration
+enable_waf = false
+waf_policy_name = "pulse-expends-waf"
+
+# Anti-DDoS protection
+enable_antiddos = true
+
+# ============================================================================
+# Application Configuration
+# ============================================================================
+
+# OBS endpoint (default for la-south-2)
+obs_endpoint = "https://obs.la-south-2.myhuaweicloud.com"
+
+# OBS credentials (for user data script)
+obs_access_key = "your-obs-access-key-id"
+obs_secret_key = "your-obs-secret-access-key"
+obs_bucket_name = "pulse-expends"
+
+# Python PDF parser service URL
+python_service_url = "http://localhost:8000"
+
+# JWT secret for authentication
+jwt_secret = "change-this-in-production-secret-key"
+
+# ============================================================================
+# Custom Endpoints (for private cloud or custom regions)
+# ============================================================================
+
+# custom_endpoints = {
+#   ecs = "https://ecs.example.com"
+#   vpc = "https://vpc.example.com"
+#   obs = "https://obs.example.com"
+# }
+
+# ============================================================================
+# Environment-Specific Overrides
+# ============================================================================
+
+# Development environment (default)
+# environment = "dev"
+# ecs_instance_count = 1
+# enable_load_balancer = false
+# enable_database = false
+# enable_redis = false
+# enable_waf = false
+
+# Staging environment
+# environment = "staging"
+# ecs_instance_count = 2
+# enable_load_balancer = true
+# enable_database = true
+# enable_redis = true
+# enable_waf = true
+
+# Production environment
+# environment = "prod"
+# ecs_instance_count = 3
+# enable_auto_scaling = true
+# min_size = 2
+# max_size = 10
+# desired_capacity = 3
+# enable_load_balancer = true
+# enable_database = true
+# database_instance_class = "rds.pg.n1.xlarge.2"
+# database_storage = 500
+# database_backup_retention = 30
+# enable_redis = true
+# redis_instance_class = "redis.ha.xu1.xlarge.r2.2"
+# enable_waf = true
+# alert_recipients = ["alerts@company.com", "ops@company.com"]
+
+# ============================================================================
+# Cost Optimization
+# ============================================================================
+
+# For development/testing, consider:
+# - Using smaller instance types
+# - Disabling auto-scaling
+# - Using single NAT Gateway
+# - Reducing database storage
+# - Disabling WAF and Redis
+
+# For production, consider:
+# - Enabling auto-scaling
+# - Using multiple availability zones
+# - Enabling all security features
+# - Setting appropriate backup retention
+# - Configuring monitoring and alerts
+
+# ============================================================================
+# Notes
+# ============================================================================
+
+# 1. Before applying:
+#    - Create SSH key pair in Huawei Cloud console
+#    - Upload your public key and name it "pulse-expends-key"
+#    - Or update ecs_key_pair to use existing key
+
+# 2. For production:
+#    - Generate strong passwords for database and Redis
+#    - Store secrets in Huawei Cloud KMS or secret manager
+#    - Enable Cloud Trail for auditing
+#    - Configure backup and disaster recovery
+
+# 3. Cost estimation:
+#    - Development: ~$50-100/month
+#    - Staging: ~$200-500/month
+#    - Production: ~$1000-5000/month (scales with users)
+
+# 4. Security:
+#    - Never commit actual secrets to version control
+#    - Use environment variables or secret manager
+#    - Regularly rotate credentials
+#    - Enable MFA for all IAM users
+
+# 5. Monitoring:
+#    - Set up Cloud Eye alerts for critical metrics
+#    - Monitor costs with Cost Center
+#    - Set up log aggregation
+#    - Create dashboards for key metrics

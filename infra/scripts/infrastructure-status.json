@@ -1,0 +1,94 @@
+{
+  "timestamp": "2026-05-19T20:27:42.710976",
+  "public_ip": "182.160.24.205",
+  "domain": "pulseexpends.duckdns.org",
+  "ports": {
+    "SSH": false,
+    "HTTP": false,
+    "HTTPS": false,
+    "MCP Server": false,
+    "PDF Parser": false
+  },
+  "http_services": {
+    "Web Server": false,
+    "MCP Server": false,
+    "PDF Parser": false
+  },
+  "terraform_outputs": {
+    "application_url": {
+      "sensitive": false,
+      "type": "string",
+      "value": "http://pulseexpends.duckdns.org"
+    },
+    "data_bucket_name": {
+      "sensitive": false,
+      "type": "string",
+      "value": "pulseexpends-data-dev-pulse-afd05cc1"
+    },
+    "documents_bucket_name": {
+      "sensitive": false,
+      "type": "string",
+      "value": "pulseexpends-documents-dev-pulse-afd05cc1"
+    },
+    "domain_ip_address": {
+      "sensitive": false,
+      "type": "string",
+      "value": "182.160.24.205"
+    },
+    "ecs_instance_id": {
+      "sensitive": false,
+      "type": "string",
+      "value": "43cc2fdf-7d81-40d3-a8c2-191aca830ec0"
+    },
+    "ecs_private_ip": {
+      "sensitive": false,
+      "type": "string",
+      "value": "10.0.1.225"
+    },
+    "ecs_public_ip": {
+      "sensitive": false,
+      "type": "string",
+      "value": "182.160.24.205"
+    },
+    "enterprise_project_id": {
+      "sensitive": false,
+      "type": "string",
+      "value": "9d731c5b-e130-430b-b88d-66f312596926"
+    },
+    "kms_key_id": {
+      "sensitive": false,
+      "type": "string",
+      "value": "2a27ce80-f6a2-47a6-a191-47f8ac07ccd0"
+    },
+    "mcp_server_url": {
+      "sensitive": false,
+      "type": "string",
+      "value": "http://pulseexpends.duckdns.org:8080"
+    },
+    "pdf_parser_url": {
+      "sensitive": false,
+      "type": "string",
+      "value": "http://pulseexpends.duckdns.org:8000"
+    },
+    "public_subnet_id": {
+      "sensitive": false,
+      "type": "string",
+      "value": "3e47e3e3-657d-4c71-a6ab-a756873a526b"
+    },
+    "security_group_id": {
+      "sensitive": false,
+      "type": "string",
+      "value": "b9ad7aff-0e54-4351-8428-eeb1e63e7343"
+    },
+    "ssh_connection_command": {
+      "sensitive": false,
+      "type": "string",
+      "value": "ssh -i pulse-expends-key.pem ubuntu@182.160.24.205"
+    },
+    "vpc_id": {
+      "sensitive": false,
+      "type": "string",
+      "value": "9be1c291-10b6-4029-9b2f-cfb345cb3a3b"
+    }
+  }
+}

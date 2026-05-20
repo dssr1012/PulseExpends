@@ -1,0 +1,18 @@
+[Unit]
+Description=PulseExpends PDF Parser (Placeholder)
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt
+Environment="PATH=/opt/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+ExecStart=/opt/venv/bin/python3 /opt/pdf-parser-placeholder.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=pulseexpends-pdf-parser
+
+[Install]
+WantedBy=multi-user.target
