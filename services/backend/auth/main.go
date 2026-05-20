@@ -235,15 +235,15 @@ func main() {
 		IdleTimeout:  120 * time.Second,
 	}
 
-	log.Printf("🚀 Servidor de autenticación iniciado en http://%s:%s", host, port)
+	log.Printf("🚀 Authentication server started at http://%s:%s", host, port)
 	log.Printf("📊 Health check: http://%s:%s/api/health", host, port)
-	log.Printf("🔐 Endpoints disponibles:")
-	log.Printf("   POST /api/auth/register - Registrar usuario")
-	log.Printf("   POST /api/auth/login - Iniciar sesión")
-	log.Printf("   GET  /api/auth/google - Login con Google")
-	log.Printf("   GET  /api/auth/profile - Perfil de usuario (protegido)")
-	log.Printf("   GET  /api/circles - Listar círculos (protegido)")
-	log.Printf("   POST /api/circles - Crear círculo (protegido)")
+	log.Printf("🔐 Available endpoints:")
+	log.Printf("   POST /api/auth/register - Register user")
+	log.Printf("   POST /api/auth/login - Login")
+	log.Printf("   GET  /api/auth/google - Google OAuth login")
+	log.Printf("   GET  /api/auth/profile - User profile (protected)")
+	log.Printf("   GET  /api/circles - List circles (protected)")
+	log.Printf("   POST /api/circles - Create circle (protected)")
 
 	if err := server.ListenAndServe(); err != nil {
 		log.Fatalf("Failed to start server: %v", err)

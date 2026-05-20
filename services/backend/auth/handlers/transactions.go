@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
 
@@ -20,11 +20,11 @@ func NewTransactionHandler(db *gorm.DB) *TransactionHandler {
 	return &TransactionHandler{db: db}
 }
 
-// GetTransactions obtiene las transacciones del usuario
+// GetTransactions retrieves the authenticated user's transactions with optional filters
 func (h *TransactionHandler) GetTransactions(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*models.User)
 
-	// Parsear parámetros de consulta
+	// Parse query parameters
 	query := r.URL.Query()
 	circleID := query.Get("circleId")
 	startDate := query.Get("startDate")
@@ -34,15 +34,15 @@ func (h *TransactionHandler) GetTransactions(w http.ResponseWriter, r *http.Requ
 	limit := query.Get("limit")
 	offset := query.Get("offset")
 
-	// Construir consulta base
-	dbQuery := h.db.Model(&models.Transaction{}).Where("user_id = ? AND is_active = ?", user.ID, true)
+	// Build base query (GORM soft-delete filters deleted_at IS NULL automatically)
+	dbQuery := h.db.Model(&models.Transaction{}).Where("user_id = ?", user.ID)
 
-	// Filtrar por círculo si se especifica
+	// Filter by circle if specified
 	if circleID != "" {
 		dbQuery = dbQuery.Where("circle_id = ?", circleID)
 	}
 
-	// Filtrar por fecha
+	// Filter by date range
 	if startDate != "" {
 		start, err := time.Parse(time.RFC3339, startDate)
 		if err == nil {
@@ -56,17 +56,17 @@ func (h *TransactionHandler) GetTransactions(w http.ResponseWriter, r *http.Requ
 		}
 	}
 
-	// Filtrar por categoría
+	// Filter by category
 	if category != "" {
 		dbQuery = dbQuery.Where("category = ?", category)
 	}
 
-	// Filtrar por tipo
+	// Filter by type
 	if transactionType != "" {
 		dbQuery = dbQuery.Where("type = ?", transactionType)
 	}
 
-	// Aplicar paginación
+	// Apply pagination
 	if limit != "" {
 		dbQuery = dbQuery.Limit(parseInt(limit, 50))
 	}
@@ -74,7 +74,7 @@ func (h *TransactionHandler) GetTransactions(w http.ResponseWriter, r *http.Requ
 		dbQuery = dbQuery.Offset(parseInt(offset, 0))
 	}
 
-	// Ordenar por fecha descendente
+	// Sort by date descending
 	dbQuery = dbQuery.Order("date DESC")
 
 	var transactions []models.Transaction
@@ -84,31 +84,32 @@ func (h *TransactionHandler) GetTransactions(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	// Obtener total para paginación
+	// Get total count for pagination
 	var total int64
-	h.db.Model(&models.Transaction{}).Where("user_id = ? AND is_active = ?", user.ID, true).Count(&total)
+	h.db.Model(&models.Transaction{}).Where("user_id = ?", user.ID).Count(&total)
 
 	response := map[string]interface{}{
-		"success": true,
+		"success":      true,
 		"transactions": transactions,
-		"total": total,
-		"limit": parseInt(limit, 50),
-		"offset": parseInt(offset, 0),
+		"total":        total,
+		"limit":        parseInt(limit, 50),
+		"offset":       parseInt(offset, 0),
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
 
-// GetTransaction obtiene una transacción específica
+// GetTransaction retrieves a specific transaction by ID
 func (h *TransactionHandler) GetTransaction(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*models.User)
 	vars := mux.Vars(r)
 	transactionID := vars["id"]
 
 	var transaction models.Transaction
-	err := h.db.Where("id = ? AND user_id = ? AND is_active = ?", transactionID, user.ID, true).
-		Preload("Splits").
+	err := h.db.Where("id = ? AND user_id = ?", transactionID, user.ID).
+		Preload("Attachments").
+		Preload("Comments").
 		First(&transaction).Error
 
 	if err != nil {
@@ -116,11 +117,11 @@ func (h *TransactionHandler) GetTransaction(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// Si la transacción pertenece a un círculo, verificar permisos
-	if transaction.CircleID != uuid.Nil {
+	// If the transaction belongs to a circle, verify membership
+	if transaction.CircleID != nil && *transaction.CircleID != "" {
 		var member models.CircleMember
-		err = h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?", 
-			transaction.CircleID, user.ID, true).First(&member).Error
+		err = h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?",
+			*transaction.CircleID, user.ID, true).First(&member).Error
 		if err != nil {
 			http.Error(w, "Access denied to circle transaction", http.StatusForbidden)
 			return
@@ -128,7 +129,7 @@ func (h *TransactionHandler) GetTransaction(w http.ResponseWriter, r *http.Reque
 	}
 
 	response := map[string]interface{}{
-		"success": true,
+		"success":     true,
 		"transaction": transaction,
 	}
 
@@ -136,33 +137,17 @@ func (h *TransactionHandler) GetTransaction(w http.ResponseWriter, r *http.Reque
 	json.NewEncoder(w).Encode(response)
 }
 
-// CreateTransaction crea una nueva transacción
+// CreateTransaction creates a new transaction
 func (h *TransactionHandler) CreateTransaction(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*models.User)
 
-	var req struct {
-		CircleID      uuid.UUID   `json:"circleId"`
-		Amount        float64     `json:"amount"`
-		Currency      string      `json:"currency"`
-		Category      string      `json:"category"`
-		Description   string      `json:"description"`
-		Date          time.Time   `json:"date"`
-		Type          string      `json:"type"` // income, expense, transfer
-		PaymentMethod string      `json:"paymentMethod"`
-		Location      string      `json:"location"`
-		Tags          []string    `json:"tags"`
-		ReceiptURL    string      `json:"receiptUrl"`
-		IsRecurring   bool        `json:"isRecurring"`
-		RecurringID   uuid.UUID   `json:"recurringId"`
-		Notes         string      `json:"notes"`
-	}
-
+	var req models.CreateTransactionRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	// Validar campos requeridos
+	// Validate required fields
 	if req.Amount <= 0 {
 		http.Error(w, "Amount must be positive", http.StatusBadRequest)
 		return
@@ -176,50 +161,50 @@ func (h *TransactionHandler) CreateTransaction(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// Validar tipo
+	// Validate transaction type
 	validTypes := map[string]bool{"income": true, "expense": true, "transfer": true}
 	if !validTypes[req.Type] {
 		http.Error(w, "Invalid transaction type", http.StatusBadRequest)
 		return
 	}
 
-	// Si es transacción de círculo, verificar permisos
-	if req.CircleID != uuid.Nil {
+	// If circle transaction, verify membership
+	if req.CircleID != nil && *req.CircleID != "" {
 		var member models.CircleMember
-		err := h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?", 
-			req.CircleID, user.ID, true).First(&member).Error
+		err := h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?",
+			*req.CircleID, user.ID, true).First(&member).Error
 		if err != nil {
 			http.Error(w, "You are not a member of this circle", http.StatusForbidden)
 			return
 		}
 	}
 
-	// Crear transacción
+	// Create transaction
 	transaction := models.Transaction{
-		UserID:       user.ID,
-		CircleID:     req.CircleID,
-		Amount:       req.Amount,
-		Currency:     req.Currency,
-		Category:     req.Category,
-		Description:  req.Description,
-		Date:         req.Date,
-		Type:         req.Type,
+		UserID:        user.ID,
+		CircleID:      req.CircleID,
+		Amount:        req.Amount,
+		Currency:      req.Currency,
+		Category:      req.Category,
+		Description:   req.Description,
+		Date:          req.Date,
+		Type:          req.Type,
 		PaymentMethod: req.PaymentMethod,
-		Location:     req.Location,
-		Tags:         models.JSONB{"tags": req.Tags},
-		ReceiptURL:   req.ReceiptURL,
-		IsRecurring:  req.IsRecurring,
-		RecurringID:  req.RecurringID,
-		Status:       "pending", // Por defecto pendiente para transacciones de círculo
-		Notes:        req.Notes,
-		Metadata:     models.JSONB{},
+		Location:      req.Location,
+		Tags:          req.Tags,
+		ReceiptURL:    req.ReceiptURL,
+		IsRecurring:   req.IsRecurring,
+		Status:        "pending", // Default pending for circle transactions
+		Notes:         req.Notes,
+		Metadata:      req.Metadata,
 	}
 
-	// Si no es transacción de círculo, aprobar automáticamente
-	if req.CircleID == uuid.Nil {
+	// Auto-approve non-circle transactions
+	if req.CircleID == nil || *req.CircleID == "" {
 		transaction.Status = "approved"
-		transaction.ApprovedBy = user.ID
-		transaction.ApprovedAt = time.Now()
+		transaction.ApprovedBy = &user.ID
+		now := time.Now()
+		transaction.ApprovedAt = &now
 	}
 
 	if err := h.db.Create(&transaction).Error; err != nil {
@@ -228,8 +213,8 @@ func (h *TransactionHandler) CreateTransaction(w http.ResponseWriter, r *http.Re
 	}
 
 	response := map[string]interface{}{
-		"success": true,
-		"message": "Transaction created successfully",
+		"success":     true,
+		"message":     "Transaction created successfully",
 		"transaction": transaction,
 	}
 
@@ -237,15 +222,15 @@ func (h *TransactionHandler) CreateTransaction(w http.ResponseWriter, r *http.Re
 	json.NewEncoder(w).Encode(response)
 }
 
-// UpdateTransaction actualiza una transacción existente
+// UpdateTransaction updates an existing transaction
 func (h *TransactionHandler) UpdateTransaction(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*models.User)
 	vars := mux.Vars(r)
 	transactionID := vars["id"]
 
-	// Obtener transacción existente
+	// Fetch existing transaction
 	var transaction models.Transaction
-	err := h.db.Where("id = ? AND user_id = ? AND is_active = ?", transactionID, user.ID, true).
+	err := h.db.Where("id = ? AND user_id = ?", transactionID, user.ID).
 		First(&transaction).Error
 
 	if err != nil {
@@ -253,37 +238,24 @@ func (h *TransactionHandler) UpdateTransaction(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// Verificar permisos para transacciones de círculo
-	if transaction.CircleID != uuid.Nil {
+	// Check permissions for circle transactions
+	if transaction.CircleID != nil && *transaction.CircleID != "" {
 		var member models.CircleMember
-		err = h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?", 
-			transaction.CircleID, user.ID, true).First(&member).Error
+		err = h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?",
+			*transaction.CircleID, user.ID, true).First(&member).Error
 		if err != nil || (member.Role != "admin" && member.Role != "owner") {
 			http.Error(w, "Insufficient permissions to update circle transaction", http.StatusForbidden)
 			return
 		}
 	}
 
-	var req struct {
-		Amount        *float64   `json:"amount"`
-		Currency      string     `json:"currency"`
-		Category      string     `json:"category"`
-		Description   string     `json:"description"`
-		Date          *time.Time `json:"date"`
-		Type          string     `json:"type"`
-		PaymentMethod string     `json:"paymentMethod"`
-		Location      string     `json:"location"`
-		Tags          []string   `json:"tags"`
-		ReceiptURL    string     `json:"receiptUrl"`
-		Notes         string     `json:"notes"`
-	}
-
+	var req models.UpdateTransactionRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	// Actualizar campos
+	// Apply updates
 	if req.Amount != nil && *req.Amount > 0 {
 		transaction.Amount = *req.Amount
 	}
@@ -309,7 +281,7 @@ func (h *TransactionHandler) UpdateTransaction(w http.ResponseWriter, r *http.Re
 		transaction.Location = req.Location
 	}
 	if req.Tags != nil {
-		transaction.Tags = models.JSONB{"tags": req.Tags}
+		transaction.Tags = req.Tags
 	}
 	if req.ReceiptURL != "" {
 		transaction.ReceiptURL = req.ReceiptURL
@@ -324,8 +296,8 @@ func (h *TransactionHandler) UpdateTransaction(w http.ResponseWriter, r *http.Re
 	}
 
 	response := map[string]interface{}{
-		"success": true,
-		"message": "Transaction updated successfully",
+		"success":     true,
+		"message":     "Transaction updated successfully",
 		"transaction": transaction,
 	}
 
@@ -333,15 +305,15 @@ func (h *TransactionHandler) UpdateTransaction(w http.ResponseWriter, r *http.Re
 	json.NewEncoder(w).Encode(response)
 }
 
-// DeleteTransaction elimina una transacción (soft delete)
+// DeleteTransaction soft-deletes a transaction (GORM sets deleted_at)
 func (h *TransactionHandler) DeleteTransaction(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*models.User)
 	vars := mux.Vars(r)
 	transactionID := vars["id"]
 
-	// Obtener transacción
+	// Fetch transaction
 	var transaction models.Transaction
-	err := h.db.Where("id = ? AND user_id = ? AND is_active = ?", transactionID, user.ID, true).
+	err := h.db.Where("id = ? AND user_id = ?", transactionID, user.ID).
 		First(&transaction).Error
 
 	if err != nil {
@@ -349,19 +321,19 @@ func (h *TransactionHandler) DeleteTransaction(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// Verificar permisos para transacciones de círculo
-	if transaction.CircleID != uuid.Nil {
+	// Check permissions for circle transactions
+	if transaction.CircleID != nil && *transaction.CircleID != "" {
 		var member models.CircleMember
-		err = h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?", 
-			transaction.CircleID, user.ID, true).First(&member).Error
+		err = h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?",
+			*transaction.CircleID, user.ID, true).First(&member).Error
 		if err != nil || (member.Role != "admin" && member.Role != "owner") {
 			http.Error(w, "Insufficient permissions to delete circle transaction", http.StatusForbidden)
 			return
 		}
 	}
 
-	// Soft delete
-	if err := h.db.Model(&transaction).Update("is_active", false).Error; err != nil {
+	// GORM soft delete (sets deleted_at timestamp)
+	if err := h.db.Delete(&transaction).Error; err != nil {
 		http.Error(w, "Failed to delete transaction", http.StatusInternalServerError)
 		return
 	}
@@ -375,13 +347,13 @@ func (h *TransactionHandler) DeleteTransaction(w http.ResponseWriter, r *http.Re
 	json.NewEncoder(w).Encode(response)
 }
 
-// GetCircleTransactions obtiene transacciones de un círculo
+// GetCircleTransactions retrieves all transactions for a circle
 func (h *TransactionHandler) GetCircleTransactions(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*models.User)
 	vars := mux.Vars(r)
 	circleID := vars["circleId"]
 
-	// Verificar que el usuario sea miembro del círculo
+	// Verify circle membership
 	var member models.CircleMember
 	err := h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?", circleID, user.ID, true).
 		First(&member).Error
@@ -391,7 +363,7 @@ func (h *TransactionHandler) GetCircleTransactions(w http.ResponseWriter, r *htt
 		return
 	}
 
-	// Parsear parámetros de consulta
+	// Parse query parameters
 	query := r.URL.Query()
 	startDate := query.Get("startDate")
 	endDate := query.Get("endDate")
@@ -401,10 +373,10 @@ func (h *TransactionHandler) GetCircleTransactions(w http.ResponseWriter, r *htt
 	limit := query.Get("limit")
 	offset := query.Get("offset")
 
-	// Construir consulta
-	dbQuery := h.db.Where("circle_id = ? AND is_active = ?", circleID, true)
+	// Build query
+	dbQuery := h.db.Where("circle_id = ?", circleID)
 
-	// Filtrar por fecha
+	// Filter by date range
 	if startDate != "" {
 		start, err := time.Parse(time.RFC3339, startDate)
 		if err == nil {
@@ -418,22 +390,22 @@ func (h *TransactionHandler) GetCircleTransactions(w http.ResponseWriter, r *htt
 		}
 	}
 
-	// Filtrar por categoría
+	// Filter by category
 	if category != "" {
 		dbQuery = dbQuery.Where("category = ?", category)
 	}
 
-	// Filtrar por tipo
+	// Filter by type
 	if transactionType != "" {
 		dbQuery = dbQuery.Where("type = ?", transactionType)
 	}
 
-	// Filtrar por estado
+	// Filter by status
 	if status != "" {
 		dbQuery = dbQuery.Where("status = ?", status)
 	}
 
-	// Aplicar paginación
+	// Apply pagination
 	if limit != "" {
 		dbQuery = dbQuery.Limit(parseInt(limit, 50))
 	}
@@ -441,7 +413,7 @@ func (h *TransactionHandler) GetCircleTransactions(w http.ResponseWriter, r *htt
 		dbQuery = dbQuery.Offset(parseInt(offset, 0))
 	}
 
-	// Ordenar por fecha descendente
+	// Sort by date descending
 	dbQuery = dbQuery.Order("date DESC")
 
 	var transactions []models.Transaction
@@ -451,31 +423,31 @@ func (h *TransactionHandler) GetCircleTransactions(w http.ResponseWriter, r *htt
 		return
 	}
 
-	// Obtener total para paginación
+	// Get total count for pagination
 	var total int64
-	h.db.Model(&models.Transaction{}).Where("circle_id = ? AND is_active = ?", circleID, true).Count(&total)
+	h.db.Model(&models.Transaction{}).Where("circle_id = ?", circleID).Count(&total)
 
 	response := map[string]interface{}{
-		"success": true,
+		"success":      true,
 		"transactions": transactions,
-		"total": total,
-		"limit": parseInt(limit, 50),
-		"offset": parseInt(offset, 0),
+		"total":        total,
+		"limit":        parseInt(limit, 50),
+		"offset":       parseInt(offset, 0),
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
 
-// SplitTransaction divide una transacción entre múltiples usuarios
+// SplitTransaction divides a transaction among multiple users
 func (h *TransactionHandler) SplitTransaction(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*models.User)
 	vars := mux.Vars(r)
 	transactionID := vars["id"]
 
-	// Obtener transacción
+	// Fetch transaction
 	var transaction models.Transaction
-	err := h.db.Where("id = ? AND user_id = ? AND is_active = ?", transactionID, user.ID, true).
+	err := h.db.Where("id = ? AND user_id = ?", transactionID, user.ID).
 		First(&transaction).Error
 
 	if err != nil {
@@ -483,26 +455,19 @@ func (h *TransactionHandler) SplitTransaction(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// Verificar que sea transacción de círculo
-	if transaction.CircleID == uuid.Nil {
+	// Only circle transactions can be split
+	if transaction.CircleID == nil || *transaction.CircleID == "" {
 		http.Error(w, "Only circle transactions can be split", http.StatusBadRequest)
 		return
 	}
 
-	var req struct {
-		Splits []struct {
-			UserID uuid.UUID `json:"userId"`
-			Amount float64   `json:"amount"`
-			Notes  string    `json:"notes"`
-		} `json:"splits"`
-	}
-
+	var req models.CreateSplitRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	// Validar splits
+	// Validate split amounts
 	totalAmount := 0.0
 	for _, split := range req.Splits {
 		if split.Amount <= 0 {
@@ -517,15 +482,13 @@ func (h *TransactionHandler) SplitTransaction(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// Crear splits
+	// Create splits
 	for _, splitReq := range req.Splits {
-		split := models.TransactionSplit{
+		split := models.SplitTransaction{
 			TransactionID: transaction.ID,
 			UserID:        splitReq.UserID,
 			Amount:        splitReq.Amount,
-			Currency:      transaction.Currency,
-			Status:        "pending",
-			Notes:         splitReq.Notes,
+			Percentage:    splitReq.Percentage,
 		}
 
 		if err := h.db.Create(&split).Error; err != nil {
@@ -543,42 +506,42 @@ func (h *TransactionHandler) SplitTransaction(w http.ResponseWriter, r *http.Req
 	json.NewEncoder(w).Encode(response)
 }
 
-// ApproveTransaction aprueba una transacción de círculo
+// ApproveTransaction approves a pending circle transaction
 func (h *TransactionHandler) ApproveTransaction(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*models.User)
 	vars := mux.Vars(r)
 	transactionID := vars["id"]
 
-	// Obtener transacción
+	// Fetch transaction
 	var transaction models.Transaction
-	err := h.db.Where("id = ? AND is_active = ?", transactionID, true).
-		First(&transaction).Error
+	err := h.db.Where("id = ?", transactionID).First(&transaction).Error
 
 	if err != nil {
 		http.Error(w, "Transaction not found", http.StatusNotFound)
 		return
 	}
 
-	// Verificar que sea transacción de círculo
-	if transaction.CircleID == uuid.Nil {
+	// Only circle transactions can be approved
+	if transaction.CircleID == nil || *transaction.CircleID == "" {
 		http.Error(w, "Only circle transactions can be approved", http.StatusBadRequest)
 		return
 	}
 
-	// Verificar permisos (solo admin/owner puede aprobar)
+	// Verify admin/owner permissions
 	var member models.CircleMember
-	err = h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?", 
-		transaction.CircleID, user.ID, true).First(&member).Error
+	err = h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?",
+		*transaction.CircleID, user.ID, true).First(&member).Error
 
 	if err != nil || (member.Role != "admin" && member.Role != "owner") {
 		http.Error(w, "Insufficient permissions to approve transaction", http.StatusForbidden)
 		return
 	}
 
-	// Aprobar transacción
+	// Approve transaction
 	transaction.Status = "approved"
-	transaction.ApprovedBy = user.ID
-	transaction.ApprovedAt = time.Now()
+	transaction.ApprovedBy = &user.ID
+	now := time.Now()
+	transaction.ApprovedAt = &now
 
 	if err := h.db.Save(&transaction).Error; err != nil {
 		http.Error(w, "Failed to approve transaction", http.StatusInternalServerError)
@@ -586,8 +549,8 @@ func (h *TransactionHandler) ApproveTransaction(w http.ResponseWriter, r *http.R
 	}
 
 	response := map[string]interface{}{
-		"success": true,
-		"message": "Transaction approved successfully",
+		"success":     true,
+		"message":     "Transaction approved successfully",
 		"transaction": transaction,
 	}
 
@@ -595,42 +558,42 @@ func (h *TransactionHandler) ApproveTransaction(w http.ResponseWriter, r *http.R
 	json.NewEncoder(w).Encode(response)
 }
 
-// RejectTransaction rechaza una transacción de círculo
+// RejectTransaction rejects a pending circle transaction
 func (h *TransactionHandler) RejectTransaction(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*models.User)
 	vars := mux.Vars(r)
 	transactionID := vars["id"]
 
-	// Obtener transacción
+	// Fetch transaction
 	var transaction models.Transaction
-	err := h.db.Where("id = ? AND is_active = ?", transactionID, true).
-		First(&transaction).Error
+	err := h.db.Where("id = ?", transactionID).First(&transaction).Error
 
 	if err != nil {
 		http.Error(w, "Transaction not found", http.StatusNotFound)
 		return
 	}
 
-	// Verificar que sea transacción de círculo
-	if transaction.CircleID == uuid.Nil {
+	// Only circle transactions can be rejected
+	if transaction.CircleID == nil || *transaction.CircleID == "" {
 		http.Error(w, "Only circle transactions can be rejected", http.StatusBadRequest)
 		return
 	}
 
-	// Verificar permisos (solo admin/owner puede rechazar)
+	// Verify admin/owner permissions
 	var member models.CircleMember
-	err = h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?", 
-		transaction.CircleID, user.ID, true).First(&member).Error
+	err = h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?",
+		*transaction.CircleID, user.ID, true).First(&member).Error
 
 	if err != nil || (member.Role != "admin" && member.Role != "owner") {
 		http.Error(w, "Insufficient permissions to reject transaction", http.StatusForbidden)
 		return
 	}
 
-	// Rechazar transacción
+	// Reject transaction
 	transaction.Status = "rejected"
-	transaction.ApprovedBy = user.ID
-	transaction.ApprovedAt = time.Now()
+	transaction.ApprovedBy = &user.ID
+	now := time.Now()
+	transaction.ApprovedAt = &now
 
 	if err := h.db.Save(&transaction).Error; err != nil {
 		http.Error(w, "Failed to reject transaction", http.StatusInternalServerError)
@@ -638,8 +601,8 @@ func (h *TransactionHandler) RejectTransaction(w http.ResponseWriter, r *http.Re
 	}
 
 	response := map[string]interface{}{
-		"success": true,
-		"message": "Transaction rejected successfully",
+		"success":     true,
+		"message":     "Transaction rejected successfully",
 		"transaction": transaction,
 	}
 
@@ -647,58 +610,57 @@ func (h *TransactionHandler) RejectTransaction(w http.ResponseWriter, r *http.Re
 	json.NewEncoder(w).Encode(response)
 }
 
-// GetUserStats obtiene estadísticas del usuario
+// GetUserStats returns aggregated statistics for the authenticated user
 func (h *TransactionHandler) GetUserStats(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*models.User)
 
-	// Obtener estadísticas básicas
 	var stats struct {
-		TotalIncome    float64 `json:"totalIncome"`
-		TotalExpenses  float64 `json:"totalExpenses"`
-		TotalTransfers float64 `json:"totalTransfers"`
-		Balance        float64 `json:"balance"`
-		TransactionCount int64  `json:"transactionCount"`
+		TotalIncome      float64 `json:"totalIncome"`
+		TotalExpenses    float64 `json:"totalExpenses"`
+		TotalTransfers   float64 `json:"totalTransfers"`
+		Balance          float64 `json:"balance"`
+		TransactionCount int64   `json:"transactionCount"`
 	}
 
-	// Calcular ingresos
+	// Calculate income
 	h.db.Model(&models.Transaction{}).
-		Where("user_id = ? AND type = ? AND is_active = ?", user.ID, "income", true).
+		Where("user_id = ? AND type = ?", user.ID, "income").
 		Select("COALESCE(SUM(amount), 0)").Scan(&stats.TotalIncome)
 
-	// Calcular gastos
+	// Calculate expenses
 	h.db.Model(&models.Transaction{}).
-		Where("user_id = ? AND type = ? AND is_active = ?", user.ID, "expense", true).
+		Where("user_id = ? AND type = ?", user.ID, "expense").
 		Select("COALESCE(SUM(amount), 0)").Scan(&stats.TotalExpenses)
 
-	// Calcular transferencias
+	// Calculate transfers
 	h.db.Model(&models.Transaction{}).
-		Where("user_id = ? AND type = ? AND is_active = ?", user.ID, "transfer", true).
+		Where("user_id = ? AND type = ?", user.ID, "transfer").
 		Select("COALESCE(SUM(amount), 0)").Scan(&stats.TotalTransfers)
 
-	// Contar transacciones
+	// Count transactions
 	h.db.Model(&models.Transaction{}).
-		Where("user_id = ? AND is_active = ?", user.ID, true).
+		Where("user_id = ?", user.ID).
 		Count(&stats.TransactionCount)
 
-	// Calcular balance
+	// Calculate balance
 	stats.Balance = stats.TotalIncome - stats.TotalExpenses
 
 	response := map[string]interface{}{
 		"success": true,
-		"stats": stats,
+		"stats":   stats,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
 
-// GetCircleStats obtiene estadísticas de un círculo
+// GetCircleStats returns aggregated statistics for a circle
 func (h *TransactionHandler) GetCircleStats(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*models.User)
 	vars := mux.Vars(r)
 	circleID := vars["circleId"]
 
-	// Verificar que el usuario sea miembro del círculo
+	// Verify circle membership
 	var member models.CircleMember
 	err := h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?", circleID, user.ID, true).
 		First(&member).Error
@@ -708,57 +670,198 @@ func (h *TransactionHandler) GetCircleStats(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// Obtener estadísticas del círculo
 	var stats struct {
-		TotalIncome    float64 `json:"totalIncome"`
-		TotalExpenses  float64 `json:"totalExpenses"`
-		TotalTransfers float64 `json:"totalTransfers"`
-		Balance        float64 `json:"balance"`
-		TransactionCount int64  `json:"transactionCount"`
-		MemberCount    int64   `json:"memberCount"`
+		TotalIncome      float64 `json:"totalIncome"`
+		TotalExpenses    float64 `json:"totalExpenses"`
+		TotalTransfers   float64 `json:"totalTransfers"`
+		Balance          float64 `json:"balance"`
+		TransactionCount int64   `json:"transactionCount"`
+		MemberCount      int64   `json:"memberCount"`
 	}
 
-	// Calcular ingresos
+	// Calculate income (only approved)
 	h.db.Model(&models.Transaction{}).
-		Where("circle_id = ? AND type = ? AND is_active = ? AND status = ?", 
-			circleID, "income", true, "approved").
+		Where("circle_id = ? AND type = ? AND status = ?", circleID, "income", "approved").
 		Select("COALESCE(SUM(amount), 0)").Scan(&stats.TotalIncome)
 
-	// Calcular gastos
+	// Calculate expenses (only approved)
 	h.db.Model(&models.Transaction{}).
-		Where("circle_id = ? AND type = ? AND is_active = ? AND status = ?", 
-			circleID, "expense", true, "approved").
+		Where("circle_id = ? AND type = ? AND status = ?", circleID, "expense", "approved").
 		Select("COALESCE(SUM(amount), 0)").Scan(&stats.TotalExpenses)
 
-	// Calcular transferencias
+	// Calculate transfers (only approved)
 	h.db.Model(&models.Transaction{}).
-		Where("circle_id = ? AND type = ? AND is_active = ? AND status = ?", 
-			circleID, "transfer", true, "approved").
+		Where("circle_id = ? AND type = ? AND status = ?", circleID, "transfer", "approved").
 		Select("COALESCE(SUM(amount), 0)").Scan(&stats.TotalTransfers)
 
-	// Contar transacciones
+	// Count transactions (only approved)
 	h.db.Model(&models.Transaction{}).
-		Where("circle_id = ? AND is_active = ? AND status = ?", circleID, true, "approved").
+		Where("circle_id = ? AND status = ?", circleID, "approved").
 		Count(&stats.TransactionCount)
 
-	// Contar miembros
+	// Count active members
 	h.db.Model(&models.CircleMember{}).
 		Where("circle_id = ? AND is_active = ?", circleID, true).
 		Count(&stats.MemberCount)
 
-	// Calcular balance
+	// Calculate balance
 	stats.Balance = stats.TotalIncome - stats.TotalExpenses
 
 	response := map[string]interface{}{
 		"success": true,
-		"stats": stats,
+		"stats":   stats,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
 
-// Helper function para parsear enteros
+// GetMonthlyStats returns monthly spending breakdown for dashboard charts
+func (h *TransactionHandler) GetMonthlyStats(w http.ResponseWriter, r *http.Request) {
+	user := r.Context().Value("user").(*models.User)
+
+	query := r.URL.Query()
+	year := query.Get("year")
+	circleID := query.Get("circleId")
+
+	if year == "" {
+		year = fmt.Sprintf("%d", time.Now().Year())
+	}
+
+	type MonthlyBreakdown struct {
+		Month          string  `json:"month"`
+		TotalIncome    float64 `json:"totalIncome"`
+		TotalExpenses  float64 `json:"totalExpenses"`
+		TotalTransfers float64 `json:"totalTransfers"`
+	}
+
+	var breakdown []MonthlyBreakdown
+
+	baseQuery := h.db.Model(&models.Transaction{}).
+		Where("user_id = ? AND EXTRACT(YEAR FROM date) = ?", user.ID, year)
+
+	if circleID != "" {
+		// Verify membership
+		var member models.CircleMember
+		err := h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?", circleID, user.ID, true).
+			First(&member).Error
+		if err != nil {
+			http.Error(w, "Access denied", http.StatusForbidden)
+			return
+		}
+		baseQuery = baseQuery.Where("circle_id = ?", circleID)
+	}
+
+	// Group by month for dashboard chart data
+	rows, err := baseQuery.
+		Select("TO_CHAR(date, 'YYYY-MM') as month, "+
+			"COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END), 0) as total_income, "+
+			"COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) as total_expenses, "+
+			"COALESCE(SUM(CASE WHEN type = 'transfer' THEN amount ELSE 0 END), 0) as total_transfers").
+		Group("TO_CHAR(date, 'YYYY-MM')").
+		Order("month ASC").
+		Rows()
+
+	if err != nil {
+		http.Error(w, "Failed to fetch monthly stats", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var m MonthlyBreakdown
+		if err := rows.Scan(&m.Month, &m.TotalIncome, &m.TotalExpenses, &m.TotalTransfers); err != nil {
+			continue
+		}
+		breakdown = append(breakdown, m)
+	}
+
+	response := map[string]interface{}{
+		"success":   true,
+		"year":      year,
+		"breakdown": breakdown,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+// GetCategoryStats returns spending breakdown by category for dashboard charts
+func (h *TransactionHandler) GetCategoryStats(w http.ResponseWriter, r *http.Request) {
+	user := r.Context().Value("user").(*models.User)
+
+	query := r.URL.Query()
+	circleID := query.Get("circleId")
+	startDate := query.Get("startDate")
+	endDate := query.Get("endDate")
+
+	type CategoryBreakdown struct {
+		Category string  `json:"category"`
+		Amount   float64 `json:"amount"`
+		Count    int64   `json:"count"`
+	}
+
+	var breakdown []CategoryBreakdown
+
+	dbQuery := h.db.Model(&models.Transaction{}).
+		Where("user_id = ? AND type = ?", user.ID, "expense")
+
+	if circleID != "" {
+		// Verify membership
+		var member models.CircleMember
+		err := h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?", circleID, user.ID, true).
+			First(&member).Error
+		if err != nil {
+			http.Error(w, "Access denied", http.StatusForbidden)
+			return
+		}
+		dbQuery = dbQuery.Where("circle_id = ?", circleID)
+	}
+
+	if startDate != "" {
+		start, err := time.Parse(time.RFC3339, startDate)
+		if err == nil {
+			dbQuery = dbQuery.Where("date >= ?", start)
+		}
+	}
+	if endDate != "" {
+		end, err := time.Parse(time.RFC3339, endDate)
+		if err == nil {
+			dbQuery = dbQuery.Where("date <= ?", end)
+		}
+	}
+
+	// Group by category for dashboard pie/bar charts
+	rows, err := dbQuery.
+		Select("category, COALESCE(SUM(amount), 0) as amount, COUNT(*) as count").
+		Group("category").
+		Order("amount DESC").
+		Rows()
+
+	if err != nil {
+		http.Error(w, "Failed to fetch category stats", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var c CategoryBreakdown
+		if err := rows.Scan(&c.Category, &c.Amount, &c.Count); err != nil {
+			continue
+		}
+		breakdown = append(breakdown, c)
+	}
+
+	response := map[string]interface{}{
+		"success":   true,
+		"breakdown": breakdown,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+// parseInt is a helper to parse a string as int with a default fallback
 func parseInt(s string, defaultValue int) int {
 	if s == "" {
 		return defaultValue

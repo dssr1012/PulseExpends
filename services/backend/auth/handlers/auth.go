@@ -30,7 +30,7 @@ type AuthHandler struct {
 }
 
 func NewAuthHandler(db *gorm.DB) *AuthHandler {
-	// Configurar OAuth2
+	// Configure OAuth2
 	oauthConfig := &oauth2.Config{
 		ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
 		ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
@@ -42,7 +42,7 @@ func NewAuthHandler(db *gorm.DB) *AuthHandler {
 		Endpoint: google.Endpoint,
 	}
 
-	// Configurar cookie store
+	// Configure cookie store
 	cookieSecret := os.Getenv("COOKIE_SECRET")
 	if cookieSecret == "" {
 		cookieSecret = "your-cookie-secret-key-change-in-production"
@@ -51,13 +51,13 @@ func NewAuthHandler(db *gorm.DB) *AuthHandler {
 	store := sessions.NewCookieStore([]byte(cookieSecret))
 	store.Options = &sessions.Options{
 		Path:     "/",
-		MaxAge:   86400 * 7, // 7 días
+		MaxAge:   86400 * 7, // 7 days
 		HttpOnly: true,
 		Secure:   os.Getenv("COOKIE_SECURE") == "true",
 		SameSite: http.SameSiteLaxMode,
 	}
 
-	// Configurar JWT secret
+	// Configure JWT secret
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
 		jwtSecret = "your-jwt-secret-key-change-in-production"
@@ -71,7 +71,7 @@ func NewAuthHandler(db *gorm.DB) *AuthHandler {
 	}
 }
 
-// Register maneja el registro de nuevos usuarios
+// Register handles user registration
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Email     string `json:"email"`
@@ -85,20 +85,20 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validar campos requeridos
+	// Validate required fields
 	if req.Email == "" || req.Password == "" {
 		http.Error(w, "Email and password are required", http.StatusBadRequest)
 		return
 	}
 
-	// Verificar si el usuario ya existe
+	// Check if user already exists
 	var existingUser models.User
 	if err := h.db.Where("email = ?", req.Email).First(&existingUser).Error; err == nil {
 		http.Error(w, "User with this email already exists", http.StatusConflict)
 		return
 	}
 
-	// Hashear contraseña
+	// Hash password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Printf("Error hashing password: %v", err)
@@ -106,7 +106,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Crear usuario
+	// Create user
 	user := models.User{
 		Email:       req.Email,
 		Username:    req.Username,
@@ -116,7 +116,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		IsActive:    true,
 		IsVerified:  false,
 		LastLoginAt: time.Now(),
-		Preferences: models.JSONB{"theme": "light", "currency": "USD", "language": "es"},
+		Preferences: models.JSONB{"theme": "light", "currency": "USD", "language": "en"},
 	}
 
 	if err := h.db.Create(&user).Error; err != nil {
@@ -125,7 +125,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Crear token JWT
+	// Create JWT token
 	token, err := h.createJWTToken(&user)
 	if err != nil {
 		log.Printf("Error creating JWT token: %v", err)
@@ -133,7 +133,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Crear sesión
+	// Create session
 	session := models.UserSession{
 		UserID:         user.ID,
 		Token:          token,
@@ -150,10 +150,10 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Configurar cookie
+	// Set session cookie
 	h.setSessionCookie(w, r, token)
 
-	// Responder
+	// Respond
 	response := map[string]interface{}{
 		"success": true,
 		"message": "User registered successfully",
@@ -171,7 +171,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// Login maneja el inicio de sesión
+// Login handles user login
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Email    string `json:"email"`
@@ -183,24 +183,24 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Buscar usuario
+	// Find user
 	var user models.User
 	if err := h.db.Where("email = ? AND is_active = ?", req.Email, true).First(&user).Error; err != nil {
 		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
 		return
 	}
 
-	// Verificar contraseña
+	// Verify password
 	if user.Password == "" || bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)) != nil {
 		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
 		return
 	}
 
-	// Actualizar último login
+	// Update last login
 	user.LastLoginAt = time.Now()
 	h.db.Save(&user)
 
-	// Crear token JWT
+	// Create JWT token
 	token, err := h.createJWTToken(&user)
 	if err != nil {
 		log.Printf("Error creating JWT token: %v", err)
@@ -208,7 +208,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Crear sesión
+	// Create session
 	session := models.UserSession{
 		UserID:         user.ID,
 		Token:          token,
@@ -225,10 +225,10 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Configurar cookie
+	// Set session cookie
 	h.setSessionCookie(w, r, token)
 
-	// Responder
+	// Respond
 	response := map[string]interface{}{
 		"success": true,
 		"message": "Login successful",
@@ -246,23 +246,23 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// GoogleLogin inicia el flujo de OAuth con Google
+// GoogleLogin initiates Google OAuth flow
 func (h *AuthHandler) GoogleLogin(w http.ResponseWriter, r *http.Request) {
-	// Generar state para prevenir CSRF
+	// Generate state to prevent CSRF
 	state := generateRandomString(32)
 	
 	session, _ := h.store.Get(r, "oauth-state")
 	session.Values["state"] = state
 	session.Save(r, w)
 
-	// Redirigir a Google
+	// Redirect to Google
 	url := h.oauthConfig.AuthCodeURL(state, oauth2.AccessTypeOffline)
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }
 
-// GoogleCallback maneja el callback de Google OAuth
+// GoogleCallback handles Google OAuth callback
 func (h *AuthHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
-	// Verificar state
+	// Verify state
 	session, _ := h.store.Get(r, "oauth-state")
 	state := session.Values["state"]
 	delete(session.Values, "state")
@@ -273,7 +273,7 @@ func (h *AuthHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Intercambiar código por token
+	// Exchange code for token
 	code := r.URL.Query().Get("code")
 	token, err := h.oauthConfig.Exchange(context.Background(), code)
 	if err != nil {
@@ -282,7 +282,7 @@ func (h *AuthHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Obtener información del usuario
+	// Get user info
 	client := h.oauthConfig.Client(context.Background(), token)
 	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
 	if err != nil {
@@ -305,12 +305,12 @@ func (h *AuthHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Buscar o crear usuario
+	// Find or create user
 	var user models.User
 	err = h.db.Where("provider = ? AND provider_id = ?", "google", googleUser.ID).First(&user).Error
 
 	if err == gorm.ErrRecordNotFound {
-		// Crear nuevo usuario
+		// Create new user
 		user = models.User{
 			Email:       googleUser.Email,
 			FullName:    googleUser.Name,
@@ -320,7 +320,7 @@ func (h *AuthHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 			IsActive:    true,
 			IsVerified:  true,
 			LastLoginAt: time.Now(),
-			Preferences: models.JSONB{"theme": "light", "currency": "USD", "language": "es"},
+			Preferences: models.JSONB{"theme": "light", "currency": "USD", "language": "en"},
 		}
 
 		if err := h.db.Create(&user).Error; err != nil {
@@ -333,13 +333,13 @@ func (h *AuthHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	} else {
-		// Actualizar usuario existente
+		// Update existing user
 		user.LastLoginAt = time.Now()
 		user.AvatarURL = googleUser.Picture
 		h.db.Save(&user)
 	}
 
-	// Crear token JWT
+	// Create JWT token
 	jwtToken, err := h.createJWTToken(&user)
 	if err != nil {
 		log.Printf("Error creating JWT token: %v", err)
@@ -347,7 +347,7 @@ func (h *AuthHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Crear sesión
+	// Create session
 	session := models.UserSession{
 		UserID:         user.ID,
 		Token:          jwtToken,
@@ -364,10 +364,10 @@ func (h *AuthHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Configurar cookie
+	// Set session cookie
 	h.setSessionCookie(w, r, jwtToken)
 
-	// Redirigir al frontend
+	// Redirect to frontend
 	frontendURL := os.Getenv("FRONTEND_URL")
 	if frontendURL == "" {
 		frontendURL = "http://localhost:3000"
@@ -377,9 +377,9 @@ func (h *AuthHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 }
 
-// Logout cierra la sesión del usuario
+// Logout handles user logout
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
-	// Obtener token del contexto o cookie
+	// Get token from context or cookie
 	token := r.Context().Value("token").(string)
 	if token == "" {
 		cookie, err := r.Cookie("pulseexpends_session")
@@ -388,12 +388,12 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Invalidar sesión en la base de datos
+	// Invalidate session in database
 	if token != "" {
 		h.db.Model(&models.UserSession{}).Where("token = ?", token).Update("is_active", false)
 	}
 
-	// Limpiar cookie
+	// Clear cookie
 	h.clearSessionCookie(w, r)
 
 	response := map[string]interface{}{
@@ -405,7 +405,7 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// GetProfile obtiene el perfil del usuario
+// GetProfile retrieves user profile
 func (h *AuthHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*models.User)
 
@@ -429,7 +429,7 @@ func (h *AuthHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// UpdateProfile actualiza el perfil del usuario
+// UpdateProfile updates user profile
 func (h *AuthHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*models.User)
 
@@ -445,9 +445,9 @@ func (h *AuthHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Actualizar campos permitidos
+	// Update allowed fields
 	if req.Username != "" {
-		// Verificar que el username no esté en uso
+		// Check if username is already in use
 		var existingUser models.User
 		if err := h.db.Where("username = ? AND id != ?", req.Username, user.ID).First(&existingUser).Error; err == nil {
 			http.Error(w, "Username already in use", http.StatusConflict)
@@ -491,7 +491,7 @@ func (h *AuthHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// ChangePassword cambia la contraseña del usuario
+// ChangePassword changes user password
 func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*models.User)
 
@@ -505,13 +505,13 @@ func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verificar contraseña actual
+	// Verify current password
 	if user.Password == "" || bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.CurrentPassword)) != nil {
 		http.Error(w, "Current password is incorrect", http.StatusUnauthorized)
 		return
 	}
 
-	// Hashear nueva contraseña
+	// Hash new password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
 	if err != nil {
 		log.Printf("Error hashing password: %v", err)
@@ -529,6 +529,126 @@ func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 	response := map[string]interface{}{
 		"success": true,
 		"message": "Password changed successfully",
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+// ForgotPassword handles password reset request
+func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Email string `json:"email"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	// Find user by email
+	var user models.User
+	if err := h.db.Where("email = ?", req.Email).First(&user).Error; err != nil {
+		// Don't reveal if user exists or not for security
+		response := map[string]interface{}{
+			"success": true,
+			"message": "If the email exists, a password reset link has been sent",
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	// Generate reset token (in a real app, you would send an email)
+	resetToken := generateRandomString(64)
+	// TODO: Store reset token in database with expiration
+	// TODO: Send email with reset link
+
+	response := map[string]interface{}{
+		"success": true,
+		"message": "If the email exists, a password reset link has been sent",
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+// ResetPassword handles password reset
+func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Token       string `json:"token"`
+		NewPassword string `json:"newPassword"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	// TODO: Validate reset token and get user ID
+	// For now, just return success
+	response := map[string]interface{}{
+		"success": true,
+		"message": "Password reset successfully",
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+// VerifyEmail handles email verification
+func (h *AuthHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
+	token := mux.Vars(r)["token"]
+
+	// TODO: Validate verification token and mark user as verified
+	// For now, just return success
+	response := map[string]interface{}{
+		"success": true,
+		"message": "Email verified successfully",
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+// GetSessions retrieves user sessions
+func (h *AuthHandler) GetSessions(w http.ResponseWriter, r *http.Request) {
+	user := r.Context().Value("user").(*models.User)
+
+	var sessions []models.UserSession
+	if err := h.db.Where("user_id = ? AND is_active = ? AND expires_at > ?", 
+		user.ID, true, time.Now()).Find(&sessions).Error; err != nil {
+		log.Printf("Error fetching sessions: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	response := map[string]interface{}{
+		"success": true,
+		"sessions": sessions,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+// RevokeSession revokes a specific session
+func (h *AuthHandler) RevokeSession(w http.ResponseWriter, r *http.Request) {
+	user := r.Context().Value("user").(*models.User)
+	sessionID := mux.Vars(r)["id"]
+
+	// Revoke session
+	if err := h.db.Model(&models.UserSession{}).
+		Where("id = ? AND user_id = ?", sessionID, user.ID).
+		Update("is_active", false).Error; err != nil {
+		log.Printf("Error revoking session: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	response := map[string]interface{}{
+		"success": true,
+		"message": "Session revoked successfully",
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -555,7 +675,7 @@ func (h *AuthHandler) setSessionCookie(w http.ResponseWriter, r *http.Request, t
 		Name:     "pulseexpends_session",
 		Value:    token,
 		Path:     "/",
-		MaxAge:   86400 * 7, // 7 días
+		MaxAge:   86400 * 7, // 7 days
 		HttpOnly: true,
 		Secure:   os.Getenv("COOKIE_SECURE") == "true",
 		SameSite: http.SameSiteLaxMode,

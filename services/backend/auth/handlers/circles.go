@@ -20,7 +20,7 @@ func NewCircleHandler(db *gorm.DB) *CircleHandler {
 	return &CircleHandler{db: db}
 }
 
-// GetCircles obtiene todos los círculos del usuario
+// GetCircles retrieves all circles for the user
 func (h *CircleHandler) GetCircles(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*models.User)
 
@@ -45,7 +45,7 @@ func (h *CircleHandler) GetCircles(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// GetCircle obtiene un círculo específico
+// GetCircle retrieves a specific circle
 func (h *CircleHandler) GetCircle(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*models.User)
 	vars := mux.Vars(r)
@@ -73,7 +73,7 @@ func (h *CircleHandler) GetCircle(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// CreateCircle crea un nuevo círculo
+// CreateCircle creates a new circle
 func (h *CircleHandler) CreateCircle(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*models.User)
 
@@ -89,13 +89,13 @@ func (h *CircleHandler) CreateCircle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validar campos requeridos
+	// Validate required fields
 	if req.Name == "" {
 		http.Error(w, "Circle name is required", http.StatusBadRequest)
 		return
 	}
 
-	// Crear círculo
+	// Create circle
 	circle := models.Circle{
 		Name:        req.Name,
 		Description: req.Description,
@@ -112,7 +112,7 @@ func (h *CircleHandler) CreateCircle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Agregar creador como admin
+	// Add creator as owner
 	member := models.CircleMember{
 		CircleID: circle.ID,
 		UserID:   user.ID,
@@ -122,7 +122,7 @@ func (h *CircleHandler) CreateCircle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.db.Create(&member).Error; err != nil {
-		// Revertir creación del círculo
+		// Rollback circle creation
 		h.db.Delete(&circle)
 		http.Error(w, "Failed to add creator to circle", http.StatusInternalServerError)
 		return
@@ -138,18 +138,18 @@ func (h *CircleHandler) CreateCircle(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// UpdateCircle actualiza un círculo existente
+// UpdateCircle updates an existing circle
 func (h *CircleHandler) UpdateCircle(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*models.User)
 	vars := mux.Vars(r)
 	circleID := vars["id"]
 
-	// Verificar permisos (solo admin/owner puede actualizar)
+	// Check permissions (only admin/owner can update)
 	var member models.CircleMember
 	err := h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?", circleID, user.ID, true).
 		First(&member).Error
 
-	if err != nil || (member.Role != "admin" && member.Role != "owner") {
+	if err != nil || (member.Role != "owner" && member.Role != "admin") {
 		http.Error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	}
@@ -167,13 +167,14 @@ func (h *CircleHandler) UpdateCircle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Find circle
 	var circle models.Circle
 	if err := h.db.Where("id = ? AND is_active = ?", circleID, true).First(&circle).Error; err != nil {
 		http.Error(w, "Circle not found", http.StatusNotFound)
 		return
 	}
 
-	// Actualizar campos
+	// Update fields
 	if req.Name != "" {
 		circle.Name = req.Name
 	}
@@ -205,29 +206,29 @@ func (h *CircleHandler) UpdateCircle(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// DeleteCircle elimina un círculo (soft delete)
+// DeleteCircle deletes a circle (soft delete)
 func (h *CircleHandler) DeleteCircle(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*models.User)
 	vars := mux.Vars(r)
 	circleID := vars["id"]
 
-	// Verificar permisos (solo owner puede eliminar)
+	// Check permissions (only owner can delete)
 	var member models.CircleMember
 	err := h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?", circleID, user.ID, true).
 		First(&member).Error
 
 	if err != nil || member.Role != "owner" {
-		http.Error(w, "Only circle owner can delete the circle", http.StatusForbidden)
+		http.Error(w, "Only the owner can delete the circle", http.StatusForbidden)
 		return
 	}
 
-	// Soft delete del círculo
+	// Soft delete circle
 	if err := h.db.Model(&models.Circle{}).Where("id = ?", circleID).Update("is_active", false).Error; err != nil {
 		http.Error(w, "Failed to delete circle", http.StatusInternalServerError)
 		return
 	}
 
-	// Desactivar todos los miembros
+	// Deactivate all members
 	if err := h.db.Model(&models.CircleMember{}).Where("circle_id = ?", circleID).Update("is_active", false).Error; err != nil {
 		http.Error(w, "Failed to deactivate circle members", http.StatusInternalServerError)
 		return
@@ -242,13 +243,13 @@ func (h *CircleHandler) DeleteCircle(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// GetCircleMembers obtiene los miembros de un círculo
+// GetCircleMembers retrieves all members of a circle
 func (h *CircleHandler) GetCircleMembers(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*models.User)
 	vars := mux.Vars(r)
 	circleID := vars["id"]
 
-	// Verificar que el usuario sea miembro del círculo
+	// Verify user is a member of the circle
 	var member models.CircleMember
 	err := h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?", circleID, user.ID, true).
 		First(&member).Error
@@ -264,7 +265,7 @@ func (h *CircleHandler) GetCircleMembers(w http.ResponseWriter, r *http.Request)
 		Find(&members).Error
 
 	if err != nil {
-		http.Error(w, "Failed to fetch members", http.StatusInternalServerError)
+		http.Error(w, "Failed to fetch circle members", http.StatusInternalServerError)
 		return
 	}
 
@@ -277,26 +278,25 @@ func (h *CircleHandler) GetCircleMembers(w http.ResponseWriter, r *http.Request)
 	json.NewEncoder(w).Encode(response)
 }
 
-// AddMember agrega un miembro al círculo
+// AddMember adds a new member to a circle
 func (h *CircleHandler) AddMember(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*models.User)
 	vars := mux.Vars(r)
 	circleID := vars["id"]
 
-	// Verificar permisos (solo admin/owner puede agregar miembros)
+	// Check permissions (only admin/owner can add members)
 	var member models.CircleMember
 	err := h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?", circleID, user.ID, true).
 		First(&member).Error
 
-	if err != nil || (member.Role != "admin" && member.Role != "owner") {
+	if err != nil || (member.Role != "owner" && member.Role != "admin") {
 		http.Error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	}
 
 	var req struct {
-		UserID uuid.UUID `json:"userId"`
-		Role   string    `json:"role"`
-		Email  string    `json:"email"`
+		UserID string `json:"userId"`
+		Role   string `json:"role"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -304,97 +304,85 @@ func (h *CircleHandler) AddMember(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Buscar usuario por ID o email
-	var targetUser models.User
-	if req.UserID != uuid.Nil {
-		err = h.db.Where("id = ? AND is_active = ?", req.UserID, true).First(&targetUser).Error
-	} else if req.Email != "" {
-		err = h.db.Where("email = ? AND is_active = ?", req.Email, true).First(&targetUser).Error
-	} else {
-		http.Error(w, "Either userId or email is required", http.StatusBadRequest)
+	// Validate role
+	if req.Role != "member" && req.Role != "admin" && req.Role != "viewer" {
+		http.Error(w, "Invalid role. Must be 'member', 'admin', or 'viewer'", http.StatusBadRequest)
 		return
 	}
 
-	if err != nil {
+	// Check if user exists
+	var targetUser models.User
+	if err := h.db.Where("id = ? AND is_active = ?", req.UserID, true).First(&targetUser).Error; err != nil {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
 
-	// Verificar que el usuario no sea ya miembro
+	// Check if user is already a member
 	var existingMember models.CircleMember
-	err = h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?", circleID, targetUser.ID, true).
-		First(&existingMember).Error
-
+	err = h.db.Where("circle_id = ? AND user_id = ?", circleID, req.UserID).First(&existingMember).Error
 	if err == nil {
-		http.Error(w, "User is already a member of this circle", http.StatusConflict)
-		return
-	}
-
-	// Determinar rol (default: member)
-	role := "member"
-	if req.Role != "" {
-		role = req.Role
-	}
-
-	// Agregar miembro
-	newMember := models.CircleMember{
-		CircleID: uuid.MustParse(circleID),
-		UserID:   targetUser.ID,
-		Role:     role,
-		JoinedAt: time.Now(),
-		IsActive: true,
-	}
-
-	if err := h.db.Create(&newMember).Error; err != nil {
-		http.Error(w, "Failed to add member", http.StatusInternalServerError)
-		return
+		if existingMember.IsActive {
+			http.Error(w, "User is already a member of this circle", http.StatusConflict)
+			return
+		}
+		// Reactivate existing membership
+		existingMember.IsActive = true
+		existingMember.Role = req.Role
+		if err := h.db.Save(&existingMember).Error; err != nil {
+			http.Error(w, "Failed to add member", http.StatusInternalServerError)
+			return
+		}
+	} else {
+		// Create new membership
+		newMember := models.CircleMember{
+			CircleID: circleID,
+			UserID:   req.UserID,
+			Role:     req.Role,
+			JoinedAt: time.Now(),
+			IsActive: true,
+		}
+		if err := h.db.Create(&newMember).Error; err != nil {
+			http.Error(w, "Failed to add member", http.StatusInternalServerError)
+			return
+		}
 	}
 
 	response := map[string]interface{}{
 		"success": true,
 		"message": "Member added successfully",
-		"member":  newMember,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
 
-// RemoveMember elimina un miembro del círculo
+// RemoveMember removes a member from a circle
 func (h *CircleHandler) RemoveMember(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*models.User)
 	vars := mux.Vars(r)
 	circleID := vars["id"]
-	userID := vars["userId"]
+	memberID := vars["userId"]
 
-	// Verificar permisos (solo admin/owner puede eliminar miembros, y no puede eliminarse a sí mismo)
-	var requesterMember models.CircleMember
+	// Check permissions (only admin/owner can remove members, owners cannot remove themselves)
+	var currentMember models.CircleMember
 	err := h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?", circleID, user.ID, true).
-		First(&requesterMember).Error
+		First(&currentMember).Error
 
-	if err != nil || (requesterMember.Role != "admin" && requesterMember.Role != "owner") {
+	if err != nil || (currentMember.Role != "owner" && currentMember.Role != "admin") {
 		http.Error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	}
 
-	// Verificar que no se está intentando eliminar al owner
-	if userID == user.ID.String() {
-		http.Error(w, "Cannot remove yourself as owner", http.StatusBadRequest)
+	// Check if trying to remove self (owners cannot remove themselves)
+	if memberID == user.ID && currentMember.Role == "owner" {
+		http.Error(w, "Owners cannot remove themselves from the circle", http.StatusBadRequest)
 		return
 	}
 
-	// Verificar que el miembro objetivo existe
-	var targetMember models.CircleMember
-	err = h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?", circleID, userID, true).
-		First(&targetMember).Error
-
-	if err != nil {
-		http.Error(w, "Member not found", http.StatusNotFound)
-		return
-	}
-
-	// Soft delete del miembro
-	if err := h.db.Model(&targetMember).Update("is_active", false).Error; err != nil {
+	// Deactivate membership
+	if err := h.db.Model(&models.CircleMember{}).
+		Where("circle_id = ? AND user_id = ?", circleID, memberID).
+		Update("is_active", false).Error; err != nil {
 		http.Error(w, "Failed to remove member", http.StatusInternalServerError)
 		return
 	}
@@ -408,20 +396,20 @@ func (h *CircleHandler) RemoveMember(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// UpdateMemberRole actualiza el rol de un miembro
+// UpdateMemberRole updates a member's role in a circle
 func (h *CircleHandler) UpdateMemberRole(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*models.User)
 	vars := mux.Vars(r)
 	circleID := vars["id"]
-	userID := vars["userId"]
+	memberID := vars["userId"]
 
-	// Verificar permisos (solo owner puede cambiar roles)
-	var requesterMember models.CircleMember
+	// Check permissions (only owner can change roles)
+	var currentMember models.CircleMember
 	err := h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?", circleID, user.ID, true).
-		First(&requesterMember).Error
+		First(&currentMember).Error
 
-	if err != nil || requesterMember.Role != "owner" {
-		http.Error(w, "Only circle owner can change roles", http.StatusForbidden)
+	if err != nil || currentMember.Role != "owner" {
+		http.Error(w, "Only the owner can change member roles", http.StatusForbidden)
 		return
 	}
 
@@ -434,74 +422,72 @@ func (h *CircleHandler) UpdateMemberRole(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// Validar rol
-	validRoles := map[string]bool{"viewer": true, "member": true, "admin": true}
-	if !validRoles[req.Role] {
+	// Validate role
+	if req.Role != "owner" && req.Role != "admin" && req.Role != "member" && req.Role != "viewer" {
 		http.Error(w, "Invalid role", http.StatusBadRequest)
 		return
 	}
 
-	// Verificar que no se está intentando cambiar el rol del owner
-	if userID == user.ID.String() {
-		http.Error(w, "Cannot change your own role as owner", http.StatusBadRequest)
-		return
-	}
-
-	// Actualizar rol
+	// Update role
 	if err := h.db.Model(&models.CircleMember{}).
-		Where("circle_id = ? AND user_id = ? AND is_active = ?", circleID, userID, true).
+		Where("circle_id = ? AND user_id = ?", circleID, memberID).
 		Update("role", req.Role).Error; err != nil {
-		http.Error(w, "Failed to update role", http.StatusInternalServerError)
+		http.Error(w, "Failed to update member role", http.StatusInternalServerError)
 		return
 	}
 
 	response := map[string]interface{}{
 		"success": true,
-		"message": "Role updated successfully",
+		"message": "Member role updated successfully",
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
 
-// JoinCircle permite unirse a un círculo con código de invitación
+// JoinCircle allows a user to join a circle using a join code
 func (h *CircleHandler) JoinCircle(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*models.User)
 	vars := mux.Vars(r)
 	joinCode := vars["code"]
 
-	// Buscar círculo por código de invitación
+	// Find circle by join code
 	var circle models.Circle
 	err := h.db.Where("join_code = ? AND is_active = ? AND is_public = ?", joinCode, true, true).
 		First(&circle).Error
 
 	if err != nil {
-		http.Error(w, "Invalid or expired invitation code", http.StatusNotFound)
+		http.Error(w, "Invalid or expired join code", http.StatusNotFound)
 		return
 	}
 
-	// Verificar que el usuario no sea ya miembro
+	// Check if user is already a member
 	var existingMember models.CircleMember
-	err = h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?", circle.ID, user.ID, true).
-		First(&existingMember).Error
-
+	err = h.db.Where("circle_id = ? AND user_id = ?", circle.ID, user.ID).First(&existingMember).Error
 	if err == nil {
-		http.Error(w, "You are already a member of this circle", http.StatusConflict)
-		return
-	}
-
-	// Agregar como miembro con rol viewer
-	member := models.CircleMember{
-		CircleID: circle.ID,
-		UserID:   user.ID,
-		Role:     "viewer",
-		JoinedAt: time.Now(),
-		IsActive: true,
-	}
-
-	if err := h.db.Create(&member).Error; err != nil {
-		http.Error(w, "Failed to join circle", http.StatusInternalServerError)
-		return
+		if existingMember.IsActive {
+			http.Error(w, "You are already a member of this circle", http.StatusConflict)
+			return
+		}
+		// Reactivate membership
+		existingMember.IsActive = true
+		if err := h.db.Save(&existingMember).Error; err != nil {
+			http.Error(w, "Failed to join circle", http.StatusInternalServerError)
+			return
+		}
+	} else {
+		// Create new membership as regular member
+		newMember := models.CircleMember{
+			CircleID: circle.ID,
+			UserID:   user.ID,
+			Role:     "member",
+			JoinedAt: time.Now(),
+			IsActive: true,
+		}
+		if err := h.db.Create(&newMember).Error; err != nil {
+			http.Error(w, "Failed to join circle", http.StatusInternalServerError)
+			return
+		}
 	}
 
 	response := map[string]interface{}{
@@ -514,18 +500,18 @@ func (h *CircleHandler) JoinCircle(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// InviteToCircle invita a un usuario por email
+// InviteToCircle creates an invitation for a user to join a circle
 func (h *CircleHandler) InviteToCircle(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user").(*models.User)
 	vars := mux.Vars(r)
 	circleID := vars["id"]
 
-	// Verificar permisos (solo admin/owner puede invitar)
+	// Check permissions (only admin/owner can invite)
 	var member models.CircleMember
 	err := h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?", circleID, user.ID, true).
 		First(&member).Error
 
-	if err != nil || (member.Role != "admin" && member.Role != "owner") {
+	if err != nil || (member.Role != "owner" && member.Role != "admin") {
 		http.Error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	}
@@ -540,68 +526,272 @@ func (h *CircleHandler) InviteToCircle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Buscar usuario por email
+	// Validate role
+	if req.Role != "member" && req.Role != "admin" && req.Role != "viewer" {
+		http.Error(w, "Invalid role", http.StatusBadRequest)
+		return
+	}
+
+	// Find user by email
 	var targetUser models.User
-	err = h.db.Where("email = ? AND is_active = ?", req.Email, true).First(&targetUser).Error
-
-	if err != nil {
-		// Crear invitación pendiente
-		invite := models.CircleInvite{
-			CircleID:   uuid.MustParse(circleID),
-			Email:      req.Email,
-			Role:       req.Role,
-			InvitedBy:  user.ID,
-			ExpiresAt:  time.Now().Add(7 * 24 * time.Hour),
-			IsAccepted: false,
-		}
-
-		if err := h.db.Create(&invite).Error; err != nil {
-			http.Error(w, "Failed to create invitation", http.StatusInternalServerError)
-			return
-		}
-
-		// TODO: Enviar email de invitación
-		response := map[string]interface{}{
-			"success": true,
-			"message": "Invitation sent to email",
-			"invite":  invite,
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(response)
+	if err := h.db.Where("email = ? AND is_active = ?", req.Email, true).First(&targetUser).Error; err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
 
-	// Usuario existe, agregar directamente
-	newMember := models.CircleMember{
-		CircleID: uuid.MustParse(circleID),
-		UserID:   targetUser.ID,
-		Role:     req.Role,
-		JoinedAt: time.Now(),
-		IsActive: true,
-	}
-
-	if err := h.db.Create(&newMember).Error; err != nil {
-		http.Error(w, "Failed to add member", http.StatusInternalServerError)
+	// Check if user is already a member
+	var existingMember models.CircleMember
+	err = h.db.Where("circle_id = ? AND user_id = ?", circleID, targetUser.ID).First(&existingMember).Error
+	if err == nil {
+		http.Error(w, "User is already a member of this circle", http.StatusConflict)
 		return
 	}
+
+	// Create invitation
+	invitation := models.CircleInvite{
+		CircleID:  circleID,
+		Email:     req.Email,
+		InvitedBy: user.ID,
+		Role:      req.Role,
+		Token:     generateRandomString(32),
+		ExpiresAt: time.Now().Add(7 * 24 * time.Hour), // 7 days
+		Accepted:  false,
+	}
+
+	if err := h.db.Create(&invitation).Error; err != nil {
+		http.Error(w, "Failed to create invitation", http.StatusInternalServerError)
+		return
+	}
+
+	// TODO: Send invitation email
 
 	response := map[string]interface{}{
 		"success": true,
-		"message": "User added to circle",
-		"member":  newMember,
+		"message": "Invitation sent successfully",
+		"invitation": map[string]interface{}{
+			"id":        invitation.ID,
+			"email":     invitation.Email,
+			"role":      invitation.Role,
+			"expiresAt": invitation.ExpiresAt,
+		},
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
 
-// Helper function para generar código de invitación
+// GetCircleTransactions retrieves transactions for a circle
+func (h *CircleHandler) GetCircleTransactions(w http.ResponseWriter, r *http.Request) {
+	user := r.Context().Value("user").(*models.User)
+	vars := mux.Vars(r)
+	circleID := vars["id"]
+
+	// Verify user is a member of the circle
+	var member models.CircleMember
+	err := h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?", circleID, user.ID, true).
+		First(&member).Error
+
+	if err != nil {
+		http.Error(w, "Access denied", http.StatusForbidden)
+		return
+	}
+
+	// Parse query parameters
+	query := r.URL.Query()
+	startDate := query.Get("startDate")
+	endDate := query.Get("endDate")
+	category := query.Get("category")
+	limit := query.Get("limit")
+	offset := query.Get("offset")
+
+	// Build query
+	dbQuery := h.db.Where("circle_id = ? AND deleted_at IS NULL", circleID)
+
+	if startDate != "" {
+		dbQuery = dbQuery.Where("date >= ?", startDate)
+	}
+	if endDate != "" {
+		dbQuery = dbQuery.Where("date <= ?", endDate)
+	}
+	if category != "" {
+		dbQuery = dbQuery.Where("category = ?", category)
+	}
+
+	// Apply pagination
+	if limit != "" {
+		dbQuery = dbQuery.Limit(limit)
+	} else {
+		dbQuery = dbQuery.Limit(50) // Default limit
+	}
+	if offset != "" {
+		dbQuery = dbQuery.Offset(offset)
+	}
+
+	var transactions []models.Transaction
+	err = dbQuery.Order("date DESC").Find(&transactions).Error
+	if err != nil {
+		http.Error(w, "Failed to fetch transactions", http.StatusInternalServerError)
+		return
+	}
+
+	response := map[string]interface{}{
+		"success":      true,
+		"transactions": transactions,
+		"count":        len(transactions),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+// GetCircleActivities retrieves recent activities for a circle
+func (h *CircleHandler) GetCircleActivities(w http.ResponseWriter, r *http.Request) {
+	user := r.Context().Value("user").(*models.User)
+	vars := mux.Vars(r)
+	circleID := vars["id"]
+
+	// Verify user is a member of the circle
+	var member models.CircleMember
+	err := h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?", circleID, user.ID, true).
+		First(&member).Error
+
+	if err != nil {
+		http.Error(w, "Access denied", http.StatusForbidden)
+		return
+	}
+
+	// Parse query parameters
+	query := r.URL.Query()
+	limit := query.Get("limit")
+	if limit == "" {
+		limit = "50"
+	}
+
+	var activities []models.CircleActivity
+	err = h.db.Where("circle_id = ?", circleID).
+		Order("created_at DESC").
+		Limit(limit).
+		Preload("User").
+		Find(&activities).Error
+
+	if err != nil {
+		http.Error(w, "Failed to fetch activities", http.StatusInternalServerError)
+		return
+	}
+
+	response := map[string]interface{}{
+		"success":    true,
+		"activities": activities,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+// GetCircleStats retrieves statistics for a circle
+func (h *CircleHandler) GetCircleStats(w http.ResponseWriter, r *http.Request) {
+	user := r.Context().Value("user").(*models.User)
+	vars := mux.Vars(r)
+	circleID := vars["id"]
+
+	// Verify user is a member of the circle
+	var member models.CircleMember
+	err := h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?", circleID, user.ID, true).
+		First(&member).Error
+
+	if err != nil {
+		http.Error(w, "Access denied", http.StatusForbidden)
+		return
+	}
+
+	// Parse query parameters
+	query := r.URL.Query()
+	startDate := query.Get("startDate")
+	endDate := query.Get("endDate")
+
+	// Build base query
+	dbQuery := h.db.Model(&models.Transaction{}).
+		Where("circle_id = ? AND deleted_at IS NULL", circleID)
+
+	if startDate != "" {
+		dbQuery = dbQuery.Where("date >= ?", startDate)
+	}
+	if endDate != "" {
+		dbQuery = dbQuery.Where("date <= ?", endDate)
+	}
+
+	// Get total income
+	var totalIncome float64
+	if err := dbQuery.Where("type = ?", "income").Select("COALESCE(SUM(amount), 0)").Scan(&totalIncome).Error; err != nil {
+		http.Error(w, "Failed to calculate income", http.StatusInternalServerError)
+		return
+	}
+
+	// Get total expenses
+	var totalExpenses float64
+	if err := dbQuery.Where("type = ?", "expense").Select("COALESCE(SUM(amount), 0)").Scan(&totalExpenses).Error; err != nil {
+		http.Error(w, "Failed to calculate expenses", http.StatusInternalServerError)
+		return
+	}
+
+	// Get category breakdown
+	type CategorySummary struct {
+		Category string  `json:"category"`
+		Total    float64 `json:"total"`
+		Count    int     `json:"count"`
+	}
+	var categoryBreakdown []CategorySummary
+	err = dbQuery.Where("type = ?", "expense").
+		Select("category, SUM(amount) as total, COUNT(*) as count").
+		Group("category").
+		Order("total DESC").
+		Scan(&categoryBreakdown).Error
+
+	if err != nil {
+		http.Error(w, "Failed to calculate category breakdown", http.StatusInternalServerError)
+		return
+	}
+
+	// Get member count
+	var memberCount int64
+	if err := h.db.Model(&models.CircleMember{}).
+		Where("circle_id = ? AND is_active = ?", circleID, true).
+		Count(&memberCount).Error; err != nil {
+		http.Error(w, "Failed to count members", http.StatusInternalServerError)
+		return
+	}
+
+	response := map[string]interface{}{
+		"success": true,
+		"stats": map[string]interface{}{
+			"totalIncome":   totalIncome,
+			"totalExpenses": totalExpenses,
+			"netBalance":    totalIncome - totalExpenses,
+			"memberCount":   memberCount,
+			"categories":    categoryBreakdown,
+		},
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+// Helper function to generate join code
 func generateJoinCode() string {
-	const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	b := make([]byte, 8)
 	for i := range b {
-		b[i] = chars[time.Now().UnixNano()%int64(len(chars))]
+		b[i] = letters[time.Now().UnixNano()%int64(len(letters))]
+	}
+	return string(b)
+}
+
+// Helper function to generate random string
+func generateRandomString(n int) string {
+	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letters[time.Now().UnixNano()%int64(len(letters))]
 	}
 	return string(b)
 }
