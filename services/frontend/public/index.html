@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PulseExpends - Gestión de Gastos Inteligente</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="logo-text">
+                    <h1>PulseExpends</h1>
+                    <p>Gestión inteligente de gastos</p>
+                </div>
+            </div>
+            <div class="user-menu">
+                <div class="user-avatar">DS</div>
+                <div>
+                    <div style="font-weight: 600;">DS SR</div>
+                    <div style="font-size: 14px; color: var(--gray-color);">Usuario Premium</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <nav>
+                    <ul class="nav-menu">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link active" data-page="dashboard">
+                                <i class="fas fa-home"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-page="transactions">
+                                <i class="fas fa-exchange-alt"></i>
+                                <span>Transacciones</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-page="categories">
+                                <i class="fas fa-tags"></i>
+                                <span>Categorías</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-page="upload">
+                                <i class="fas fa-file-upload"></i>
+                                <span>Subir Resumen</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-page="alerts">
+                                <i class="fas fa-bell"></i>
+                                <span>Alertas</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-page="settings">
+                                <i class="fas fa-cog"></i>
+                                <span>Configuración</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </aside>
+
+            <!-- Main Content Area -->
+            <main class="dashboard" id="main-content">
+                <!-- Dashboard content will be loaded here -->
+                <div class="loading" id="loading">
+                    <div class="loading-spinner"></div>
+                    <span>Cargando datos...</span>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Add Expense Modal -->
+    <div class="modal" id="addExpenseModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Agregar Gasto</h2>
+                <button class="close-modal" id="closeModal">&times;</button>
+            </div>
+            <form id="expenseForm">
+                <div class="form-group">
+                    <label class="form-label">Descripción</label>
+                    <input type="text" class="form-input" id="description" placeholder="Ej: Cena en restaurante" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Monto ($)</label>
+                    <input type="number" class="form-input" id="amount" step="0.01" min="0" placeholder="0.00" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Categoría</label>
+                    <select class="form-select" id="category" required>
+                        <option value="">Seleccionar categoría</option>
+                        <option value="Food">Alimentos</option>
+                        <option value="Transportation">Transporte</option>
+                        <option value="Shopping">Compras</option>
+                        <option value="Entertainment">Entretenimiento</option>
+                        <option value="Coffee">Café</option>
+                        <option value="Utilities">Servicios</option>
+                        <option value="Healthcare">Salud</option>
+                        <option value="Education">Educación</option>
+                        <option value="Other">Otros</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Fecha</label>
+                    <input type="date" class="form-input" id="date" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tipo</label>
+                    <select class="form-select" id="type" required>
+                        <option value="expense">Gasto</option>
+                        <option value="income">Ingreso</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 15px;">
+                    <i class="fas fa-plus"></i> Agregar Transacción
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div class="modal" id="uploadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Subir Resumen de Tarjeta</h2>
+                <button class="close-modal" id="closeUploadModal">&times;</button>
+            </div>
+            <div class="upload-area" id="dropArea">
+                <div class="upload-icon">
+                    <i class="fas fa-file-pdf"></i>
+                </div>
+                <h3>Arrastra tu archivo PDF aquí</h3>
+                <p class="upload-text">o haz clic para seleccionar</p>
+                <input type="file" id="pdfFile" accept=".pdf" style="display: none;">
+                <button class="upload-button" onclick="document.getElementById('pdfFile').click()">
+                    Seleccionar Archivo
+                </button>
+                <p style="margin-top: 15px; font-size: 14px; color: var(--gray-color);">
+                    Formatos soportados: PDF (máx. 10MB)
+                </p>
+            </div>
+            <div id="uploadStatus" style="margin-top: 20px; display: none;">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <span>Procesando PDF...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/src/app.js"></script>
+    <!-- 
+    Configuración de subdominios:
+    - Frontend Principal: http://pulseexpends.duckdns.org
+    - API MCP Server: http://api.pulseexpends.duckdns.org
+    - PDF Parser API: http://pdf.pulseexpends.duckdns.org
+    - Status Dashboard: http://status.pulseexpends.duckdns.org
+    
+    Para desarrollo local, modificar las URLs en app.js
+    -->
+</body>
+</html>

@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PulseExpends - Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* Additional styles for dashboard */
+        .welcome-banner {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 30px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .welcome-banner::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+        
+        .welcome-banner::after {
+            content: '';
+            position: absolute;
+            bottom: -80px;
+            right: 20px;
+            width: 150px;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+        }
+        
+        .welcome-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .welcome-content h1 {
+            margin: 0 0 10px 0;
+            font-size: 2.2rem;
+        }
+        
+        .welcome-content p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .quick-action-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid #eee;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        
+        .quick-action-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+            border-color: var(--primary-color);
+        }
+        
+        .quick-action-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px auto;
+            color: white;
+            font-size: 1.8rem;
+        }
+        
+        .quick-action-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--dark-color);
+            margin: 0 0 10px 0;
+        }
+        
+        .quick-action-desc {
+            color: var(--gray-color);
+            font-size: 0.9rem;
+            margin: 0;
+        }
+        
+        .recent-circles {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        }
+        
+        .recent-circles-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .recent-circles-header h2 {
+            margin: 0;
+            color: var(--dark-color);
+            font-size: 1.5rem;
+        }
+        
+        .circles-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .circle-item {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #eee;
+            transition: all 0.3s ease;
+        }
+        
+        .circle-item:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 168, 255, 0.1);
+        }
+        
+        .circle-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .circle-icon-small {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+        }
+        
+        .circle-role {
+            padding: 4px 12px;
+            background: var(--primary-color-light);
+            color: var(--primary-color);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .circle-item-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--dark-color);
+            margin: 0 0 10px 0;
+        }
+        
+        .circle-item-meta {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            color: var(--gray-color);
+        }
+        
+        .circle-item-meta i {
+            margin-right: 5px;
+        }
+        
+        .circle-item-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .circle-item-actions .btn {
+            flex: 1;
+            padding: 8px 15px;
+            font-size: 0.9rem;
+        }
+        
+        .no-circles {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px;
+            color: var(--gray-color);
+        }
+        
+        .no-circles i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid #eee;
+        }
+        
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .stat-title {
+            font-size: 1rem;
+            color: var(--gray-color);
+            margin: 0;
+        }
+        
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .stat-icon.expense {
+            background: rgba(232, 65, 24, 0.1);
+            color: var(--danger-color);
+        }
+        
+        .stat-icon.income {
+            background: rgba(76, 209, 55, 0.1);
+            color: var(--success-color);
+        }
+        
+        .stat-icon.balance {
+            background: rgba(0, 168, 255, 0.1);
+            color: var(--primary-color);
+        }
+        
+        .stat-icon.transactions {
+            background: rgba(251, 197, 49, 0.1);
+            color: var(--warning-color);
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dark-color);
+            margin: 0 0 10px 0;
+        }
+        
+        .stat-change {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .stat-change.positive {
+            color: var(--success-color);
+        }
+        
+        .stat-change.negative {
+            color: var(--danger-color);
+        }
+        
+        .recent-transactions {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            margin: 0;
+            color: var(--dark-color);
+            font-size: 1.5rem;
+        }
+        
+        .transactions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid var(--primary-color);
+            transition: all 0.3s ease;
+        }
+        
+        .transaction-item:hover {
+            background: #f0f7ff;
+            transform: translateX(5px);
+        }
+        
+        .transaction-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .transaction-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.1rem;
+        }
+        
+        .transaction-icon.food {
+            background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
+        }
+        
+        .transaction-icon.transport {
+            background: linear-gradient(135deg, #4ECDC4, #6CE5DD);
+        }
+        
+        .transaction-icon.shopping {
+            background: linear-gradient(135deg, #FFD166, #FFE08E);
+        }
+        
+        .transaction-icon.entertainment {
+            background: linear-gradient(135deg, #7209B7, #9D4EDD);
+        }
+        
+        .transaction-icon.coffee {
+            background: linear-gradient(135deg, #F72585, #FF7AB8);
+        }
+        
+        .transaction-details h4 {
+            margin: 0 0 5px 0;
+            font-size: 1rem;
+            color: var(--dark-color);
+        }
+        
+        .transaction-details p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: var(--gray-color);
+        }
+        
+        .transaction-amount {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .transaction-amount.expense {
+            color: var(--danger-color);
+        }
+        
+        .transaction-amount.income {
+            color: var(--success-color);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--gray-color);
+        }
+        
+        .loading i {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+        
+        @media (max-width: 768px) {
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+            
+            .circles-list {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .welcome-content h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <a href="dashboard.html">
+                    <i class="fas fa-chart-line"></i>
+                    <span>PulseExpends</span>
+                </a>
+            </div>
+            
+            <div class="nav-links">
+                <a href="dashboard.html" class="nav-link active">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="transactions.html" class="nav-link">
+                    <i class="fas fa-receipt"></i>
+                    <span>Transacciones</span>
+                </a>
+                <a href="circles.html" class="nav-link">
+                    <i class="fas fa-users"></i>
+                    <span>Grupos</span>
+                </a>
+                <a href="upload.html" class="nav-link">
+                    <i class="fas fa-file-upload"></i>
+                    <span>Subir PDF</span>
+                </a>
+                <a href="settings.html" class="nav-link">
+                    <i class="fas fa-cog"></i>
+                    <span>Configuración</span>
+                </a>
+            </div>
+            
+            <div class="nav-user">
+                <div class="user-dropdown">
+                    <button class="user-btn">
+                        <div class="user-avatar" id="userAvatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span id="userName">Usuario</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="dropdown-menu">
+                        <a href="profile.html" class="dropdown-item">
+                            <i class="fas fa-user"></i> Mi Perfil
+                        </a>
+                        <a href="settings.html" class="dropdown-item">
+                            <i class="fas fa-cog"></i> Configuración
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <div class="main-container">
+        <div class="welcome-banner">
+            <div class="welcome-content">
+                <h1 id="welcomeMessage">Bienvenido de vuelta!</h1>
+                <p id="welcomeSubtitle">Aquí tienes un resumen de tus finanzas</p>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <a href="transactions.html?action=add" class="quick-action-card">
+                <div class="quick-action-icon">
+                    <i class="fas fa-plus"></i>
+                </div>
+                <h3 class="quick-action-title">Agregar Gasto</h3>
+                <p class="quick-action-desc">Registra un nuevo gasto o ingreso manualmente</p>
+            </a>
+            
+            <a href="upload.html" class="quick-action-card">
+                <div class="quick-action-icon">
+                    <i class="fas fa-file-pdf"></i>
+                </div>
+                <h3 class="quick-action-title">Subir PDF</h3>
+                <p class="quick-action-desc">Extrae transacciones automáticamente de tu resumen</p>
+            </a>
+            
+            <a href="circles.html" class="quick-action-card">
+                <div class="quick-action-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3 class="quick-action-title">Grupos Familiares</h3>
+                <p class="quick-action-desc">Gestiona gastos compartidos con tu familia</p>
+            </a>
+            
+            <a href="settings.html" class="quick-action-card">
+                <div class="quick-action-icon">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                <h3 class="quick-action-title">Reportes</h3>
+                <p class="quick-action-desc">Visualiza análisis detallados de tus gastos</p>
+            </a>
+        </div>
+        
+        <!-- Recent Circles -->
+        <div class="recent-circles" id="recentCirclesSection">
+            <div class="recent-circles-header">
+                <h2><i class="fas fa-users"></i> Tus Grupos Familiares</h2>
+                <a href="circles.html" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Ver Todos
+                </a>
+            </div>
+            
+            <div class="circles-list" id="circlesList">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Cargando grupos...</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Stats Grid -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <h3 class="stat-title">Gastos Totales</h3>
+                    <div class="stat-icon expense">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="totalExpenses">$0.00</div>
+                <div class="stat-change negative">
+                    <i class="fas fa-arrow-down"></i>
+                    <span>Este mes</span>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <h3 class="stat-title">Ingresos Totales</h3>
+                    <div class="stat-icon income">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="totalIncome">$0.00</div>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>Este mes</span>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <h3 class="stat-title">Balance Neto</h3>
+                    <div class="stat-icon balance">
+                        <i class="fas fa-balance-scale"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="netBalance">$0.00</div>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>Positivo</span>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <h3 class="stat-title">Transacciones</h3>
+                    <div class="stat-icon transactions">
+                        <i class="fas fa-receipt"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="transactionCount">0</div>
+                <div class="stat-change positive">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Total registradas</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Transactions -->
+        <div class="recent-transactions">
+            <div class="section-header">
+                <h2 class="section-title">Transacciones Recientes</h2>
+                <a href="transactions.html" class="btn btn-primary">
+                    <i class="fas fa-list"></i> Ver Todas
+                </a>
+            </div>
+            
+            <div class="transactions-list" id="recentTransactions">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Cargando transacciones...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Expense Modal -->
+    <div class="modal" id="addExpenseModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-plus-circle"></i> Agregar Transacción</h2>
+                <button class="close-modal" onclick="closeAddExpenseModal()">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <form id="expenseForm">
+                    <div class="form-group">
+                        <label class="form-label">Descripción</label>
+                        <input type="text" id="description" class="form-input" placeholder="Ej: Supermercado, Restaurante, Salario..." required>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Monto</label>
+                            <input type="number" id="amount" class="form-input" placeholder="0.00" step="0.01" min="0" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Tipo</label>
+                            <select id="type" class="form-select" required>
+                                <option value="expense">Gasto</option>
+                                <option value="income">Ingreso</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Categoría</label>
+                            <select id="category" class="form-select" required>
+                                <option value="Food">Alimentos</option>
+                                <option value="Transportation">Transporte</option>
+                                <option value="Shopping">Compras</option>
+                                <option value="Entertainment">Entretenimiento</option>
+                                <option value="Coffee">Café</option>
+                                <option value="Utilities">Servicios</option>
+                                <option value="Healthcare">Salud</option>
+                                <option value="Education">Educación</option>
+                                <option value="Other">Otros</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Fecha</label>
+                            <input type="date" id="date" class="form-input" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Grupo Familiar (opcional)</label>
+                        <select id="circleId" class="form-select">
+                            <option value="">Personal (sin grupo)</option>
+                            <!-- Circles will be populated here -->
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Notas (opcional)</label>
+                        <textarea id="notes" class="form-input" rows="3" placeholder="Agrega notas adicionales..."></textarea>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn" onclick="closeAddExpenseModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="addTransaction()">
+                    <i class="fas fa-save"></i> Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="auth-loading" style="display: none;">
+        <div class="spinner"></div>
+        <p>Procesando...</p>
+    </div>
+    
+    <!-- Include Auth Script -->
+    <script src="src/auth.js"></script>
+    
+    <script>
+        // API Configuration
+        const API_BASE_URL = window.location.hostname === 'pulseexpends.duckdns.org' ? 
+            'http://api.pulseexpends.duckdns.org/api' : 
+            'http://localhost:8082/api';
+        
+        // Check authentication on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Check if user is authenticated
+            const isAuthenticated = await window.auth.checkAuth();
+            if (!isAuthenticated) {
+                return;
+            }
+            
+            // Update welcome message with user name
+            const user = window.auth.getCurrentUser();
+            if (user) {
+                document.getElementById('welcomeMessage').textContent = `Bienvenido, ${user.fullName?.split(' ')[0] || user.username || 'Usuario'}!`;
+                document.getElementById('userName').textContent = user.fullName?.split(' ')[0] || user.username || 'Usuario';
+                
+                if (user.avatarURL) {
+                    document.getElementById('userAvatar').style.backgroundImage = `url('${user.avatarURL}')`;
+                    document.getElementById('userAvatar').innerHTML = '';
+                } else {
+                    document.getElementById('userAvatar').textContent = user.fullName ? user.fullName.charAt(0).toUpperCase() : 'U';
+                }
+            }
+            
+            // Load dashboard data
+            loadDashboardData();
+            loadRecentCircles();
+            loadRecentTransactions();
+            
+            // Set today's date as default
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = today;
+            
+            // Load user's circles for dropdown
+            loadCirclesForDropdown();
+        });
+        
+        // Load dashboard data
+        async function loadDashboardData() {
+            const token = window.auth.getToken();
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/stats`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Error al cargar estadísticas');
+                }
+                
+                const data = await response.json();
+                
+                // Update stats
+                document.getElementById('totalExpenses').textContent = `$${data.total_expenses?.toFixed(2) || '0.00'}`;
+                document.getElementById('totalIncome').textContent = `$${data.total_income?.toFixed(2) || '0.00'}`;
+                document.getElementById('netBalance').textContent = `$${data.net_balance?.toFixed(2) || '0.00'}`;
+                document.getElementById('transactionCount').textContent = data.transaction_count || '0';
+                
+                // Update balance trend
+                const balanceChange = document.querySelector('#statsGrid .stat-card:nth-child(3) .stat-change');
+                if (data.net_balance >= 0) {
+                    balanceChange.className = 'stat-change positive';
+                    balanceChange.innerHTML = '<i class="fas fa-arrow-up"></i> <span>Positivo</span>';
+                } else {
+                    balanceChange.className = 'stat-change negative';
+                    balanceChange.innerHTML = '<i class="fas fa-arrow-down"></i> <span>Negativo</span>';
+                }
+                
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                // Show error state
+                document.getElementById('statsGrid').innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--gray-color);">
+                        <i class="fas fa-exclamation-circle" style="font-size: 3rem; margin-bottom: 15px;"></i>
+                        <h3>Error al cargar estadísticas</h3>
+                        <p>No se pudieron cargar los datos del dashboard. Por favor, intenta nuevamente.</p>
+                        <button class="btn btn-primary" onclick="loadDashboardData()" style="margin-top: 15px;">
+                            <i class="fas fa-redo"></i> Reintentar
+                        </button>
+                    </div>
+                `;
+            }
+        }
+        
+        // Load recent circles
+        async function loadRecentCircles() {
+            const token = window.auth.getToken();
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/circles?limit=3`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Error al cargar grupos');
+                }
+                
+                const data = await response.json();
+                renderRecentCircles(data.circles || []);
+                
+            } catch (error) {
+                console.error('Error loading circles:', error);
+                document.getElementById('circlesList').innerHTML = `
+                    <div class="no-circles">
+                        <i class="fas fa-users"></i>
+                        <h3>No tienes grupos familiares</h3>
+                        <p>Crea tu primer grupo para compartir gastos con tu familia o amigos.</p>
+                        <a href="circles.html" class="btn btn-primary" style="margin-top: 15px;">
+                            <i class="fas fa-plus"></i> Crear Grupo
+                        </a>
+                    </div>
+                `;
+            }
+        }
+        
+        // Render recent circles
+        function renderRecentCircles(circles) {
+            const circlesList = document.getElementById('circlesList');
+            
+            if (circles.length === 0) {
+                circlesList.innerHTML = `
+                    <div class="no-circles">
+                        <i class="fas fa-users"></i>
+                        <h3>No tienes grupos familiares</h3>
+                        <p>Crea tu primer grupo para compartir gastos con tu familia o amigos.</p>
+                        <a href="circles.html" class="btn btn-primary" style="margin-top: 15px;">
+                            <i class="fas fa-plus"></i> Crear Grupo
+                        </a>
+                    </div>
+                `;
+                return;
+            }
+            
+            circlesList.innerHTML = circles.map(circle => `
+                <div class="circle-item">
+                    <div class="circle-item-header">
+                        <div class="circle-icon-small">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <span class="circle-role">${circle.role === 'admin' ? 'Administrador' : 'Miembro'}</span>
+                    </div>
+                    
+                    <h3 class="circle-item-name">${circle.name}</h3>
+                    
+                    ${circle.description ? `<p style="color: var(--gray-color); margin: 0 0 15px 0; font-size: 0.9rem;">${circle.description}</p>` : ''}
+                    
+                    <div class="circle-item-meta">
+                        <span><i class="fas fa-user-friends"></i> ${circle.member_count || 1} miembros</span>
+                        <span><i class="fas fa-money-bill-wave"></i> ${circle.currency || 'USD'}</span>
+                    </div>
+                    
+                    <div class="circle-item-actions">
+                        <a href="circles.html?circle=${circle.id}" class="btn" style="flex: 1;">
+                            <i class="fas fa-eye"></i> Ver
+                        </a>
+                        ${circle.role === 'admin' ? `
+                            <a href="circles.html?circle=${circle.id}&edit=true" class="btn btn-primary" style="flex: 1;">
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Load recent transactions
+        async function loadRecentTransactions() {
+            const token = window.auth.getToken();
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/transactions?limit=5`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Error al cargar transacciones');
+                }
+                
+                const data = await response.json();
+                renderRecentTransactions(data.transactions || []);
+                
+            } catch (error) {
+                console.error('Error loading transactions:', error);
+                document.getElementById('recentTransactions').innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--gray-color);">
+                        <i class="fas fa-exclamation-circle" style="font-size: 2rem; margin-bottom: 15px;"></i>
+                        <p>No se pudieron cargar las transacciones recientes</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Render recent transactions
+        function renderRecentTransactions(transactions) {
+            const transactionsList = document.getElementById('recentTransactions');
+            
+            if (transactions.length === 0) {
+                transactionsList.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--gray-color);">
+                        <i class="fas fa-receipt" style="font-size: 2rem; margin-bottom: 15px;"></i>
+                        <p>No hay transacciones recientes</p>
+                        <button class="btn btn-primary" onclick="showAddExpenseModal()" style="margin-top: 15px;">
+                            <i class="fas fa-plus"></i> Agregar tu primera transacción
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            transactionsList.innerHTML = transactions.map(transaction => `
+                <div class="transaction-item">
+                    <div class="transaction-info">
+                        <div class="transaction-icon ${getCategoryClass(transaction.category)}">
+                            <i class="${getCategoryIcon(transaction.category)}"></i>
+                        </div>
+                        <div class="transaction-details">
+                            <h4>${transaction.description || 'Sin descripción'}</h4>
+                            <p>${formatDate(transaction.date)} • ${transaction.category} • ${transaction.circle_name ? `Grupo: ${transaction.circle_name}` : 'Personal'}</p>
+                        </div>
+                    </div>
+                    <div class="transaction-amount ${transaction.type}">
+                        ${transaction.type === 'expense' ? '-' : '+'}$${transaction.amount?.toFixed(2) || '0.00'}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Load circles for dropdown
+        async function loadCirclesForDropdown() {
+            const token = window.auth.getToken();
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/circles`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const circleSelect = document.getElementById('circleId');
+                    
+                    if (data.circles && data.circles.length > 0) {
+                        data.circles.forEach(circle => {
+                            const option = document.createElement('option');
+                            option.value = circle.id;
+                            option.textContent = circle.name;
+                            circleSelect.appendChild(option);
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading circles for dropdown:', error);
+            }
+        }
+        
+        // Show add expense modal
+        function showAddExpenseModal() {
+            document.getElementById('addExpenseModal').classList.add('active');
+        }
+        
+        // Close add expense modal
+        function closeAddExpenseModal() {
+            document.getElementById('addExpenseModal').classList.remove('active');
+            document.getElementById('expenseForm').reset();
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = today;
+        }
+        
+        // Add transaction
+        async function addTransaction() {
+            const token = window.auth.getToken();
+            
+            const transactionData = {
+                description: document.getElementById('description').value,
+                amount: parseFloat(document.getElementById('amount').value),
+                type: document.getElementById('type').value,
+                category: document.getElementById('category').value,
+                date: document.getElementById('date').value + 'T00:00:00Z',
+                notes: document.getElementById('notes').value || null,
+                circle_id: document.getElementById('circleId').value || null
+            };
+            
+            // Validate
+            if (!transactionData.description || !transactionData.amount || transactionData.amount <= 0) {
+                alert('Por favor completa todos los campos requeridos');
+                return;
+            }
+            
+            showLoading();
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/transactions`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(transactionData)
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Error al agregar transacción');
+                }
+                
+                hideLoading();
+                closeAddExpenseModal();
+                alert('¡Transacción agregada exitosamente!');
+                
+                // Reload data
+                loadDashboardData();
+                loadRecentTransactions();
+                
+            } catch (error) {
+                hideLoading();
+                alert('Error: ' + error.message);
+            }
+        }
+        
+        // Helper functions
+        function getCategoryClass(category) {
+            const classes = {
+                'Food': 'food',
+                'Transportation': 'transport',
+                'Shopping': 'shopping',
+                'Entertainment': 'entertainment',
+                'Coffee': 'coffee',
+                'Utilities': 'transport',
+                'Healthcare': 'food',
+                'Education': 'entertainment',
+                'Other': 'shopping'
+            };
+            return classes[category] || 'shopping';
+        }
+        
+        function getCategoryIcon(category) {
+            const icons = {
+                'Food': 'fas fa-utensils',
+                'Transportation': 'fas fa-car',
+                'Shopping': 'fas fa-shopping-bag',
+                'Entertainment': 'fas fa-film',
+                'Coffee': 'fas fa-coffee',
+                'Utilities': 'fas fa-bolt',
+                'Healthcare': 'fas fa-heartbeat',
+                'Education': 'fas fa-graduation-cap',
+                'Other': 'fas fa-question-circle'
+            };
+            return icons[category] || 'fas fa-question-circle';
+        }
+        
+        function formatDate(dateString) {
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('es-ES', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+            } catch (e) {
+                return 'Fecha inválida';
+            }
+        }
+        
+        // Show/hide loading
+        function showLoading() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+        
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+        
+        // Logout
+        function logout() {
+            window.auth.logout();
+        }
+        
+        // Make functions available globally
+        window.showAddExpenseModal = showAddExpenseModal;
+        window.closeAddExpenseModal = closeAddExpenseModal;
+        window.addTransaction = addTransaction;
+        window.logout = logout;
+    </script>
+</body>
+</html>

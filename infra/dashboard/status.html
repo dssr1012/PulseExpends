@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PulseExpends Infrastructure Status</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .status-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-left: 5px solid #f59e0b;
+        }
+        
+        .status-card.critical {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+        
+        .status-card.success {
+            border-left-color: #10b981;
+            background: #f0fdf4;
+        }
+        
+        .status-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .status-title {
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .status-message {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .details {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .detail-value {
+            color: #333;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .actions {
+            display: grid;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .action-btn {
+            display: block;
+            padding: 15px;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .action-btn.secondary {
+            background: #6b7280;
+        }
+        
+        .action-btn.secondary:hover {
+            background: #4b5563;
+            box-shadow: 0 10px 20px rgba(107, 114, 128, 0.3);
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .timestamp {
+            background: #f3f4f6;
+            padding: 10px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        
+        .alert {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            color: #92400e;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .alert.critical {
+            background: #fef2f2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+        
+        .step {
+            margin: 15px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .step:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚨 Infrastructure Status</h1>
+            <p>PulseExpends Huawei Cloud Environment</p>
+        </div>
+        
+        <div class="status-card critical">
+            <div class="status-icon">⚠️</div>
+            <h2 class="status-title">ECS Instance is SHUTOFF</h2>
+            <p class="status-message">
+                The Huawei Cloud ECS instance is currently stopped. Services are not accessible.
+            </p>
+            
+            <div class="alert critical">
+                <strong>Impact:</strong> Dashboard, MCP Server, and PDF Parser services are offline.
+            </div>
+            
+            <div class="details">
+                <div class="detail-item">
+                    <span class="detail-label">Instance Name:</span>
+                    <span class="detail-value">pulseexpends-dev-pulse-afd05cc1-ecs</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Instance ID:</span>
+                    <span class="detail-value">acc9edeb-1cd4-4181-8904-881135933ac5</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Public IP:</span>
+                    <span class="detail-value">182.160.24.205</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Private IP:</span>
+                    <span class="detail-value">10.0.1.108</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Status:</span>
+                    <span class="detail-value" style="color: #ef4444;">SHUTOFF</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="alert">
+            <strong>Next Steps Required:</strong> The instance needs to be started manually through Huawei Cloud Console.
+        </div>
+        
+        <h3 style="color: #333; margin: 30px 0 15px 0;">📋 Resolution Steps</h3>
+        
+        <div class="step">Log into <a href="https://console.huaweicloud.com/ecs" target="_blank">Huawei Cloud Console</a></div>
+        <div class="step">Navigate to <strong>ECS → Instances</strong></div>
+        <div class="step">Find instance: <code>pulseexpends-dev-pulse-afd05cc1-ecs</code></div>
+        <div class="step">Click the <strong>Start</strong> button</div>
+        <div class="step">Wait 2-3 minutes for boot to complete</div>
+        <div class="step">Run deployment script: <code>./deploy-dashboard-to-ecs.sh</code></div>
+        
+        <div class="actions">
+            <a href="http://localhost:8081" class="action-btn">
+                🚀 Start Local Dashboard (Port 8081)
+            </a>
+            <a href="./DASHBOARD-README.md" class="action-btn secondary">
+                📖 View Full Documentation
+            </a>
+            <a href="https://github.com/dssr1012/PulseExpends-Infra" target="_blank" class="action-btn secondary">
+                💾 GitHub Repository
+            </a>
+        </div>
+        
+        <div class="footer">
+            <p>PulseExpends Infrastructure • Huawei Cloud • Terraform Managed</p>
+            <div class="timestamp" id="current-time"></div>
+        </div>
+    </div>
+
+    <script>
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            const options = { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                timeZoneName: 'short'
+            };
+            document.getElementById('current-time').textContent = 
+                'Last Updated: ' + now.toLocaleDateString('en-US', options);
+        }
+        
+        updateTime();
+        setInterval(updateTime, 1000);
+        
+        // Auto-refresh every 30 seconds to check status
+        setTimeout(() => {
+            window.location.reload();
+        }, 30000);
+    </script>
+</body>
+</html>

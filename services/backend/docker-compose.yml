@@ -1,0 +1,108 @@
+version: '3.8'
+
+services:
+  # PostgreSQL database
+  postgres:
+    image: postgres:15-alpine
+    container_name: pulseexpends-postgres
+    environment:
+      POSTGRES_DB: pulseexpends
+      POSTGRES_USER: pulseexpends
+      POSTGRES_PASSWORD: pulseexpends_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/auth/database/migrations:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pulseexpends"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pulseexpends-network
+
+  # Auth API server
+  auth-api:
+    build: ./backend/auth
+    container_name: pulseexpends-auth-api
+    environment:
+      - DATABASE_URL=postgresql://pulseexpends:pulseexpends_password@postgres:5432/pulseexpends
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REDIRECT_URI=http://localhost:8082/api/auth/google/callback
+      - JWT_SECRET=${JWT_SECRET}
+      - PORT=8082
+    ports:
+      - "8082:8082"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend/auth:/app
+      - /app/go/pkg/mod
+    command: go run main.go
+    networks:
+      - pulseexpends-network
+
+  # MCP Server (existing)
+  mcp-server:
+    build: ./backend/mcp-server
+    container_name: pulseexpends-mcp-server
+    environment:
+      - DATABASE_URL=postgresql://pulseexpends:pulseexpends_password@postgres:5432/pulseexpends
+      - AUTH_API_URL=http://auth-api:8082
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - auth-api
+    volumes:
+      - ./backend/mcp-server:/app
+    networks:
+      - pulseexpends-network
+
+  # PDF Parser (existing)
+  pdf-parser:
+    build: ./backend/pdf-parser
+    container_name: pulseexpends-pdf-parser
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/pdf-parser:/app
+    networks:
+      - pulseexpends-network
+
+  # Frontend (Nginx)
+  frontend:
+    image: nginx:alpine
+    container_name: pulseexpends-frontend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./frontend/public:/usr/share/nginx/html
+      - ./backend/nginx-config/nginx-subdomains.conf:/etc/nginx/conf.d/default.conf
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - auth-api
+      - mcp-server
+      - pdf-parser
+    networks:
+      - pulseexpends-network
+
+  # Status Dashboard (existing)
+  status-dashboard:
+    build: ./backend/status-dashboard
+    container_name: pulseexpends-status-dashboard
+    ports:
+      - "8081:8081"
+    networks:
+      - pulseexpends-network
+
+volumes:
+  postgres_data:
+
+networks:
+  pulseexpends-network:
+    driver: bridge

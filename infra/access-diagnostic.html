@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access Diagnostic - PulseExpends</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .test {
+            margin: 20px 0;
+            padding: 15px;
+            border-left: 4px solid #4CAF50;
+            background-color: #f9f9f9;
+        }
+        .test h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .code {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .instructions {
+            background-color: #e8f4fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Access Diagnostic - PulseExpends</h1>
+        
+        <div class="instructions">
+            <h3>📋 Instructions:</h3>
+            <p>Share this link with people who cannot access the application:</p>
+            <div class="code">http://pulseexpends.duckdns.org/diagnostico.html</div>
+            <p>Or ask them to visit: <strong>http://182.160.24.205/diagnostico.html</strong></p>
+        </div>
+
+        <div class="test">
+            <h3>1. Basic Connection Test</h3>
+            <p>This test verifies if you can connect to the server:</p>
+            <div id="test1" class="result">Running test...</div>
+            <button onclick="runTest1()">Run Test 1</button>
+        </div>
+
+        <div class="test">
+            <h3>2. DNS Test</h3>
+            <p>This test verifies if your DNS resolves the domain correctly:</p>
+            <div id="test2" class="result">Waiting for execution...</div>
+            <button onclick="runTest2()">Run Test 2</button>
+        </div>
+
+        <div class="test">
+            <h3>3. Port 80 Test</h3>
+            <p>This test verifies if port 80 is accessible:</p>
+            <div id="test3" class="result">Waiting for execution...</div>
+            <button onclick="runTest3()">Run Test 3</button>
+        </div>
+
+        <div class="test">
+            <h3>4. Web Application Test</h3>
+            <p>This test verifies if the web application responds:</p>
+            <div id="test4" class="result">Waiting for execution...</div>
+            <button onclick="runTest4()">Run Test 4</button>
+        </div>
+
+        <div class="test">
+            <h3>5. Authentication API Test</h3>
+            <p>This test verifies if the authentication API works:</p>
+            <div id="test5" class="result">Waiting for execution...</div>
+            <button onclick="runTest5()">Run Test 5</button>
+        </div>
+
+        <div class="instructions">
+            <h3>🔧 Common Solutions:</h3>
+            <ul>
+                <li><strong>If test 1 fails:</strong> Your internet connection has problems</li>
+                <li><strong>If test 2 fails:</strong> DNS issues. Use the direct IP: <code>182.160.24.205</code></li>
+                <li><strong>If test 3 fails:</strong> Firewall blocking port 80. Contact your network administrator</li>
+                <li><strong>If test 4 fails:</strong> The application is not responding. Try again later</li>
+                <li><strong>If test 5 fails:</strong> Authentication API has problems</li>
+            </ul>
+            
+            <h3>📞 Technical Information:</h3>
+            <div class="code">
+                Server: 182.160.24.205 (Chile - Huawei Cloud)<br>
+                Port: 80 (HTTP)<br>
+                Domain: pulseexpends.duckdns.org<br>
+                Subdomains: api.pulseexpends.duckdns.org, pdf.pulseexpends.duckdns.org, status.pulseexpends.duckdns.org<br>
+                Last update: 2026-05-20 08:30 GMT-4
+            </div>
+        </div>
+
+        <div id="summary" class="result" style="display: none;">
+            <h3>📊 Diagnostic Summary</h3>
+            <div id="summaryContent"></div>
+        </div>
+    </div>
+
+    <script>
+        function updateResult(elementId, success, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = 'result ' + (success ? 'success' : 'error');
+        }
+
+        function runTest1() {
+            updateResult('test1', false, 'Testing internet connection...');
+            fetch('https://httpbin.org/get')
+                .then(response => response.ok)
+                .then(success => {
+                    if (success) {
+                        updateResult('test1', true, '✅ Internet connection: OK');
+                    } else {
+                        updateResult('test1', false, '❌ Internet connection: FAILED');
+                    }
+                })
+                .catch(() => {
+                    updateResult('test1', false, '❌ Internet connection: FAILED - No internet access');
+                });
+        }
+
+        function runTest2() {
+            updateResult('test2', false, 'Resolving DNS...');
+            fetch('https://dns.google/resolve?name=pulseexpends.duckdns.org&type=A')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.Answer && data.Answer.length > 0) {
+                        const ip = data.Answer[0].data;
+                        updateResult('test2', true, `✅ DNS resolved: ${ip}`);
+                    } else {
+                        updateResult('test2', false, '❌ DNS: Could not resolve');
+                    }
+                })
+                .catch(() => {
+                    // Fallback to direct fetch
+                    fetch('http://pulseexpends.duckdns.org/favicon.ico', { mode: 'no-cors' })
+                        .then(() => updateResult('test2', true, '✅ DNS: Indirect resolution OK'))
+                        .catch(() => updateResult('test2', false, '❌ DNS: Could not resolve'));
+                });
+        }
+
+        function runTest3() {
+            updateResult('test3', false, 'Testing port 80...');
+            fetch('http://182.160.24.205/favicon.ico', { mode: 'no-cors' })
+                .then(() => updateResult('test3', true, '✅ Port 80: ACCESSIBLE'))
+                .catch(() => {
+                    // Try with domain
+                    fetch('http://pulseexpends.duckdns.org/favicon.ico', { mode: 'no-cors' })
+                        .then(() => updateResult('test3', true, '✅ Port 80: ACCESSIBLE (via domain)'))
+                        .catch(() => updateResult('test3', false, '❌ Port 80: BLOCKED'));
+                });
+        }
+
+        function runTest4() {
+            updateResult('test4', false, 'Testing web application...');
+            fetch('http://pulseexpends.duckdns.org/')
+                .then(response => {
+                    if (response.ok) {
+                        updateResult('test4', true, `✅ Web application: RESPONDS (HTTP ${response.status})`);
+                    } else {
+                        updateResult('test4', false, `❌ Web application: ERROR (HTTP ${response.status})`);
+                    }
+                })
+                .catch(() => {
+                    // Try with IP
+                    fetch('http://182.160.24.205/')
+                        .then(response => {
+                            if (response.ok) {
+                                updateResult('test4', true, `✅ Web application: RESPONDS via IP (HTTP ${response.status})`);
+                            } else {
+                                updateResult('test4', false, `❌ Web application: ERROR via IP (HTTP ${response.status})`);
+                            }
+                        })
+                        .catch(() => updateResult('test4', false, '❌ Web application: NO RESPONSE'));
+                });
+        }
+
+        function runTest5() {
+            updateResult('test5', false, 'Testing authentication API...');
+            fetch('http://pulseexpends.duckdns.org/api/auth/health')
+                .then(response => {
+                    if (response.ok) {
+                        return response.json().then(data => {
+                            updateResult('test5', true, `✅ Auth API: RESPONDS (${data.status || 'OK'})`);
+                        });
+                    } else {
+                        updateResult('test5', false, `❌ Auth API: ERROR (HTTP ${response.status})`);
+                    }
+                })
+                .catch(() => {
+                    // Try with IP
+                    fetch('http://182.160.24.205/api/auth/health')
+                        .then(response => {
+                            if (response.ok) {
+                                return response.json().then(data => {
+                                    updateResult('test5', true, `✅ Auth API: RESPONDS via IP (${data.status || 'OK'})`);
+                                });
+                            } else {
+                                updateResult('test5', false, `❌ Auth API: ERROR via IP (HTTP ${response.status})`);
+                            }
+                        })
+                        .catch(() => updateResult('test5', false, '❌ Auth API: NO RESPONSE'));
+                });
+        }
+
+        // Run all tests automatically
+        setTimeout(() => {
+            runTest1();
+            setTimeout(runTest2, 1000);
+            setTimeout(runTest3, 2000);
+            setTimeout(runTest4, 3000);
+            setTimeout(runTest5, 4000);
+            
+            // Show summary after 6 seconds
+            setTimeout(() => {
+                const summary = document.getElementById('summary');
+                const summaryContent = document.getElementById('summaryContent');
+                summary.style.display = 'block';
+                
+                const tests = ['test1', 'test2', 'test3', 'test4', 'test5'];
+                let passed = 0;
+                let failed = 0;
+                
+                tests.forEach(testId => {
+                    const testElement = document.getElementById(testId);
+                    if (testElement.classList.contains('success')) {
+                        passed++;
+                    } else if (testElement.classList.contains('error')) {
+                        failed++;
+                    }
+                });
+                
+                summaryContent.innerHTML = `
+                    <p>✅ Tests passed: ${passed}</p>
+                    <p>❌ Tests failed: ${failed}</p>
+                    <p>📈 Success rate: ${Math.round((passed / tests.length) * 100)}%</p>
+                    <p><strong>Recommendation:</strong> ${failed === 0 ? 'Everything works correctly' : 'Review failed tests'}</p>
+                `;
+            }, 6000);
+        }, 1000);
+    </script>
+</body>
+</html>

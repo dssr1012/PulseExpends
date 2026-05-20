@@ -1,0 +1,17 @@
+[Unit]
+Description=PulseExpends MCP Server (Placeholder)
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt
+ExecStart=/opt/mcp-server-placeholder
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=pulseexpends-mcp
+
+[Install]
+WantedBy=multi-user.target
