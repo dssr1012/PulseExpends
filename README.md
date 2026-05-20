@@ -157,12 +157,15 @@ pytest tests/
 
 ### Manual Deployment
 ```bash
-# Deploy to ECS
+# Deploy to ECS with paths (recommended for DuckDNS)
 cd infra
+./deploy-with-paths.sh
+
+# Or with subdomains (requires Cloudflare or custom domain)
 ./setup-ecs-subdomains.sh
 
-# Configure DuckDNS
-./configure-duckdns-secure.sh
+# Configure DuckDNS (only main domain needed)
+./scripts/configure-duckdns.sh
 ```
 
 ### Automated Deployment
@@ -171,6 +174,23 @@ GitHub Actions workflows are available in `.github/workflows/` for:
 - Automated testing
 - Infrastructure deployment
 - Security scanning
+
+### Path-based Deployment (Recommended for DuckDNS)
+Since DuckDNS doesn't natively support subdomains, we use path-based routing:
+
+```bash
+# Deploy with paths (no subdomains required)
+cd infra
+./deploy-with-paths.sh
+```
+
+**Access URLs with paths:**
+- Frontend: `http://pulseexpends.duckdns.org/`
+- MCP Server API: `http://pulseexpends.duckdns.org/mcp/`
+- PDF Parser API: `http://pulseexpends.duckdns.org/pdf/`
+- Status Dashboard: `http://pulseexpends.duckdns.org/status/`
+
+See [Paths Deployment Guide](infra/PATHS-DEPLOYMENT-GUIDE.md) for detailed instructions.
 
 ## 📝 Documentation
 
