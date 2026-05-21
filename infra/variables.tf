@@ -568,7 +568,7 @@ variable "enable_rds" {
 variable "rds_instance_type" {
   description = "RDS instance type"
   type        = string
-  default     = "rds.pg.c2.medium"
+  default     = "rds.pg.n1.large.2"
 }
 
 variable "rds_storage" {
@@ -608,9 +608,15 @@ variable "rds_password" {
 }
 
 variable "rds_database_name" {
-  description = "RDS database name"
+  description = "RDS primary database name (auth service)"
   type        = string
-  default     = "pulseexpends"
+  default     = "pulseexpends_auth"
+}
+
+variable "rds_core_database_name" {
+  description = "RDS core database name (MCP/core service)"
+  type        = string
+  default     = "pulseexpends_core"
 }
 
 variable "rds_backup_retention" {

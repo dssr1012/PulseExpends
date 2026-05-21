@@ -85,8 +85,9 @@ obs_buckets = {
   }
 }
 
-# Database Configuration (Phase 2 - disabled for now)
-enable_database = false
+# Database Configuration
+enable_database = true
+enable_rds = true
 database_engine = "postgresql"
 database_version = "13"
 database_instance_class = "rds.pg.n1.large.2"
@@ -103,7 +104,7 @@ alert_recipients = ["your-email@example.com"]  # Add your email for alerts
 enable_dashboards = true
 
 # Security Configuration
-enable_kms = true
+enable_kms = false  # Temporarily disabled due to KMS key state issue
 kms_key_alias = "alias/pulse-expends"
 enable_waf = false  # Enable for production
 enable_antiddos = true
@@ -120,6 +121,11 @@ obs_secret_key = "Ab4OYYfiMnhAPt8R2fdagz29y0yK5OmrCHHaO439"  # Same as secret_ke
 obs_bucket_name = "pulse-expends-data-dev"
 python_service_url = "http://localhost:8000"
 jwt_secret = "pulse-expends-jwt-secret-prod-2024-change-me"  # Secure JWT secret for authentication
+
+# RDS Configuration
+rds_password = "pptKH9g8dWXDYnPKdCRTJzY46COSvLI"
+rds_database_name = "pulseexpends_auth"       # Auth service database
+rds_core_database_name = "pulseexpends_core"  # MCP/Core service database
 
 # DuckDNS Configuration (for automatic DNS updates)
 duckdns_token = ""  # Add your DuckDNS token here after deployment

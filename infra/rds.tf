@@ -4,12 +4,12 @@ resource "huaweicloud_rds_instance" "postgresql" {
   
   name                = "${local.name_prefix}-rds"
   flavor             = var.rds_instance_type
-  ha_replication_mode = var.rds_ha_replication_mode
+  # ha_replication_mode = var.rds_ha_replication_mode  # Single instance, no HA
   vpc_id             = huaweicloud_vpc.main.id
   subnet_id          = huaweicloud_vpc_subnet.public.id
   security_group_id  = huaweicloud_networking_secgroup.main.id
   
-  availability_zone = ["la-south-2a", "la-south-2b"]
+  availability_zone = ["la-south-2a"]
   
   db {
     type     = "PostgreSQL"
@@ -18,7 +18,7 @@ resource "huaweicloud_rds_instance" "postgresql" {
   }
   
   volume {
-    type = "ULTRAHIGH"
+    type = "ESSD"
     size = var.rds_storage
   }
   
@@ -42,12 +42,23 @@ resource "huaweicloud_rds_instance" "postgresql" {
   }
 }
 
-# Database for PulseExpends application
-resource "huaweicloud_rds_database" "pulseexpends" {
+# Database for PulseExpends Auth service
+resource "huaweicloud_rds_database" "pulseexpends_auth" {
   count = var.enable_rds ? 1 : 0
   
   instance_id   = huaweicloud_rds_instance.postgresql[0].id
   name          = var.rds_database_name
+  character_set = "UTF8"
+  
+  depends_on = [huaweicloud_rds_instance.postgresql]
+}
+
+# Database for PulseExpends Core/MCP service
+resource "huaweicloud_rds_database" "pulseexpends_core" {
+  count = var.enable_rds ? 1 : 0
+  
+  instance_id   = huaweicloud_rds_instance.postgresql[0].id
+  name          = var.rds_core_database_name
   character_set = "UTF8"
   
   depends_on = [huaweicloud_rds_instance.postgresql]
@@ -65,21 +76,21 @@ resource "huaweicloud_rds_account" "app_user" {
 }
 
 # Grant privileges to the user
-resource "huaweicloud_rds_database_privilege" "app_user_privileges" {
-  count = var.enable_rds ? 1 : 0
-  
-  instance_id = huaweicloud_rds_instance.postgresql[0].id
-  db_name     = huaweicloud_rds_database.pulseexpends[0].name
-  users {
-    name     = huaweicloud_rds_account.app_user[0].name
-    readonly = false
-  }
-  
-  depends_on = [
-    huaweicloud_rds_database.pulseexpends,
-    huaweicloud_rds_account.app_user
-  ]
-}
+# NOTE: huaweicloud_rds_database_privilege is not supported for PostgreSQL engine
+# Privileges are granted via SQL directly during migration
+# resource "huaweicloud_rds_database_privilege" "app_user_privileges" {
+#   count = var.enable_rds ? 1 : 0
+#   instance_id = huaweicloud_rds_instance.postgresql[0].id
+#   db_name     = huaweicloud_rds_database.pulseexpends[0].name
+#   users {
+#     name     = huaweicloud_rds_account.app_user[0].name
+#     readonly = false
+#   }
+#   depends_on = [
+#     huaweicloud_rds_database.pulseexpends,
+#     huaweicloud_rds_account.app_user
+#   ]
+# }
 
 # Security group rule for PostgreSQL access
 resource "huaweicloud_networking_secgroup_rule" "postgresql" {
@@ -138,14 +149,25 @@ output "rds_username" {
   sensitive   = true
 }
 
+output "rds_core_database_name" {
+  description = "Name of the RDS core database (MCP service)"
+  value       = var.enable_rds ? var.rds_core_database_name : null
+}
+
 output "rds_connection_string" {
-  description = "PostgreSQL connection string"
+  description = "PostgreSQL connection string for auth database"
   value       = var.enable_rds ? "postgresql://${var.rds_username}:${var.rds_password}@${huaweicloud_rds_instance.postgresql[0].private_ips[0]}:5432/${var.rds_database_name}" : null
   sensitive   = true
 }
 
+output "rds_core_connection_string" {
+  description = "PostgreSQL connection string for core database"
+  value       = var.enable_rds ? "postgresql://${var.rds_username}:${var.rds_password}@${huaweicloud_rds_instance.postgresql[0].private_ips[0]}:5432/${var.rds_core_database_name}" : null
+  sensitive   = true
+}
+
 output "rds_public_connection_string" {
-  description = "PostgreSQL public connection string (if enabled)"
+  description = "PostgreSQL public connection string for auth database (if enabled)"
   value       = var.enable_rds && var.enable_rds_public_access ? "postgresql://${var.rds_username}:${var.rds_password}@${huaweicloud_rds_instance.postgresql[0].public_ips[0]}:5432/${var.rds_database_name}" : null
   sensitive   = true
 }
@@ -157,6 +179,6 @@ output "rds_status" {
 
 output "rds_instructions" {
   description = "Instructions for connecting to RDS"
-  value       = var.enable_rds ? "\n📋 RDS PostgreSQL Configuration:\n===============================\nDatabase: ${var.rds_database_name}\nUsername: ${var.rds_username}\nPassword: [set via variable]\nEndpoint: ${huaweicloud_rds_instance.postgresql[0].private_ips[0]}:5432\n\nConnection String:\npostgresql://${var.rds_username}:[PASSWORD]@${huaweicloud_rds_instance.postgresql[0].private_ips[0]}:5432/${var.rds_database_name}\n\nTo connect from ECS instance:\nPGPASSWORD=[PASSWORD] psql -h ${huaweicloud_rds_instance.postgresql[0].private_ips[0]} -U ${var.rds_username} -d ${var.rds_database_name}\n\nTo update application configuration:\nDATABASE_URL=postgresql://${var.rds_username}:[PASSWORD]@${huaweicloud_rds_instance.postgresql[0].private_ips[0]}:5432/${var.rds_database_name}\n" : "RDS is disabled. Set enable_rds = true to create a PostgreSQL database."
+  value       = var.enable_rds ? "\n📋 RDS PostgreSQL Configuration:\n===============================\nInstance: ${huaweicloud_rds_instance.postgresql[0].name}\nEndpoint: ${huaweicloud_rds_instance.postgresql[0].private_ips[0]}:5432\n\nAuth Database: ${var.rds_database_name}\nCore Database: ${var.rds_core_database_name}\nUsername: ${var.rds_username}\nPassword: [set via variable]\n\nAuth Connection String:\npostgresql://${var.rds_username}:[PASSWORD]@${huaweicloud_rds_instance.postgresql[0].private_ips[0]}:5432/${var.rds_database_name}\n\nCore Connection String:\npostgresql://${var.rds_username}:[PASSWORD]@${huaweicloud_rds_instance.postgresql[0].private_ips[0]}:5432/${var.rds_core_database_name}\n\nTo connect from ECS instance:\nPGPASSWORD=[PASSWORD] psql -h ${huaweicloud_rds_instance.postgresql[0].private_ips[0]} -U ${var.rds_username} -d ${var.rds_database_name}\n" : "RDS is disabled. Set enable_rds = true to create a PostgreSQL database."
   sensitive   = true
 }
