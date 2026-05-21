@@ -1,10 +1,40 @@
 package models
 
 import (
+	"database/sql/driver"
+	"encoding/json"
 	"time"
 
 	"gorm.io/gorm"
 )
+
+// StringSlice is a custom type for storing []string as JSONB in PostgreSQL
+type StringSlice []string
+
+func (s StringSlice) Value() (driver.Value, error) {
+	if s == nil {
+		return "[]", nil
+	}
+	bytes, err := json.Marshal(s)
+	return string(bytes), err
+}
+
+func (s *StringSlice) Scan(value interface{}) error {
+	if value == nil {
+		*s = StringSlice{}
+		return nil
+	}
+	var bytes []byte
+	switch v := value.(type) {
+	case string:
+		bytes = []byte(v)
+	case []byte:
+		bytes = v
+	default:
+		return json.Unmarshal(nil, s)
+	}
+	return json.Unmarshal(bytes, s)
+}
 
 type Circle struct {
 	ID          string         `json:"id" gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
@@ -43,7 +73,7 @@ type CircleSettings struct {
 	AllowMemberDeleteTransactions bool     `json:"allow_member_delete_transactions" gorm:"default:false"`
 	RequireApprovalForAdd         bool     `json:"require_approval_for_add" gorm:"default:false"`
 	RequireApprovalForEdit        bool     `json:"require_approval_for_edit" gorm:"default:false"`
-	DefaultCategories             []string `json:"default_categories" gorm:"type:jsonb"`
+	DefaultCategories             StringSlice `json:"default_categories" gorm:"type:jsonb"`
 	BudgetAlertsEnabled           bool     `json:"budget_alerts_enabled" gorm:"default:true"`
 	MonthlyBudget                float64  `json:"monthly_budget" gorm:"default:0"`
 	NotificationPreferences       NotificationPreferences `json:"notification_preferences" gorm:"embedded"`

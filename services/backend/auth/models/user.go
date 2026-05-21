@@ -69,6 +69,7 @@ type UserSession struct {
 	DeviceInfo string    `json:"device_info"`
 	IPAddress  string    `json:"ip_address"`
 	UserAgent  string    `json:"user_agent"`
+	IsActive   bool      `json:"is_active" gorm:"default:true"`
 	ExpiresAt  time.Time `json:"expires_at" gorm:"index"`
 	CreatedAt  time.Time `json:"created_at" gorm:"autoCreateTime"`
 	LastUsedAt time.Time `json:"last_used_at" gorm:"autoUpdateTime"`

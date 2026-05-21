@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
 
+	"pulseexpends/backend/auth/middleware"
 	"pulseexpends/backend/auth/models"
 )
 
@@ -22,7 +23,11 @@ func NewCircleHandler(db *gorm.DB) *CircleHandler {
 
 // GetCircles retrieves all circles for the user
 func (h *CircleHandler) GetCircles(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(*models.User)
+	user := middleware.GetUserFromContext(r.Context())
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 
 	var circles []models.Circle
 	err := h.db.Joins("JOIN circle_members ON circle_members.circle_id = circles.id").
@@ -47,7 +52,11 @@ func (h *CircleHandler) GetCircles(w http.ResponseWriter, r *http.Request) {
 
 // GetCircle retrieves a specific circle
 func (h *CircleHandler) GetCircle(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(*models.User)
+	user := middleware.GetUserFromContext(r.Context())
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	vars := mux.Vars(r)
 	circleID := vars["id"]
 
@@ -75,7 +84,11 @@ func (h *CircleHandler) GetCircle(w http.ResponseWriter, r *http.Request) {
 
 // CreateCircle creates a new circle
 func (h *CircleHandler) CreateCircle(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(*models.User)
+	user := middleware.GetUserFromContext(r.Context())
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 
 	var req struct {
 		Name        string `json:"name"`
@@ -140,7 +153,11 @@ func (h *CircleHandler) CreateCircle(w http.ResponseWriter, r *http.Request) {
 
 // UpdateCircle updates an existing circle
 func (h *CircleHandler) UpdateCircle(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(*models.User)
+	user := middleware.GetUserFromContext(r.Context())
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	vars := mux.Vars(r)
 	circleID := vars["id"]
 
@@ -206,7 +223,11 @@ func (h *CircleHandler) UpdateCircle(w http.ResponseWriter, r *http.Request) {
 
 // DeleteCircle deletes a circle (soft delete)
 func (h *CircleHandler) DeleteCircle(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(*models.User)
+	user := middleware.GetUserFromContext(r.Context())
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	vars := mux.Vars(r)
 	circleID := vars["id"]
 
@@ -243,7 +264,11 @@ func (h *CircleHandler) DeleteCircle(w http.ResponseWriter, r *http.Request) {
 
 // GetCircleMembers retrieves all members of a circle
 func (h *CircleHandler) GetCircleMembers(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(*models.User)
+	user := middleware.GetUserFromContext(r.Context())
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	vars := mux.Vars(r)
 	circleID := vars["id"]
 
@@ -278,7 +303,11 @@ func (h *CircleHandler) GetCircleMembers(w http.ResponseWriter, r *http.Request)
 
 // AddMember adds a new member to a circle
 func (h *CircleHandler) AddMember(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(*models.User)
+	user := middleware.GetUserFromContext(r.Context())
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	vars := mux.Vars(r)
 	circleID := vars["id"]
 
@@ -356,7 +385,11 @@ func (h *CircleHandler) AddMember(w http.ResponseWriter, r *http.Request) {
 
 // RemoveMember removes a member from a circle
 func (h *CircleHandler) RemoveMember(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(*models.User)
+	user := middleware.GetUserFromContext(r.Context())
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	vars := mux.Vars(r)
 	circleID := vars["id"]
 	memberID := vars["userId"]
@@ -396,7 +429,11 @@ func (h *CircleHandler) RemoveMember(w http.ResponseWriter, r *http.Request) {
 
 // UpdateMemberRole updates a member's role in a circle
 func (h *CircleHandler) UpdateMemberRole(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(*models.User)
+	user := middleware.GetUserFromContext(r.Context())
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	vars := mux.Vars(r)
 	circleID := vars["id"]
 	memberID := vars["userId"]
@@ -445,7 +482,11 @@ func (h *CircleHandler) UpdateMemberRole(w http.ResponseWriter, r *http.Request)
 
 // JoinCircle allows a user to join a circle using a join code
 func (h *CircleHandler) JoinCircle(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(*models.User)
+	user := middleware.GetUserFromContext(r.Context())
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	vars := mux.Vars(r)
 	joinCode := vars["code"]
 
@@ -500,7 +541,11 @@ func (h *CircleHandler) JoinCircle(w http.ResponseWriter, r *http.Request) {
 
 // InviteToCircle creates an invitation for a user to join a circle
 func (h *CircleHandler) InviteToCircle(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(*models.User)
+	user := middleware.GetUserFromContext(r.Context())
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	vars := mux.Vars(r)
 	circleID := vars["id"]
 
@@ -580,7 +625,11 @@ func (h *CircleHandler) InviteToCircle(w http.ResponseWriter, r *http.Request) {
 
 // GetCircleTransactions retrieves transactions for a circle
 func (h *CircleHandler) GetCircleTransactions(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(*models.User)
+	user := middleware.GetUserFromContext(r.Context())
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	vars := mux.Vars(r)
 	circleID := vars["id"]
 
@@ -648,7 +697,11 @@ func (h *CircleHandler) GetCircleTransactions(w http.ResponseWriter, r *http.Req
 
 // GetCircleActivities retrieves recent activities for a circle
 func (h *CircleHandler) GetCircleActivities(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(*models.User)
+	user := middleware.GetUserFromContext(r.Context())
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	vars := mux.Vars(r)
 	circleID := vars["id"]
 
@@ -695,7 +748,11 @@ func (h *CircleHandler) GetCircleActivities(w http.ResponseWriter, r *http.Reque
 
 // GetCircleStats retrieves statistics for a circle
 func (h *CircleHandler) GetCircleStats(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(*models.User)
+	user := middleware.GetUserFromContext(r.Context())
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	vars := mux.Vars(r)
 	circleID := vars["id"]
 

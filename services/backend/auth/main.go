@@ -41,6 +41,8 @@ func initDB() {
 	// Auto migrate models
 	err = db.AutoMigrate(
 		&models.User{},
+		&models.UserAuth{},
+		&models.UserPreferences{},
 		&models.Circle{},
 		&models.CircleMember{},
 		&models.Transaction{},

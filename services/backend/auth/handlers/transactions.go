@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
 
+	"pulseexpends/backend/auth/middleware"
 	"pulseexpends/backend/auth/models"
 )
 
@@ -22,7 +23,11 @@ func NewTransactionHandler(db *gorm.DB) *TransactionHandler {
 
 // GetTransactions retrieves the authenticated user's transactions with optional filters
 func (h *TransactionHandler) GetTransactions(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(*models.User)
+	user := middleware.GetUserFromContext(r.Context())
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 
 	// Parse query parameters
 	query := r.URL.Query()
@@ -102,7 +107,11 @@ func (h *TransactionHandler) GetTransactions(w http.ResponseWriter, r *http.Requ
 
 // GetTransaction retrieves a specific transaction by ID
 func (h *TransactionHandler) GetTransaction(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(*models.User)
+	user := middleware.GetUserFromContext(r.Context())
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	vars := mux.Vars(r)
 	transactionID := vars["id"]
 
@@ -139,7 +148,11 @@ func (h *TransactionHandler) GetTransaction(w http.ResponseWriter, r *http.Reque
 
 // CreateTransaction creates a new transaction
 func (h *TransactionHandler) CreateTransaction(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(*models.User)
+	user := middleware.GetUserFromContext(r.Context())
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 
 	var req models.CreateTransactionRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -224,7 +237,11 @@ func (h *TransactionHandler) CreateTransaction(w http.ResponseWriter, r *http.Re
 
 // UpdateTransaction updates an existing transaction
 func (h *TransactionHandler) UpdateTransaction(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(*models.User)
+	user := middleware.GetUserFromContext(r.Context())
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	vars := mux.Vars(r)
 	transactionID := vars["id"]
 
@@ -307,7 +324,11 @@ func (h *TransactionHandler) UpdateTransaction(w http.ResponseWriter, r *http.Re
 
 // DeleteTransaction soft-deletes a transaction (GORM sets deleted_at)
 func (h *TransactionHandler) DeleteTransaction(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(*models.User)
+	user := middleware.GetUserFromContext(r.Context())
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	vars := mux.Vars(r)
 	transactionID := vars["id"]
 
@@ -349,7 +370,11 @@ func (h *TransactionHandler) DeleteTransaction(w http.ResponseWriter, r *http.Re
 
 // GetCircleTransactions retrieves all transactions for a circle
 func (h *TransactionHandler) GetCircleTransactions(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(*models.User)
+	user := middleware.GetUserFromContext(r.Context())
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	vars := mux.Vars(r)
 	circleID := vars["circleId"]
 
@@ -441,7 +466,11 @@ func (h *TransactionHandler) GetCircleTransactions(w http.ResponseWriter, r *htt
 
 // SplitTransaction divides a transaction among multiple users
 func (h *TransactionHandler) SplitTransaction(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(*models.User)
+	user := middleware.GetUserFromContext(r.Context())
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	vars := mux.Vars(r)
 	transactionID := vars["id"]
 
@@ -508,7 +537,11 @@ func (h *TransactionHandler) SplitTransaction(w http.ResponseWriter, r *http.Req
 
 // ApproveTransaction approves a pending circle transaction
 func (h *TransactionHandler) ApproveTransaction(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(*models.User)
+	user := middleware.GetUserFromContext(r.Context())
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	vars := mux.Vars(r)
 	transactionID := vars["id"]
 
@@ -560,7 +593,11 @@ func (h *TransactionHandler) ApproveTransaction(w http.ResponseWriter, r *http.R
 
 // RejectTransaction rejects a pending circle transaction
 func (h *TransactionHandler) RejectTransaction(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(*models.User)
+	user := middleware.GetUserFromContext(r.Context())
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	vars := mux.Vars(r)
 	transactionID := vars["id"]
 
@@ -612,7 +649,11 @@ func (h *TransactionHandler) RejectTransaction(w http.ResponseWriter, r *http.Re
 
 // GetUserStats returns aggregated statistics for the authenticated user
 func (h *TransactionHandler) GetUserStats(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(*models.User)
+	user := middleware.GetUserFromContext(r.Context())
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 
 	var stats struct {
 		TotalIncome      float64 `json:"totalIncome"`
@@ -656,7 +697,11 @@ func (h *TransactionHandler) GetUserStats(w http.ResponseWriter, r *http.Request
 
 // GetCircleStats returns aggregated statistics for a circle
 func (h *TransactionHandler) GetCircleStats(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(*models.User)
+	user := middleware.GetUserFromContext(r.Context())
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	vars := mux.Vars(r)
 	circleID := vars["circleId"]
 
@@ -718,7 +763,11 @@ func (h *TransactionHandler) GetCircleStats(w http.ResponseWriter, r *http.Reque
 
 // GetMonthlyStats returns monthly spending breakdown for dashboard charts
 func (h *TransactionHandler) GetMonthlyStats(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(*models.User)
+	user := middleware.GetUserFromContext(r.Context())
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 
 	query := r.URL.Query()
 	year := query.Get("year")
@@ -788,7 +837,11 @@ func (h *TransactionHandler) GetMonthlyStats(w http.ResponseWriter, r *http.Requ
 
 // GetCategoryStats returns spending breakdown by category for dashboard charts
 func (h *TransactionHandler) GetCategoryStats(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(*models.User)
+	user := middleware.GetUserFromContext(r.Context())
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 
 	query := r.URL.Query()
 	circleID := query.Get("circleId")

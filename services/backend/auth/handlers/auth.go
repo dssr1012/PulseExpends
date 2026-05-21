@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -101,11 +102,22 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Auto-generate username from email if not provided
+	username := req.Username
+	if username == "" {
+		// Use the local part of the email as username
+		if idx := strings.Index(req.Email, "@"); idx > 0 {
+			username = req.Email[:idx]
+		} else {
+			username = req.Email
+		}
+	}
+
 	// Create user
 	now := time.Now()
 	user := models.User{
 		Email:      req.Email,
-		Username:   req.Username,
+		Username:   username,
 		FullName:   req.FullName,
 		Provider:   "local",
 		IsActive:   true,
@@ -140,6 +152,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	// Create session
 	session := models.UserSession{
+		IsActive: true,
 		UserID:    user.ID,
 		Token:     token,
 		IPAddress: r.RemoteAddr,
@@ -214,6 +227,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	// Create session
 	session := models.UserSession{
+		IsActive: true,
 		UserID:    user.ID,
 		Token:     token,
 		IPAddress: r.RemoteAddr,
@@ -346,6 +360,7 @@ func (h *AuthHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 
 	// Create session
 	session := models.UserSession{
+		IsActive: true,
 		UserID:    user.ID,
 		Token:     jwtToken,
 		IPAddress: r.RemoteAddr,
