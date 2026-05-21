@@ -51,7 +51,7 @@ func initDB() {
 	var err error
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
-		dsn = "postgresql://pulseexpends:pulseexpends_password@localhost:5432/pulseexpends"
+		dsn = "postgresql://pulseexpends:pulseexpends_password@localhost:5432/pulseexpends_core"
 	}
 
 	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})

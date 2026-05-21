@@ -1,22 +1,38 @@
-# Session Snapshot — 2026-05-21
+# Session Snapshot — 2026-05-21 (Post-Consolidation)
 
 ## Current Architecture Status
 
 | Component | Status | Detail |
 |-----------|--------|--------|
-| **ECS Instance** | ✅ Running | `ac8.large.2`, Ubuntu 22.04, IP `182.160.24.205`, region `la-south-2a` |
-| **RDS PostgreSQL** | ✅ Running | PostgreSQL 15.14, flavor `rds.pg.n1.large.2.ha` (single instance), internal IP `10.0.1.137:5432`, storage ESSD 40GB |
-| **Go Auth Backend** | ✅ Running | `pulseexpends-auth` on port 8082, systemd service enabled |
-| **Nginx** | ✅ Running | Reverse proxy on port 80, serves frontend + proxies API routes |
-| **Frontend** | ✅ Served | Static HTML at `/opt/PulseExpends/services/frontend/` |
-| **MCP Server** | Unknown | Port 8080 (Go REST API for transactions) |
-| **PDF Parser** | Unknown | Port 8000 (Python/Flask) |
-| **Status Dashboard** | Unknown | Port 8081 (Python HTTP server) |
+| **ECS Instance** | ⏸️ SHUTOFF | `ac8.large.2`, Ubuntu 22.04, IP `182.160.24.205`, region `la-south-2a` |
+| **RDS PostgreSQL** | ⏸️ SHUTDOWN | Single instance, PostgreSQL 15, internal IP `10.0.1.137:5432`, ESSD 100GB |
+| **Go Auth Backend** | ✅ Code ready | Built for linux/amd64, targets `pulseexpends_auth` DB |
+| **Go MCP/Core Backend** | ✅ Code ready | Targets `pulseexpends_core` DB |
+| **Nginx** | ✅ Config ready | Reverse proxy with auth/circles/mcp/pdf/status routes |
 
-### Database Schema (12 tables)
+### RDS Instance (Single, Consolidated)
+- **Instance ID**: `c6af5be615b642d4bd3b36df12d88728in03`
+- **Instance Name**: `pulseexpends-dev-pulse-301eb37f-rds`
+- **Engine**: PostgreSQL 15
+- **Flavor**: `rds.pg.n1.large.2` (single instance, no HA)
+- **Private IP**: `10.0.1.137`
+- **Storage**: ESSD 100GB
+- **Admin User**: `pulseexpends_admin`
+
+### Logical Databases on Single Instance
+| Database | Service | Purpose |
+|----------|---------|---------|
+| `pulseexpends_auth` | Auth Backend (port 8082) | Users, sessions, auth, circles |
+| `pulseexpends_core` | MCP/Core Backend (port 8080) | Transactions, splits, attachments, comments |
+
+### Orphaned Resource (To Delete via Console)
+- **RDS Instance**: `8e3a147370a44c71b00cedbc8e62a8a3in03` — SHUTDOWN, not in Terraform state
+- **Action Required**: Start → Delete from Huawei Cloud Console (API requires instance to be ACTIVE)
+
+### Database Schema (Auth DB - `pulseexpends_auth`)
 `users`, `user_auth`, `user_sessions`, `circles`, `circle_members`, `circle_invites`, `circle_activities`, `transactions`, `split_transactions`, `attachments`, `comments`, `recurring_transactions`
 
-### Working API Endpoints (via `http://182.160.24.205`)
+### Working API Endpoints (when ECS + RDS are running)
 - `POST /api/auth/register` — Create account (returns JWT + user)
 - `POST /api/auth/login` — Login (returns JWT + user)
 - `GET  /api/health` — Health check (on port 8082 directly)
@@ -34,46 +50,13 @@
 
 ---
 
-## Exact File Modifications (This Session)
-
-### Go Backend — `/root/PulseExpends/services/backend/auth/`
-1. **`models/user.go`** — Added `TableName()` methods:
-   - `UserAuth.TableName() → "user_auth"` (GORM was pluralizing to `user_auths`)
-   - `UserSession.TableName() → "user_sessions"`
-2. **`handlers/auth.go`** — Rewrote to fix model mismatches:
-   - `UserAuth.PasswordHash` instead of `User.Password`
-   - `*time.Time` for `LastLoginAt`
-   - `UserSession` without `IsActive`/`LastActivityAt` (uses `ExpiresAt`/`LastUsedAt`)
-   - Removed `models.JSONB` references
-3. **`handlers/circles.go`** — Multiple fixes:
-   - Renamed `generateRandomString` → `generateCircleCode` (duplicate symbol)
-   - Replaced `models.JSONB` with `models.CircleSettings`
-   - Fixed string→int conversion for limit/offset using `fmt.Sscanf`
-   - Removed nil check on struct type `req.Settings`
-   - Added `fmt` import
-4. **`middleware/auth.go`** — Fixed `session.LastActivityAt` → `session.LastUsedAt`
-5. **`main.go`** — Fixed:
-   - Removed unused `context` import
-   - `models.TransactionSplit` → `models.SplitTransaction`
-   - `middleware.AuthMiddleware` → `middleware.AuthMiddleware(db)`
-
-### ECS Instance Configuration
-6. **`/etc/nginx/sites-available/pulseexpends`** — Added `/api/auth/` and `/api/circles/` proxy locations
-7. **`/etc/systemd/system/pulseexpends-auth.service`** — Created systemd service for auth backend
-8. **`/opt/pulseexpends-auth/.env`** — Environment file with DATABASE_URL, JWT_SECRET, etc.
-
-### RDS Database
-9. **Dropped views** `user_transaction_summaries` and `circle_summaries` (blocked GORM AutoMigrate ALTER TABLE)
-10. **Granted schema privileges** to `pulseexpends_admin` on `public` schema
-
----
-
 ## Huawei Cloud Resource IDs
 
 | Resource | ID |
 |----------|-----|
-| ECS Instance | `pulseexpends-dev-pulse-301eb37f-ecs` (name) |
-| RDS Instance | `pulseexpends-rds-postgresql` (name) — need to verify exact ID |
+| ECS Instance | `f123f778-23f8-4d17-bb9f-6a540b37d0c6` |
+| RDS Instance (primary) | `c6af5be615b642d4bd3b36df12d88728in03` |
+| RDS Instance (orphan) | `8e3a147370a44c71b00cedbc8e62a8a3in03` — **TO DELETE** |
 | EIP | `94e1e7d5-0384-43eb-ab4b-f842255166be` → `182.160.24.205` |
 | VPC | `14432977-f91e-4b8a-b7cc-0da95b0dfc45` |
 | Security Group | `6e43ebe9-d7ba-46cc-9fec-c511655f98f3` |
@@ -88,6 +71,31 @@
 
 ---
 
+## File Modifications (This Session)
+
+### Terraform Infrastructure
+1. **`infra/rds.tf`** — Split single `huaweicloud_rds_database` into two:
+   - `huaweicloud_rds_database.pulseexpends_auth` → `pulseexpends_auth`
+   - `huaweicloud_rds_database.pulseexpends_core` → `pulseexpends_core`
+   - Added `rds_core_database_name` output
+   - Added `rds_core_connection_string` output
+   - Updated `rds_instructions` output with both DBs
+2. **`infra/variables.tf`** — Added `rds_core_database_name` variable (default: `pulseexpends_core`)
+3. **`infra/terraform.tfvars`** — Set `rds_database_name = "pulseexpends_auth"`, `rds_core_database_name = "pulseexpends_core"`
+4. **`infra/NGINX-ROUTING-FIX.md`** — Created (English consolidation of Spanish docs)
+
+### Application Configs
+5. **`services/backend/auth/main.go`** — Default DSN now targets `pulseexpends_auth`
+6. **`services/backend/auth/.env.example`** — Created with `DATABASE_URL` pointing to `pulseexpends_auth`
+7. **`services/backend/mcp-server-enhanced-with-auth/main.go`** — Default DSN now targets `pulseexpends_core`
+8. **`services/backend/mcp-server-enhanced-with-auth/.env.example`** — Created with `DATABASE_URL` pointing to `pulseexpends_core`
+
+### Cleanup
+9. **Deleted** `DIAGNOSTICO-SOLUCION.md` (Spanish) — consolidated into `infra/NGINX-ROUTING-FIX.md`
+10. **Deleted** `infra/SOLUCION-NGINX-FIX.md` (Spanish) — consolidated into `infra/NGINX-ROUTING-FIX.md`
+
+---
+
 ## Next Session Roadmap
 
 ### 1. Frontend Initialization (Priority: High)
@@ -98,69 +106,83 @@
 - Implement login/register UI components
 - Set up state management (Zustand or React Context)
 
-### 2. SSL/HTTPS Configuration (Priority: High)
-- Apply for free SSL certificate via Huawei Cloud CCM (Certificate Manager)
+### 2. Delete Orphaned RDS Instance (Priority: High)
+- Start orphaned RDS `8e3a147370a44c71b00cedbc8e62a8a3in03` via Huawei Cloud Console
+- Delete it immediately after it becomes ACTIVE
+- This saves ~$80-120/month
+
+### 3. Create `pulseexpends_core` Database (Priority: High)
+- When RDS is started, create the `pulseexpends_core` logical database
+- Run migrations for the core schema (transactions, splits, etc.)
+
+### 4. SSL/HTTPS Configuration (Priority: High)
+- Apply for free SSL certificate via Huawei Cloud CCM
 - Domain: `pulseexpends.duckdns.org`
 - Configure Nginx with SSL on port 443
 - Set up HTTP→HTTPS redirect
-- Consider wildcard cert for `*.pulseexpends.duckdns.org` if subdomains needed
 
-### 3. DNS & Subdomains (Priority: Medium)
-- DuckDNS does not support subdomains — need alternative:
-  - Option A: Use Huawei Cloud DNS service
-  - Option B: Use Cloudflare free tier
-  - Option C: Purchase a proper domain
-- Required subdomains: `api.`, `auth.`, `pdf.`, `status.`
+### 5. DNS & Subdomains (Priority: Medium)
+- DuckDNS does not support subdomains — need alternative
+- Options: Huawei Cloud DNS, Cloudflare free tier, or purchase a proper domain
 
-### 4. Backend Hardening (Priority: Medium)
+### 6. Backend Hardening (Priority: Medium)
 - Add rate limiting to auth endpoints
 - Implement proper CORS origin validation
 - Add request logging middleware
-- Set up health check monitoring
-- Configure log rotation for journalctl
-
-### 5. CI/CD Pipeline (Priority: Low)
-- GitHub Actions for automated builds
-- Automated deployment to ECS on push to main
-- Database migration automation
-- Staging environment setup
-
-### 6. Additional Features (Priority: Low)
-- Google OAuth integration (endpoints exist, needs client credentials)
-- MFA/TOTP implementation
-- Password reset flow
-- Email verification
-- Circle invitation system testing
+- Configure log rotation
 
 ---
 
-## Cost Estimates (When Running)
+## Cost Estimates
 
-| Resource | Monthly Cost (USD) |
-|----------|-------------------|
-| ECS `ac8.large.2` | ~$70-100 |
-| RDS `rds.pg.n1.large.2.ha` | ~$80-120 |
-| EIP (traffic mode) | ~$10-20 + usage |
-| OBS Storage | ~$5-10 |
-| **Total (running)** | **~$165-250** |
-| **Total (stopped)** | **~$5-15** (EVS disk + OBS only) |
+| Resource | Monthly Cost (Running) | Monthly Cost (Stopped) |
+|----------|----------------------|----------------------|
+| ECS `ac8.large.2` | ~$70-100 | ~$5 (disk) |
+| RDS `rds.pg.n1.large.2` | ~$80-120 | ~$10 (disk) |
+| EIP (traffic mode) | ~$10-20 + usage | ~$5 |
+| OBS Storage | ~$5-10 | ~$5-10 |
+| **Total** | **~$165-250** | **~$25-30** |
 
 ---
 
 ## Resume Procedure
 
 ```bash
-# 1. Start ECS instance (Huawei Cloud Console or API)
-# 2. Start RDS instance (Huawei Cloud Console or API)
+# 1. Start ECS instance
+python3 -c "
+from huaweicloudsdkcore.auth.credentials import BasicCredentials
+from huaweicloudsdkecs.v2 import EcsClient
+from huaweicloudsdkecs.v2.region.ecs_region import EcsRegion
+from huaweicloudsdkecs.v2.model.batch_start_servers_option import BatchStartServersOption
+from huaweicloudsdkecs.v2.model.batch_start_servers_request import BatchStartServersRequest
+from huaweicloudsdkecs.v2.model.server_id import ServerId
+creds = BasicCredentials('HPUAELE34ORKBY58ROT4', 'Ab4OYYfiMnhAPt8R2fdagz29y0yK5OmrCHHaO439', '1c42334636a749199423adad7a2d6ea3')
+client = EcsClient.new_builder().with_credentials(creds).with_region(EcsRegion.value_of('la-south-2')).build()
+client.batch_start_servers(BatchStartServersRequest(body=BatchStartServersOption(servers=[ServerId(id='f123f778-23f8-4d17-bb9f-6a540b37d0c6')])))
+"
+
+# 2. Start RDS instance
+python3 -c "
+from huaweicloudsdkcore.auth.credentials import BasicCredentials
+from huaweicloudsdkrds.v3 import RdsClient
+from huaweicloudsdkrds.v3.region.rds_region import RdsRegion
+from huaweicloudsdkrds.v3.model.startup_instance_request import StartupInstanceRequest
+creds = BasicCredentials('HPUAELE34ORKBY58ROT4', 'Ab4OYYfiMnhAPt8R2fdagz29y0yK5OmrCHHaO439', '1c42334636a749199423adad7a2d6ea3')
+client = RdsClient.new_builder().with_credentials(creds).with_region(RdsRegion.value_of('la-south-2')).build()
+client.startup_instance(StartupInstanceRequest(instance_id='c6af5be615b642d4bd3b36df12d88728in03'))
+"
+
 # 3. Wait for both to become ACTIVE (~2-3 minutes)
 # 4. SSH into ECS
 ssh -i /root/PulseExpends-Infra/pulse-expends-key.pem root@182.160.24.205
-# 5. Start services
+
+# 5. Create pulseexpends_core database if not exists
+PGPASSWORD=pptKH9g8dWXDYnPKdCRTJzY46COSvLI psql -h 10.0.1.137 -U pulseexpends_admin -d postgres -c "CREATE DATABASE pulseexpends_core;"
+
+# 6. Start services
 sudo systemctl start nginx
 sudo systemctl start pulseexpends-auth
-# 6. Verify
+
+# 7. Verify
 curl http://localhost:8082/api/health
-curl -X POST http://localhost:8082/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"donnie@pulseexpends.com","password":"TestPass123!"}'
 ```
