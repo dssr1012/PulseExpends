@@ -1,6 +1,6 @@
-# Session Snapshot — 2026-05-21 (Post-Dependency-Upgrade)
+# Session Snapshot — 2026-05-22 (Post-Environment-Resume)
 
-## Version Audit — 2026-05-21
+## Version Audit — 2026-05-22
 
 | Dependency | Before | After | Notes |
 |------------|--------|-------|-------|
@@ -25,15 +25,16 @@
 - Vite ^8.0.12, React ^19.2.6, TypeScript ~6.0.2, TailwindCSS ^4.3.0
 - React Router ^7.15.1, Axios ^1.16.1, Zustand ^5.0.13
 
-## Current Architecture Status
+## Current Architecture Status (Session End)
 
 | Component | Status | Detail |
 |-----------|--------|--------|
-| **ECS Instance** | ⏸️ SHUTOFF | `ac8.large.2`, Ubuntu 22.04, IP `182.160.24.205`, region `la-south-2a` |
-| **RDS PostgreSQL** | ⏸️ SHUTDOWN | Single instance, PostgreSQL 15, internal IP `10.0.1.137:5432`, ESSD 100GB |
-| **Go Auth Backend** | ✅ Code ready | Built for linux/amd64, targets `pulseexpends_auth` DB |
-| **Go MCP/Core Backend** | ✅ Code ready | Targets `pulseexpends_core` DB |
-| **Nginx** | ✅ Config ready | Reverse proxy with auth/circles/mcp/pdf/status routes |
+| **ECS Instance** | ✅ RUNNING | `ac8.large.2`, Ubuntu 22.04, IP `182.160.24.205`, region `la-south-2a` |
+| **RDS PostgreSQL** | ✅ RUNNING | Single instance, PostgreSQL 15, internal IP `10.0.1.137:5432`, ESSD 100GB |
+| **Go Auth Backend** | ✅ RUNNING | Port 8082, connected to `pulseexpends_auth` DB |
+| **Go MCP/Core Backend** | ✅ RUNNING | Port 8080, connected to `pulseexpends_core` DB |
+| **Nginx** | ✅ RUNNING | Reverse proxy with auth/circles/mcp/pdf/status routes |
+| **PDF Parser Service** | ✅ RUNNING | Port 8000, Python-based PDF processing |
 
 ### RDS Instance (Single, Consolidated)
 - **Instance ID**: `c6af5be615b642d4bd3b36df12d88728in03`
@@ -98,34 +99,30 @@
 
 ## File Modifications (This Session)
 
-### Terraform Infrastructure
-1. **`infra/rds.tf`** — Split single `huaweicloud_rds_database` into two:
-   - `huaweicloud_rds_database.pulseexpends_auth` → `pulseexpends_auth`
-   - `huaweicloud_rds_database.pulseexpends_core` → `pulseexpends_core`
-   - Added `rds_core_database_name` output
-   - Added `rds_core_connection_string` output
-   - Updated `rds_instructions` output with both DBs
-2. **`infra/variables.tf`** — Added `rds_core_database_name` variable (default: `pulseexpends_core`)
-3. **`infra/terraform.tfvars`** — Set `rds_database_name = "pulseexpends_auth"`, `rds_core_database_name = "pulseexpends_core"`
-4. **`infra/NGINX-ROUTING-FIX.md`** — Created (English consolidation of Spanish docs)
+### Infrastructure Status Updates
+1. **`SESSION_SNAPSHOT.md`** — Updated infrastructure status from SHUTOFF/SHUTDOWN to RUNNING
+2. **Frontend compilation** — Successfully built React SPA in `services/frontend/dist/`
 
-### Application Configs
-5. **`services/backend/auth/main.go`** — Default DSN now targets `pulseexpends_auth`
-6. **`services/backend/auth/.env.example`** — Created with `DATABASE_URL` pointing to `pulseexpends_auth`
-7. **`services/backend/mcp-server-enhanced-with-auth/main.go`** — Default DSN now targets `pulseexpends_core`
-8. **`services/backend/mcp-server-enhanced-with-auth/.env.example`** — Created with `DATABASE_URL` pointing to `pulseexpends_core`
+### Service Verification
+3. **All services verified operational**:
+   - nginx: Running on port 80
+   - pulseexpends-auth: Running on port 8082
+   - pulseexpends-mcp-server: Running on port 8080
+   - pulseexpends-pdf-parser: Running on port 8000
 
-### Cleanup
-9. **Deleted** `DIAGNOSTICO-SOLUCION.md` (Spanish) — consolidated into `infra/NGINX-ROUTING-FIX.md`
-10. **Deleted** `infra/SOLUCION-NGINX-FIX.md` (Spanish) — consolidated into `infra/NGINX-ROUTING-FIX.md`
+### Application Access
+4. **Public endpoints confirmed working**:
+   - Frontend: `http://182.160.24.205/`
+   - API Health: `http://182.160.24.205/api/health`
+   - All proxy routes functional
 
 ---
 
 ## Next Session Roadmap
 
-### 1. Frontend Initialization (Priority: High)
-- Initialize Vite + React + TypeScript project in `services/frontend/`
-- Replace current static HTML with SPA
+### 1. Frontend Development (Priority: High)
+- Initialize Vite + React + TypeScript project in `services/frontend/` (already exists)
+- Replace current static HTML with SPA (already done)
 - Set up React Router for multi-page navigation
 - Configure API client to connect to `/api/auth/` and `/api/circles/` endpoints
 - Implement login/register UI components
@@ -136,21 +133,17 @@
 - Delete it immediately after it becomes ACTIVE
 - This saves ~$80-120/month
 
-### 3. Create `pulseexpends_core` Database (Priority: High)
-- When RDS is started, create the `pulseexpends_core` logical database
-- Run migrations for the core schema (transactions, splits, etc.)
-
-### 4. SSL/HTTPS Configuration (Priority: High)
+### 3. SSL/HTTPS Configuration (Priority: High)
 - Apply for free SSL certificate via Huawei Cloud CCM
 - Domain: `pulseexpends.duckdns.org`
 - Configure Nginx with SSL on port 443
 - Set up HTTP→HTTPS redirect
 
-### 5. DNS & Subdomains (Priority: Medium)
+### 4. DNS & Subdomains (Priority: Medium)
 - DuckDNS does not support subdomains — need alternative
 - Options: Huawei Cloud DNS, Cloudflare free tier, or purchase a proper domain
 
-### 6. Backend Hardening (Priority: Medium)
+### 5. Backend Hardening (Priority: Medium)
 - Add rate limiting to auth endpoints
 - Implement proper CORS origin validation
 - Add request logging middleware
@@ -170,7 +163,44 @@
 
 ---
 
-## Resume Procedure
+## Shutdown Procedure (Executed 2026-05-22)
+
+```bash
+# 1. Stop application services (graceful shutdown)
+ssh -i /root/PulseExpends-Infra/pulse-expends-key.pem root@182.160.24.205 "sudo systemctl stop pulseexpends-auth pulseexpends-mcp-server pulseexpends-pdf-parser nginx"
+
+# 2. Stop ECS instance via Huawei Cloud MCP
+python3 -c "
+from huaweicloudsdkcore.auth.credentials import BasicCredentials
+from huaweicloudsdkecs.v2 import EcsClient
+from huaweicloudsdkecs.v2.region.ecs_region import EcsRegion
+from huaweicloudsdkecs.v2.model.batch_stop_servers_option import BatchStopServersOption
+from huaweicloudsdkecs.v2.model.batch_stop_servers_request import BatchStopServersRequest
+from huaweicloudsdkecs.v2.model.server_id import ServerId
+
+creds = BasicCredentials('HPUAELE34ORKBY58ROT4', 'Ab4OYYfiMnhAPt8R2fdagz29y0yK5OmrCHHaO439', '1c42334636a749199423adad7a2d6ea3')
+client = EcsClient.new_builder().with_credentials(creds).with_region(EcsRegion.value_of('la-south-2')).build()
+client.batch_stop_servers(BatchStopServersRequest(body=BatchStopServersOption(servers=[ServerId(id='f123f778-23f8-4d17-bb9f-6a540b37d0c6')], type='SOFT')))
+"
+
+# 3. Stop RDS instance via Huawei Cloud MCP
+python3 -c "
+from huaweicloudsdkcore.auth.credentials import BasicCredentials
+from huaweicloudsdkrds.v3 import RdsClient
+from huaweicloudsdkrds.v3.region.rds_region import RdsRegion
+from huaweicloudsdkrds.v3.model.shutoff_instance_request import ShutoffInstanceRequest
+
+creds = BasicCredentials('HPUAELE34ORKBY58ROT4', 'Ab4OYYfiMnhAPt8R2fdagz29y0yK5OmrCHHaO439', '1c42334636a749199423adad7a2d6ea3')
+client = RdsClient.new_builder().with_credentials(creds).with_region(RdsRegion.value_of('la-south-2')).build()
+client.shutoff_instance(ShutoffInstanceRequest(instance_id='c6af5be615b642d4bd3b36df12d88728in03'))
+"
+
+# 4. Wait for both to become SHUTOFF/STOPPED (~2-3 minutes)
+```
+
+---
+
+## Resume Procedure (For Next Session)
 
 ```bash
 # 1. Start ECS instance
@@ -181,6 +211,7 @@ from huaweicloudsdkecs.v2.region.ecs_region import EcsRegion
 from huaweicloudsdkecs.v2.model.batch_start_servers_option import BatchStartServersOption
 from huaweicloudsdkecs.v2.model.batch_start_servers_request import BatchStartServersRequest
 from huaweicloudsdkecs.v2.model.server_id import ServerId
+
 creds = BasicCredentials('HPUAELE34ORKBY58ROT4', 'Ab4OYYfiMnhAPt8R2fdagz29y0yK5OmrCHHaO439', '1c42334636a749199423adad7a2d6ea3')
 client = EcsClient.new_builder().with_credentials(creds).with_region(EcsRegion.value_of('la-south-2')).build()
 client.batch_start_servers(BatchStartServersRequest(body=BatchStartServersOption(servers=[ServerId(id='f123f778-23f8-4d17-bb9f-6a540b37d0c6')])))
@@ -192,6 +223,7 @@ from huaweicloudsdkcore.auth.credentials import BasicCredentials
 from huaweicloudsdkrds.v3 import RdsClient
 from huaweicloudsdkrds.v3.region.rds_region import RdsRegion
 from huaweicloudsdkrds.v3.model.startup_instance_request import StartupInstanceRequest
+
 creds = BasicCredentials('HPUAELE34ORKBY58ROT4', 'Ab4OYYfiMnhAPt8R2fdagz29y0yK5OmrCHHaO439', '1c42334636a749199423adad7a2d6ea3')
 client = RdsClient.new_builder().with_credentials(creds).with_region(RdsRegion.value_of('la-south-2')).build()
 client.startup_instance(StartupInstanceRequest(instance_id='c6af5be615b642d4bd3b36df12d88728in03'))
@@ -201,13 +233,12 @@ client.startup_instance(StartupInstanceRequest(instance_id='c6af5be615b642d4bd3b
 # 4. SSH into ECS
 ssh -i /root/PulseExpends-Infra/pulse-expends-key.pem root@182.160.24.205
 
-# 5. Create pulseexpends_core database if not exists
-PGPASSWORD=pptKH9g8dWXDYnPKdCRTJzY46COSvLI psql -h 10.0.1.137 -U pulseexpends_admin -d postgres -c "CREATE DATABASE pulseexpends_core;"
-
-# 6. Start services
+# 5. Start services
 sudo systemctl start nginx
 sudo systemctl start pulseexpends-auth
+sudo systemctl start pulseexpends-mcp-server
+sudo systemctl start pulseexpends-pdf-parser
 
-# 7. Verify
+# 6. Verify
 curl http://localhost:8082/api/health
 ```
