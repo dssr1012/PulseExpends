@@ -1,52 +1,7 @@
 {
-  "compilerOptions": {
-    "target": "ES2022",
-    "module": "ESNext",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "skipLibCheck": true,
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "react-jsx",
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"],
-      "@backend/*": ["./backend/src/*"],
-      "@frontend/*": ["./frontend/src/*"],
-      "@ai/*": ["./ai-engine/src/*"],
-      "@shared/*": ["./shared/src/*"]
-    }
-  },
-  "include": [
-    "src",
-    "backend/src",
-    "frontend/src",
-    "ai-engine/src",
-    "shared/src",
-    "**/*.ts",
-    "**/*.tsx"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "build",
-    "coverage",
-    "**/*.test.ts",
-    "**/*.spec.ts"
-  ],
+  "files": [],
   "references": [
-    { "path": "./backend" },
-    { "path": "./frontend" },
-    { "path": "./ai-engine" },
-    { "path": "./shared" }
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
   ]
 }
