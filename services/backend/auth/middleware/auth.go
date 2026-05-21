@@ -104,7 +104,7 @@ func AuthMiddleware(db *gorm.DB) func(http.Handler) http.Handler {
 			}
 
 			// Update session last activity
-			session.LastActivityAt = time.Now()
+			session.LastUsedAt = time.Now()
 			db.Save(&session)
 
 			// Set user and token in context

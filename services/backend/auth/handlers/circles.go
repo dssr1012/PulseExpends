@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
 
@@ -104,7 +104,7 @@ func (h *CircleHandler) CreateCircle(w http.ResponseWriter, r *http.Request) {
 		IsActive:    true,
 		IsPublic:    req.IsPublic,
 		JoinCode:    generateJoinCode(),
-		Settings:    models.JSONB{"notifications": true, "default_currency": req.Currency},
+		Settings:    models.CircleSettings{BudgetAlertsEnabled: true, DefaultCategories: []string{"food", "transport", "entertainment", "utilities", "health"}},
 	}
 
 	if err := h.db.Create(&circle).Error; err != nil {
@@ -159,7 +159,7 @@ func (h *CircleHandler) UpdateCircle(w http.ResponseWriter, r *http.Request) {
 		Description string `json:"description"`
 		Currency    string `json:"currency"`
 		IsPublic    *bool  `json:"isPublic"`
-		Settings    models.JSONB `json:"settings"`
+		Settings    models.CircleSettings `json:"settings"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -187,9 +187,7 @@ func (h *CircleHandler) UpdateCircle(w http.ResponseWriter, r *http.Request) {
 	if req.IsPublic != nil {
 		circle.IsPublic = *req.IsPublic
 	}
-	if req.Settings != nil {
-		circle.Settings = req.Settings
-	}
+	circle.Settings = req.Settings
 
 	if err := h.db.Save(&circle).Error; err != nil {
 		http.Error(w, "Failed to update circle", http.StatusInternalServerError)
@@ -553,7 +551,7 @@ func (h *CircleHandler) InviteToCircle(w http.ResponseWriter, r *http.Request) {
 		Email:     req.Email,
 		InvitedBy: user.ID,
 		Role:      req.Role,
-		Token:     generateRandomString(32),
+		Token:     generateCircleCode(32),
 		ExpiresAt: time.Now().Add(7 * 24 * time.Hour), // 7 days
 		Accepted:  false,
 	}
@@ -619,12 +617,16 @@ func (h *CircleHandler) GetCircleTransactions(w http.ResponseWriter, r *http.Req
 
 	// Apply pagination
 	if limit != "" {
-		dbQuery = dbQuery.Limit(limit)
+		var l int
+		fmt.Sscanf(limit, "%d", &l)
+		dbQuery = dbQuery.Limit(l)
 	} else {
 		dbQuery = dbQuery.Limit(50) // Default limit
 	}
 	if offset != "" {
-		dbQuery = dbQuery.Offset(offset)
+		var o int
+		fmt.Sscanf(offset, "%d", &o)
+		dbQuery = dbQuery.Offset(o)
 	}
 
 	var transactions []models.Transaction
@@ -667,10 +669,13 @@ func (h *CircleHandler) GetCircleActivities(w http.ResponseWriter, r *http.Reque
 		limit = "50"
 	}
 
+	var limitInt int = 50
+	fmt.Sscanf(limit, "%d", &limitInt)
+
 	var activities []models.CircleActivity
 	err = h.db.Where("circle_id = ?", circleID).
 		Order("created_at DESC").
-		Limit(limit).
+		Limit(limitInt).
 		Preload("User").
 		Find(&activities).Error
 
@@ -786,8 +791,8 @@ func generateJoinCode() string {
 	return string(b)
 }
 
-// Helper function to generate random string
-func generateRandomString(n int) string {
+// Helper function to generate random string for circles
+func generateCircleCode(n int) string {
 	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	b := make([]byte, n)
 	for i := range b {

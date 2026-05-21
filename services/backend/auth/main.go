@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -45,7 +44,7 @@ func initDB() {
 		&models.Circle{},
 		&models.CircleMember{},
 		&models.Transaction{},
-		&models.TransactionSplit{},
+		&models.SplitTransaction{},
 		&models.RecurringTransaction{},
 		&models.UserSession{},
 		&models.CircleInvite{},
@@ -171,7 +170,7 @@ func main() {
 
 	// Protected routes (require authentication)
 	protected := r.PathPrefix("/api").Subrouter()
-	protected.Use(middleware.AuthMiddleware)
+	protected.Use(middleware.AuthMiddleware(db))
 
 	// Auth protected routes
 	protected.HandleFunc("/auth/logout", auth.Logout).Methods("POST")

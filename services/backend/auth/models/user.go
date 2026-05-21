@@ -60,6 +60,8 @@ type UserAuth struct {
 	UpdatedAt          time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 }
 
+func (UserAuth) TableName() string { return "user_auth" }
+
 type UserSession struct {
 	ID         string    `json:"id" gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	UserID     string    `json:"user_id" gorm:"type:uuid;not null;index"`
@@ -71,6 +73,8 @@ type UserSession struct {
 	CreatedAt  time.Time `json:"created_at" gorm:"autoCreateTime"`
 	LastUsedAt time.Time `json:"last_used_at" gorm:"autoUpdateTime"`
 }
+
+func (UserSession) TableName() string { return "user_sessions" }
 
 // GoogleUserInfo represents user info from Google OAuth
 type GoogleUserInfo struct {
