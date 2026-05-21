@@ -1,4 +1,29 @@
-# Session Snapshot — 2026-05-21 (Post-Consolidation)
+# Session Snapshot — 2026-05-21 (Post-Dependency-Upgrade)
+
+## Version Audit — 2026-05-21
+
+| Dependency | Before | After | Notes |
+|------------|--------|-------|-------|
+| PostgreSQL RDS version | 15 | **17** | Huawei Cloud confirms PG 17 available in la-south-2 |
+| Huawei Cloud TF Provider | >= 1.56.0 | **~> 1.91** | Latest stable: v1.91.0 |
+| Go version (all modules) | 1.21 | **1.22** | Minimum required for project |
+| gorm.io/gorm | v1.25.5 | **v1.31.1** | Auth module |
+| gorm.io/driver/postgres | v1.5.4 | **v1.6.0** | Auth module |
+| github.com/golang-jwt/jwt/v5 | v5.2.0 | **v5.3.1** | Auth module |
+| @types/node | 24.12.4 | **25.9.1** | Frontend |
+
+### Packages Skipped (Go 1.22 incompatibility)
+- `github.com/gorilla/sessions` v1.2.2 → v1.4.0 requires Go >= 1.23
+- `github.com/jackc/pgx/v5` v5.6.0 → v5.9.2 requires Go >= 1.25.0
+- `golang.org/x/crypto` v0.31.0 → v0.51.0 requires Go >= 1.24 (indirect via pgx)
+- `golang.org/x/oauth2` v0.15.0 → v0.36.0 requires Go >= 1.24
+- `cloud.google.com/go/compute` v1.23.3 → v1.63.0 requires Go >= 1.25.0
+
+> These will be upgraded when Go toolchain is updated to 1.25+ in a future session.
+
+### Frontend Packages (all current)
+- Vite ^8.0.12, React ^19.2.6, TypeScript ~6.0.2, TailwindCSS ^4.3.0
+- React Router ^7.15.1, Axios ^1.16.1, Zustand ^5.0.13
 
 ## Current Architecture Status
 
