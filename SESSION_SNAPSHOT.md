@@ -128,22 +128,17 @@
 - Implement login/register UI components
 - Set up state management (Zustand or React Context)
 
-### 2. Delete Orphaned RDS Instance (Priority: High)
-- Start orphaned RDS `8e3a147370a44c71b00cedbc8e62a8a3in03` via Huawei Cloud Console
-- Delete it immediately after it becomes ACTIVE
-- This saves ~$80-120/month
-
-### 3. SSL/HTTPS Configuration (Priority: High)
+### 2. SSL/HTTPS Configuration (Priority: High)
 - Apply for free SSL certificate via Huawei Cloud CCM
 - Domain: `pulseexpends.duckdns.org`
 - Configure Nginx with SSL on port 443
 - Set up HTTP→HTTPS redirect
 
-### 4. DNS & Subdomains (Priority: Medium)
+### 3. DNS & Subdomains (Priority: Medium)
 - DuckDNS does not support subdomains — need alternative
 - Options: Huawei Cloud DNS, Cloudflare free tier, or purchase a proper domain
 
-### 5. Backend Hardening (Priority: Medium)
+### 4. Backend Hardening (Priority: Medium)
 - Add rate limiting to auth endpoints
 - Implement proper CORS origin validation
 - Add request logging middleware
@@ -169,30 +164,19 @@
 # 1. Stop application services (graceful shutdown)
 ssh -i /root/PulseExpends-Infra/pulse-expends-key.pem root@182.160.24.205 "sudo systemctl stop pulseexpends-auth pulseexpends-mcp-server pulseexpends-pdf-parser nginx"
 
-# 2. Stop ECS instance via Huawei Cloud MCP
-python3 -c "
-from huaweicloudsdkcore.auth.credentials import BasicCredentials
-from huaweicloudsdkecs.v2 import EcsClient
-from huaweicloudsdkecs.v2.region.ecs_region import EcsRegion
-from huaweicloudsdkecs.v2.model.batch_stop_servers_option import BatchStopServersOption
-from huaweicloudsdkecs.v2.model.batch_stop_servers_request import BatchStopServersRequest
-from huaweicloudsdkecs.v2.model.server_id import ServerId
-
-creds = BasicCredentials('HPUAELE34ORKBY58ROT4', 'Ab4OYYfiMnhAPt8R2fdagz29y0yK5OmrCHHaO439', '1c42334636a749199423adad7a2d6ea3')
-client = EcsClient.new_builder().with_credentials(creds).with_region(EcsRegion.value_of('la-south-2')).build()
-client.batch_stop_servers(BatchStopServersRequest(body=BatchStopServersOption(servers=[ServerId(id='f123f778-23f8-4d17-bb9f-6a540b37d0c6')], type='SOFT')))
-"
+# 2. Stop ECS instance via OS shutdown command (Huawei Cloud SDK had 400 error)
+ssh -i /root/PulseExpends-Infra/pulse-expends-key.pem root@182.160.24.205 "sudo shutdown -h now"
 
 # 3. Stop RDS instance via Huawei Cloud MCP
 python3 -c "
 from huaweicloudsdkcore.auth.credentials import BasicCredentials
 from huaweicloudsdkrds.v3 import RdsClient
 from huaweicloudsdkrds.v3.region.rds_region import RdsRegion
-from huaweicloudsdkrds.v3.model.shutoff_instance_request import ShutoffInstanceRequest
+from huaweicloudsdkrds.v3.model.stop_instance_request import StopInstanceRequest
 
 creds = BasicCredentials('HPUAELE34ORKBY58ROT4', 'Ab4OYYfiMnhAPt8R2fdagz29y0yK5OmrCHHaO439', '1c42334636a749199423adad7a2d6ea3')
 client = RdsClient.new_builder().with_credentials(creds).with_region(RdsRegion.value_of('la-south-2')).build()
-client.shutoff_instance(ShutoffInstanceRequest(instance_id='c6af5be615b642d4bd3b36df12d88728in03'))
+client.stop_instance(StopInstanceRequest(instance_id='c6af5be615b642d4bd3b36df12d88728in03'))
 "
 
 # 4. Wait for both to become SHUTOFF/STOPPED (~2-3 minutes)
