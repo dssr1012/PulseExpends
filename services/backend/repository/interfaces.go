@@ -247,3 +247,278 @@ type BudgetAlert struct {
 	Current    float64   `json:"current"`
 	CreatedAt  time.Time `json:"created_at"`
 }
+
+// ============================================================================
+// NEW REPOSITORY INTERFACES FOR REQUIREMENTS
+// ============================================================================
+
+// CreditCardRepository defines the interface for secure credit card data access
+type CreditCardRepository interface {
+	// Basic CRUD operations
+	Create(ctx context.Context, card *model.CreditCard) error
+	FindByID(ctx context.Context, id uuid.UUID) (*model.CreditCard, error)
+	FindByUser(ctx context.Context, userID uuid.UUID) ([]model.CreditCard, error)
+	FindByCircle(ctx context.Context, circleID uuid.UUID) ([]model.CreditCard, error)
+	Update(ctx context.Context, card *model.CreditCard) error
+	Delete(ctx context.Context, id uuid.UUID) error
+	SoftDelete(ctx context.Context, id uuid.UUID) error
+
+	// Query operations
+	FindByBank(ctx context.Context, bankName string) ([]model.CreditCard, error)
+	FindByLastFour(ctx context.Context, lastFour string) ([]model.CreditCard, error)
+	FindActiveCards(ctx context.Context, userID uuid.UUID) ([]model.CreditCard, error)
+	FindDefaultCard(ctx context.Context, userID uuid.UUID) (*model.CreditCard, error)
+
+	// Billing operations
+	UpdateBalance(ctx context.Context, cardID uuid.UUID, newBalance float64) error
+	GetUpcomingPayments(ctx context.Context, userID uuid.UUID, days int) ([]model.CreditCard, error)
+	GetStatementPeriod(ctx context.Context, cardID uuid.UUID) (*time.Time, *time.Time, error) // closing date, due date
+}
+
+// ExchangeRateRepository defines the interface for currency exchange rate data access
+type ExchangeRateRepository interface {
+	// Basic CRUD operations
+	Create(ctx context.Context, rate *model.ExchangeRate) error
+	FindByID(ctx context.Context, id uuid.UUID) (*model.ExchangeRate, error)
+	Update(ctx context.Context, rate *model.ExchangeRate) error
+	Delete(ctx context.Context, id uuid.UUID) error
+
+	// Query operations
+	FindLatestRate(ctx context.Context, baseCurrency, targetCurrency string) (*model.ExchangeRate, error)
+	FindRatesByDate(ctx context.Context, date time.Time) ([]model.ExchangeRate, error)
+	FindRatesByCurrency(ctx context.Context, baseCurrency string) ([]model.ExchangeRate, error)
+	FindHistoricalRates(ctx context.Context, baseCurrency, targetCurrency string, startDate, endDate time.Time) ([]model.ExchangeRate, error)
+
+	// Conversion operations
+	ConvertAmount(ctx context.Context, amount float64, fromCurrency, toCurrency string, date time.Time) (float64, error)
+	GetSupportedCurrencies(ctx context.Context) ([]string, error)
+	UpdateRatesFromAPI(ctx context.Context, rates map[string]float64, date time.Time, source string) error
+}
+
+// MobileNotificationRepository defines the interface for mobile notification data access
+type MobileNotificationRepository interface {
+	// Basic CRUD operations
+	Create(ctx context.Context, notification *model.MobileNotification) error
+	FindByID(ctx context.Context, id uuid.UUID) (*model.MobileNotification, error)
+	FindByUser(ctx context.Context, userID uuid.UUID, filters NotificationFilters) ([]model.MobileNotification, error)
+	Update(ctx context.Context, notification *model.MobileNotification) error
+	Delete(ctx context.Context, id uuid.UUID) error
+
+	// Processing operations
+	FindPending(ctx context.Context, limit int) ([]model.MobileNotification, error)
+	UpdateStatus(ctx context.Context, notificationID uuid.UUID, status string, transactionID *uuid.UUID, errorMsg string) error
+	MarkAsProcessed(ctx context.Context, notificationID uuid.UUID, transactionID uuid.UUID) error
+	MarkAsIgnored(ctx context.Context, notificationID uuid.UUID) error
+
+	// Analytics operations
+	GetProcessingStats(ctx context.Context, userID uuid.UUID, days int) (*NotificationStats, error)
+	GetAppStats(ctx context.Context, userID uuid.UUID) ([]AppNotificationStats, error)
+	GetConfidenceDistribution(ctx context.Context, userID uuid.UUID) (map[string]int, error)
+}
+
+// AnomalyDetectionRepository defines the interface for anomaly detection data access
+type AnomalyDetectionRepository interface {
+	// Rule management
+	CreateRule(ctx context.Context, rule *model.AnomalyDetectionRule) error
+	FindRuleByID(ctx context.Context, id uuid.UUID) (*model.AnomalyDetectionRule, error)
+	FindRulesByCircle(ctx context.Context, circleID uuid.UUID, activeOnly bool) ([]model.AnomalyDetectionRule, error)
+	UpdateRule(ctx context.Context, rule *model.AnomalyDetectionRule) error
+	DeleteRule(ctx context.Context, id uuid.UUID) error
+	ToggleRule(ctx context.Context, id uuid.UUID, active bool) error
+
+	// Anomaly detection
+	CreateAnomaly(ctx context.Context, anomaly *model.DetectedAnomaly) error
+	FindAnomalyByID(ctx context.Context, id uuid.UUID) (*model.DetectedAnomaly, error)
+	FindAnomaliesByCircle(ctx context.Context, circleID uuid.UUID, filters AnomalyFilters) ([]model.DetectedAnomaly, error)
+	FindAnomaliesByTransaction(ctx context.Context, transactionID uuid.UUID) ([]model.DetectedAnomaly, error)
+	UpdateAnomaly(ctx context.Context, anomaly *model.DetectedAnomaly) error
+	ResolveAnomaly(ctx context.Context, anomalyID uuid.UUID, resolvedBy uuid.UUID, note string) error
+	IgnoreAnomaly(ctx context.Context, anomalyID uuid.UUID, ignoredBy uuid.UUID) error
+
+	// Detection operations
+	CheckForDuplicates(ctx context.Context, transaction *model.Transaction, windowDays int) ([]model.DetectedAnomaly, error)
+	CheckForAmountMismatch(ctx context.Context, transaction *model.Transaction, percentageThreshold float64) (*model.DetectedAnomaly, error)
+	CheckForOrphanTransactions(ctx context.Context, circleID uuid.UUID, days int) ([]model.DetectedAnomaly, error)
+	RunAnomalyDetection(ctx context.Context, circleID uuid.UUID, ruleID *uuid.UUID) ([]model.DetectedAnomaly, error)
+
+	// Analytics
+	GetAnomalyStats(ctx context.Context, circleID uuid.UUID, startDate, endDate time.Time) (*AnomalyStats, error)
+	GetRuleEffectiveness(ctx context.Context, circleID uuid.UUID) ([]RuleEffectiveness, error)
+}
+
+// NotificationAppWhitelistRepository defines the interface for notification app whitelist data access
+type NotificationAppWhitelistRepository interface {
+	// Basic CRUD operations
+	AddApp(ctx context.Context, whitelist *model.NotificationAppWhitelist) error
+	RemoveApp(ctx context.Context, id uuid.UUID) error
+	UpdateApp(ctx context.Context, whitelist *model.NotificationAppWhitelist) error
+	FindByID(ctx context.Context, id uuid.UUID) (*model.NotificationAppWhitelist, error)
+
+	// Query operations
+	FindByUser(ctx context.Context, userID uuid.UUID) ([]model.NotificationAppWhitelist, error)
+	FindByAppPackage(ctx context.Context, userID uuid.UUID, appPackage string) (*model.NotificationAppWhitelist, error)
+	IsAppWhitelisted(ctx context.Context, userID uuid.UUID, appPackage string) (bool, error)
+	GetEnabledApps(ctx context.Context, userID uuid.UUID) ([]string, error)
+
+	// Bulk operations
+	AddApps(ctx context.Context, userID uuid.UUID, apps []string) error
+	RemoveApps(ctx context.Context, userID uuid.UUID, apps []string) error
+	ToggleApps(ctx context.Context, userID uuid.UUID, apps []string, enabled bool) error
+}
+
+// ============================================================================
+// FILTER STRUCTURES FOR NEW MODELS
+// ============================================================================
+
+type CreditCardFilters struct {
+	BankName    string
+	CardType    string
+	IsActive    *bool
+	IsDefault   *bool
+	Limit       int
+	Offset      int
+}
+
+type ExchangeRateFilters struct {
+	BaseCurrency   string
+	TargetCurrency string
+	StartDate      *time.Time
+	EndDate        *time.Time
+	Source         string
+	Limit          int
+	Offset         int
+}
+
+type NotificationFilters struct {
+	AppPackage   string
+	Status       string
+	StartDate    *time.Time
+	EndDate      *time.Time
+	MinConfidence *float64
+	MaxConfidence *float64
+	Limit        int
+	Offset       int
+	SortBy       string
+	SortOrder    string // "asc" or "desc"
+}
+
+type AnomalyFilters struct {
+	Type         string
+	Severity     string
+	Status       string
+	StartDate    *time.Time
+	EndDate      *time.Time
+	RuleID       *uuid.UUID
+	Limit        int
+	Offset       int
+	SortBy       string
+	SortOrder    string // "asc" or "desc"
+}
+
+// ============================================================================
+// HELPER TYPES FOR NEW MODELS
+// ============================================================================
+
+type NotificationStats struct {
+	Total          int     `json:"total"`
+	Processed      int     `json:"processed"`
+	Pending        int     `json:"pending"`
+	Ignored        int     `json:"ignored"`
+	Error          int     `json:"error"`
+	AvgConfidence  float64 `json:"avg_confidence"`
+	SuccessRate    float64 `json:"success_rate"`
+}
+
+type AppNotificationStats struct {
+	AppPackage     string  `json:"app_package"`
+	AppName        string  `json:"app_name"`
+	Total          int     `json:"total"`
+	Processed      int     `json:"processed"`
+	AvgConfidence  float64 `json:"avg_confidence"`
+	LastProcessed  *time.Time `json:"last_processed"`
+}
+
+type AnomalyStats struct {
+	Total          int            `json:"total"`
+	ByType         map[string]int `json:"by_type"`
+	BySeverity     map[string]int `json:"by_severity"`
+	ByStatus       map[string]int `json:"by_status"`
+	ResolvedRate   float64        `json:"resolved_rate"`
+	AvgResolutionTime time.Duration `json:"avg_resolution_time"`
+}
+
+type RuleEffectiveness struct {
+	RuleID        uuid.UUID `json:"rule_id"`
+	RuleName      string    `json:"rule_name"`
+	RuleType      string    `json:"rule_type"`
+	TotalDetected int       `json:"total_detected"`
+	TruePositives int       `json:"true_positives"`
+	FalsePositives int      `json:"false_positives"`
+	Effectiveness float64   `json:"effectiveness"`
+	LastTriggered *time.Time `json:"last_triggered"`
+}
+
+// ============================================================================
+// UPDATED TRANSACTION REPOSITORY INTERFACE
+// ============================================================================
+
+// Add new methods to TransactionRepository for requirements
+type TransactionRepository interface {
+	// ... existing methods ...
+
+	// New methods for requirements
+	FindPrivateExpenses(ctx context.Context, circleID uuid.UUID, viewerID uuid.UUID, filters TransactionFilters) ([]model.Transaction, error)
+	FindAnomalies(ctx context.Context, circleID uuid.UUID, filters TransactionFilters) ([]model.Transaction, error)
+	FindBySource(ctx context.Context, circleID uuid.UUID, source model.TransactionSource, filters TransactionFilters) ([]model.Transaction, error)
+	
+	// Currency conversion
+	ConvertTransactionAmount(ctx context.Context, transaction *model.Transaction, targetCurrency string) (float64, error)
+	GetCurrencySummary(ctx context.Context, circleID uuid.UUID, startDate, endDate time.Time) (map[string]CurrencySummary, error)
+	
+	// Mobile notification integration
+	FindByNotificationID(ctx context.Context, notificationID string) (*model.Transaction, error)
+	BulkCreateFromNotifications(ctx context.Context, notifications []model.MobileNotification) ([]model.Transaction, error)
+	
+	// Anomaly detection helpers
+	FindSimilarAmounts(ctx context.Context, circleID uuid.UUID, amount float64, currency string, windowDays int, threshold float64) ([]model.Transaction, error)
+	FindRecentByCategory(ctx context.Context, circleID uuid.UUID, category string, days int) ([]model.Transaction, error)
+	FindOrphanTransactions(ctx context.Context, circleID uuid.UUID, days int) ([]model.Transaction, error)
+}
+
+type CurrencySummary struct {
+	Currency        string  `json:"currency"`
+	TotalIncome     float64 `json:"total_income"`
+	TotalExpenses   float64 `json:"total_expenses"`
+	NetBalance      float64 `json:"net_balance"`
+	TransactionCount int    `json:"transaction_count"`
+	ExchangeRate    float64 `json:"exchange_rate,omitempty"`
+	ConvertedAmount float64 `json:"converted_amount,omitempty"`
+}
+
+// Update TransactionFilters to include new fields
+type TransactionFilters struct {
+	StartDate      *time.Time
+	EndDate        *time.Time
+	Category       string
+	PaymentMethod  model.PaymentMethod
+	MinAmount      *float64
+	MaxAmount      *float64
+	Status         model.TransactionStatus
+	IsVerified     *bool
+	IsRecurring    *bool
+	Search         string
+	Limit          int
+	Offset         int
+	SortBy         string
+	SortOrder      string // "asc" or "desc"
+	
+	// New fields for requirements
+	IsPrivate      *bool
+	IsAnomaly      *bool
+	AnomalyType    string
+	AnomalySeverity string
+	Source         model.TransactionSource
+	Currency       string
+	BaseCurrency   string
+	IncludeHidden  bool // Include private expenses that are still hidden
+}
