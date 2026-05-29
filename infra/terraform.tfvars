@@ -11,7 +11,7 @@ environment = "dev"  # dev, staging, prod
 project_name = "pulseexpends"
 
 # Enterprise Project Configuration
-enable_enterprise_project = true
+enable_enterprise_project = false
 enterprise_project_name = "pulse-expendss"
 enterprise_project_type = "prod"  # prod, poc, dev
 
