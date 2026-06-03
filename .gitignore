@@ -230,3 +230,28 @@ duckdns-token.sh
 *.token
 *.secret
 
+
+# Credenciales y archivos sensibles
+*.pem
+*.key
+*.tfvars
+.env
+secrets.*
+credentials.*
+*.token
+*.secret
+access_keys.txt
+private_keys/
+ssh-keys/
+# Excluir terraform.tfvars pero NO terraform.tfvars.example
+terraform.tfvars
+# Excluir claves SSH generadas
+pulse-expends-key
+pulse-expends-key.pub
+# Excluir archivos de configuración con credenciales
+config.local.*
+settings.local.*
+# Archivos de backup de credenciales
+*.backup.*
+credentials-backup.*
+
