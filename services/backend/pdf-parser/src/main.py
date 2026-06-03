@@ -21,7 +21,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
-    title="PulseExpends PDF Parser API",
+    title="PulseExpends PDF Parser api",
     description="AI-powered PDF/Image parsing service for credit card statements",
     version="1.0.0",
     docs_url="/docs",
@@ -43,7 +43,7 @@ ocr_service = OCRService()
 ai_service = AIService()
 obs_service = OBSService()
 
-# Pydantic models for API
+# Pydantic models for api
 class ParseRequest(BaseModel):
     document_url: Optional[str] = None
     document_type: str = Field(..., description="Type of document: credit_card, bank_statement, invoice, receipt")
@@ -132,7 +132,7 @@ async def parse_upload(
         )
         
     except Exception as e:
-        logger.error(f"Error parsing uploaded file: {str(e)}")
+        logger.error(f"error parsing uploaded file: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to parse document: {str(e)}")
 
 @app.post("/parse/url", response_model=ParseResponse)
@@ -179,7 +179,7 @@ async def parse_url(
         )
         
     except Exception as e:
-        logger.error(f"Error parsing document from URL: {str(e)}")
+        logger.error(f"error parsing document from URL: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to parse document: {str(e)}")
 
 @app.post("/parse/obs", response_model=ParseResponse)
@@ -237,7 +237,7 @@ async def parse_obs(
         )
         
     except Exception as e:
-        logger.error(f"Error parsing document from OBS: {str(e)}")
+        logger.error(f"error parsing document from OBS: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to parse document: {str(e)}")
 
 @app.get("/result/{request_id}")
@@ -261,7 +261,7 @@ async def get_result(request_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error retrieving result: {str(e)}")
+        logger.error(f"error retrieving result: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to retrieve result: {str(e)}")
 
 @app.get("/banks/supported")

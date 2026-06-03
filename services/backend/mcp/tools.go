@@ -50,7 +50,7 @@ func (m *MCPToolManager) GetTools() []MCPTool {
 func (m *MCPToolManager) ExecuteTool(ctx context.Context, toolName string, params map[string]interface{}) (interface{}, error) {
 	tool, exists := m.tools[toolName]
 	if !exists {
-		return nil, fmt.Errorf("tool not found: %s", toolName)
+		return nil, fmt.errorf("tool not found: %s", toolName)
 	}
 
 	return tool.Handler(ctx, params)
@@ -404,22 +404,22 @@ func (m *MCPToolManager) handleSaveTransaction(ctx context.Context, params map[s
 	// Parse parameters
 	circleID, ok := params["circle_id"].(string)
 	if !ok {
-		return nil, fmt.Errorf("circle_id is required and must be a string")
+		return nil, fmt.errorf("circle_id is required and must be a string")
 	}
 
 	userID, ok := params["user_id"].(string)
 	if !ok {
-		return nil, fmt.Errorf("user_id is required and must be a string")
+		return nil, fmt.errorf("user_id is required and must be a string")
 	}
 
 	amount, ok := params["amount"].(float64)
 	if !ok {
-		return nil, fmt.Errorf("amount is required and must be a number")
+		return nil, fmt.errorf("amount is required and must be a number")
 	}
 
 	description, ok := params["description"].(string)
 	if !ok {
-		return nil, fmt.Errorf("description is required and must be a string")
+		return nil, fmt.errorf("description is required and must be a string")
 	}
 
 	// Create transaction
@@ -449,7 +449,7 @@ func (m *MCPToolManager) handleSaveTransaction(ctx context.Context, params map[s
 	// Save transaction
 	err := m.repo.Transaction.Create(ctx, transaction)
 	if err != nil {
-		return nil, fmt.Errorf("failed to save transaction: %w", err)
+		return nil, fmt.errorf("failed to save transaction: %w", err)
 	}
 
 	return map[string]interface{}{
@@ -463,7 +463,7 @@ func (m *MCPToolManager) handleSaveTransaction(ctx context.Context, params map[s
 func (m *MCPToolManager) handleGetTransactions(ctx context.Context, params map[string]interface{}) (interface{}, error) {
 	circleID, ok := params["circle_id"].(string)
 	if !ok {
-		return nil, fmt.Errorf("circle_id is required and must be a string")
+		return nil, fmt.errorf("circle_id is required and must be a string")
 	}
 
 	// Build filter
@@ -497,7 +497,7 @@ func (m *MCPToolManager) handleGetTransactions(ctx context.Context, params map[s
 	// Get transactions
 	transactions, err := m.repo.Transaction.FindByCircle(ctx, circleID, filter)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get transactions: %w", err)
+		return nil, fmt.errorf("failed to get transactions: %w", err)
 	}
 
 	return map[string]interface{}{
@@ -511,7 +511,7 @@ func (m *MCPToolManager) handleGetTransactions(ctx context.Context, params map[s
 func (m *MCPToolManager) handleGetTransactionSummary(ctx context.Context, params map[string]interface{}) (interface{}, error) {
 	circleID, ok := params["circle_id"].(string)
 	if !ok {
-		return nil, fmt.Errorf("circle_id is required and must be a string")
+		return nil, fmt.errorf("circle_id is required and must be a string")
 	}
 
 	// Parse date range
@@ -533,7 +533,7 @@ func (m *MCPToolManager) handleGetTransactionSummary(ctx context.Context, params
 	// Get summary
 	summary, err := m.repo.Transaction.GetSummary(ctx, circleID, startDate, endDate)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get transaction summary: %w", err)
+		return nil, fmt.errorf("failed to get transaction summary: %w", err)
 	}
 
 	return map[string]interface{}{
@@ -551,17 +551,17 @@ func (m *MCPToolManager) handleParseCreditCardStatement(ctx context.Context, par
 	// For now, return a mock response
 	documentURL, ok := params["document_url"].(string)
 	if !ok {
-		return nil, fmt.Errorf("document_url is required and must be a string")
+		return nil, fmt.errorf("document_url is required and must be a string")
 	}
 
 	circleID, ok := params["circle_id"].(string)
 	if !ok {
-		return nil, fmt.Errorf("circle_id is required and must be a string")
+		return nil, fmt.errorf("circle_id is required and must be a string")
 	}
 
 	userID, ok := params["user_id"].(string)
 	if !ok {
-		return nil, fmt.Errorf("user_id is required and must be a string")
+		return nil, fmt.errorf("user_id is required and must be a string")
 	}
 
 	bankName := getStringParam(params, "bank_name", "generic")
@@ -588,7 +588,7 @@ func (m *MCPToolManager) handleParseCreditCardStatement(ctx context.Context, par
 func (m *MCPToolManager) handleCreateFamilyCircle(ctx context.Context, params map[string]interface{}) (interface{}, error) {
 	name, ok := params["name"].(string)
 	if !ok {
-		return nil, fmt.Errorf("name is required and must be a string")
+		return nil, fmt.errorf("name is required and must be a string")
 	}
 
 	circle := &model.Circle{
@@ -603,7 +603,7 @@ func (m *MCPToolManager) handleCreateFamilyCircle(ctx context.Context, params ma
 			AllowMemberEditTransactions:   true,
 			AllowMemberDeleteTransactions: false,
 			DefaultCategories: []string{
-				"supermercado", "restaurante", "transporte", "servicios",
+				"supermercado", "restaurante", "transporte", "services",
 				"salud", "educación", "entretenimiento", "ropa",
 				"tecnología", "hogar", "otros",
 			},
@@ -635,7 +635,7 @@ func (m *MCPToolManager) handleCreateFamilyCircle(ctx context.Context, params ma
 	// Save circle
 	err := m.repo.Circle.Create(ctx, circle)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create family circle: %w", err)
+		return nil, fmt.errorf("failed to create family circle: %w", err)
 	}
 
 	return map[string]interface{}{
@@ -649,16 +649,16 @@ func (m *MCPToolManager) handleCreateFamilyCircle(ctx context.Context, params ma
 func (m *MCPToolManager) handleGetFamilyCircle(ctx context.Context, params map[string]interface{}) (interface{}, error) {
 	circleID, ok := params["circle_id"].(string)
 	if !ok {
-		return nil, fmt.Errorf("circle_id is required and must be a string")
+		return nil, fmt.errorf("circle_id is required and must be a string")
 	}
 
 	circle, err := m.repo.Circle.FindByID(ctx, circleID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get family circle: %w", err)
+		return nil, fmt.errorf("failed to get family circle: %w", err)
 	}
 
 	if circle == nil {
-		return nil, fmt.Errorf("family circle not found: %s", circleID)
+		return nil, fmt.errorf("family circle not found: %s", circleID)
 	}
 
 	// Get summary
@@ -678,12 +678,12 @@ func (m *MCPToolManager) handleGetFamilyCircle(ctx context.Context, params map[s
 func (m *MCPToolManager) handleAddCircleMember(ctx context.Context, params map[string]interface{}) (interface{}, error) {
 	circleID, ok := params["circle_id"].(string)
 	if !ok {
-		return nil, fmt.Errorf("circle_id is required and must be a string")
+		return nil, fmt.errorf("circle_id is required and must be a string")
 	}
 
 	userID, ok := params["user_id"].(string)
 	if !ok {
-		return nil, fmt.Errorf("user_id is required and must be a string")
+		return nil, fmt.errorf("user_id is required and must be a string")
 	}
 
 	role := getStringParam(params, "role", "member")
@@ -697,7 +697,7 @@ func (m *MCPToolManager) handleAddCircleMember(ctx context.Context, params map[s
 
 	err := m.repo.Circle.AddMember(ctx, circleID, member)
 	if err != nil {
-		return nil, fmt.Errorf("failed to add circle member: %w", err)
+		return nil, fmt.errorf("failed to add circle member: %w", err)
 	}
 
 	return map[string]interface{}{
@@ -712,7 +712,7 @@ func (m *MCPToolManager) handleAddCircleMember(ctx context.Context, params map[s
 func (m *MCPToolManager) handleGetMonthlySummary(ctx context.Context, params map[string]interface{}) (interface{}, error) {
 	circleID, ok := params["circle_id"].(string)
 	if !ok {
-		return nil, fmt.Errorf("circle_id is required and must be a string")
+		return nil, fmt.errorf("circle_id is required and must be a string")
 	}
 
 	months := getIntParam(params, "months", 6)
@@ -720,7 +720,7 @@ func (m *MCPToolManager) handleGetMonthlySummary(ctx context.Context, params map
 	// Get monthly trends
 	trends, err := m.repo.Transaction.GetMonthlyTrend(ctx, circleID, months)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get monthly summary: %w", err)
+		return nil, fmt.errorf("failed to get monthly summary: %w", err)
 	}
 
 	// Calculate totals
@@ -746,7 +746,7 @@ func (m *MCPToolManager) handleGetMonthlySummary(ctx context.Context, params map
 func (m *MCPToolManager) handleDetectSpendingPatterns(ctx context.Context, params map[string]interface{}) (interface{}, error) {
 	circleID, ok := params["circle_id"].(string)
 	if !ok {
-		return nil, fmt.Errorf("circle_id is required and must be a string")
+		return nil, fmt.errorf("circle_id is required and must be a string")
 	}
 
 	// Parse date range
@@ -774,7 +774,7 @@ func (m *MCPToolManager) handleDetectSpendingPatterns(ctx context.Context, param
 
 	transactions, err := m.repo.Transaction.FindByCircle(ctx, circleID, filter)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get transactions for analysis: %w", err)
+		return nil, fmt.errorf("failed to get transactions for analysis: %w", err)
 	}
 
 	// Simple pattern detection (in real implementation, this would use ML)

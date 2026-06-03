@@ -474,7 +474,7 @@
                 </a>
                 <a href="settings.html" class="nav-link">
                     <i class="fas fa-cog"></i>
-                    <span>Configuración</span>
+                    <span>configuration</span>
                 </a>
             </div>
             
@@ -484,7 +484,7 @@
                         <div class="user-avatar" id="userAvatar">
                             <i class="fas fa-user"></i>
                         </div>
-                        <span id="userName">Usuario</span>
+                        <span id="userName">user</span>
                         <i class="fas fa-chevron-down"></i>
                     </button>
                     <div class="dropdown-menu">
@@ -492,11 +492,11 @@
                             <i class="fas fa-user"></i> Mi Perfil
                         </a>
                         <a href="settings.html" class="dropdown-item">
-                            <i class="fas fa-cog"></i> Configuración
+                            <i class="fas fa-cog"></i> configuration
                         </a>
                         <div class="dropdown-divider"></div>
                         <a href="#" class="dropdown-item" onclick="logout()">
-                            <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                            <i class="fas fa-sign-out-alt"></i> Cerrar session
                         </a>
                     </div>
                 </div>
@@ -646,7 +646,7 @@
     <div class="modal" id="addExpenseModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2><i class="fas fa-plus-circle"></i> Agregar Transacción</h2>
+                <h2><i class="fas fa-plus-circle"></i> Agregar transaction</h2>
                 <button class="close-modal" onclick="closeAddExpenseModal()">&times;</button>
             </div>
             
@@ -689,7 +689,7 @@
                         </div>
                         
                         <div class="form-group">
-                            <label class="form-label">Fecha</label>
+                            <label class="form-label">date</label>
                             <input type="date" id="date" class="form-input" required>
                         </div>
                     </div>
@@ -728,7 +728,7 @@
     <script src="src/auth.js"></script>
     
     <script>
-        // API Configuration
+        // api Configuration
         const API_BASE_URL = window.location.hostname === 'pulseexpends.duckdns.org' ? 
             'http://api.pulseexpends.duckdns.org/api' : 
             'http://localhost:8082/api';
@@ -744,8 +744,8 @@
             // Update welcome message with user name
             const user = window.auth.getCurrentUser();
             if (user) {
-                document.getElementById('welcomeMessage').textContent = `Bienvenido, ${user.fullName?.split(' ')[0] || user.username || 'Usuario'}!`;
-                document.getElementById('userName').textContent = user.fullName?.split(' ')[0] || user.username || 'Usuario';
+                document.getElementById('welcomeMessage').textContent = `Bienvenido, ${user.fullName?.split(' ')[0] || user.username || 'user'}!`;
+                document.getElementById('userName').textContent = user.fullName?.split(' ')[0] || user.username || 'user';
                 
                 if (user.avatarURL) {
                     document.getElementById('userAvatar').style.backgroundImage = `url('${user.avatarURL}')`;
@@ -780,7 +780,7 @@
                 });
                 
                 if (!response.ok) {
-                    throw new Error('Error al cargar estadísticas');
+                    throw new error('error al cargar estadísticas');
                 }
                 
                 const data = await response.json();
@@ -802,12 +802,12 @@
                 }
                 
             } catch (error) {
-                console.error('Error loading dashboard data:', error);
+                console.error('error loading dashboard data:', error);
                 // Show error state
                 document.getElementById('statsGrid').innerHTML = `
                     <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--gray-color);">
                         <i class="fas fa-exclamation-circle" style="font-size: 3rem; margin-bottom: 15px;"></i>
-                        <h3>Error al cargar estadísticas</h3>
+                        <h3>error al cargar estadísticas</h3>
                         <p>No se pudieron cargar los datos del dashboard. Por favor, intenta nuevamente.</p>
                         <button class="btn btn-primary" onclick="loadDashboardData()" style="margin-top: 15px;">
                             <i class="fas fa-redo"></i> Reintentar
@@ -829,21 +829,21 @@
                 });
                 
                 if (!response.ok) {
-                    throw new Error('Error al cargar grupos');
+                    throw new error('error al cargar grupos');
                 }
                 
                 const data = await response.json();
                 renderRecentCircles(data.circles || []);
                 
             } catch (error) {
-                console.error('Error loading circles:', error);
+                console.error('error loading circles:', error);
                 document.getElementById('circlesList').innerHTML = `
                     <div class="no-circles">
                         <i class="fas fa-users"></i>
                         <h3>No tienes grupos familiares</h3>
                         <p>Crea tu primer grupo para compartir gastos con tu familia o amigos.</p>
                         <a href="circles.html" class="btn btn-primary" style="margin-top: 15px;">
-                            <i class="fas fa-plus"></i> Crear Grupo
+                            <i class="fas fa-plus"></i> create Grupo
                         </a>
                     </div>
                 `;
@@ -861,7 +861,7 @@
                         <h3>No tienes grupos familiares</h3>
                         <p>Crea tu primer grupo para compartir gastos con tu familia o amigos.</p>
                         <a href="circles.html" class="btn btn-primary" style="margin-top: 15px;">
-                            <i class="fas fa-plus"></i> Crear Grupo
+                            <i class="fas fa-plus"></i> create Grupo
                         </a>
                     </div>
                 `;
@@ -912,14 +912,14 @@
                 });
                 
                 if (!response.ok) {
-                    throw new Error('Error al cargar transacciones');
+                    throw new error('error al cargar transacciones');
                 }
                 
                 const data = await response.json();
                 renderRecentTransactions(data.transactions || []);
                 
             } catch (error) {
-                console.error('Error loading transactions:', error);
+                console.error('error loading transactions:', error);
                 document.getElementById('recentTransactions').innerHTML = `
                     <div style="text-align: center; padding: 40px; color: var(--gray-color);">
                         <i class="fas fa-exclamation-circle" style="font-size: 2rem; margin-bottom: 15px;"></i>
@@ -939,7 +939,7 @@
                         <i class="fas fa-receipt" style="font-size: 2rem; margin-bottom: 15px;"></i>
                         <p>No hay transacciones recientes</p>
                         <button class="btn btn-primary" onclick="showAddExpenseModal()" style="margin-top: 15px;">
-                            <i class="fas fa-plus"></i> Agregar tu primera transacción
+                            <i class="fas fa-plus"></i> Agregar tu primera transaction
                         </button>
                     </div>
                 `;
@@ -989,7 +989,7 @@
                     }
                 }
             } catch (error) {
-                console.error('Error loading circles for dropdown:', error);
+                console.error('error loading circles for dropdown:', error);
             }
         }
         
@@ -1040,12 +1040,12 @@
                 
                 if (!response.ok) {
                     const error = await response.json();
-                    throw new Error(error.message || 'Error al agregar transacción');
+                    throw new error(error.message || 'error al agregar transaction');
                 }
                 
                 hideLoading();
                 closeAddExpenseModal();
-                alert('¡Transacción agregada exitosamente!');
+                alert('¡transaction agregada exitosamente!');
                 
                 // Reload data
                 loadDashboardData();
@@ -1053,7 +1053,7 @@
                 
             } catch (error) {
                 hideLoading();
-                alert('Error: ' + error.message);
+                alert('error: ' + error.message);
             }
         }
         
@@ -1097,7 +1097,7 @@
                     year: 'numeric'
                 });
             } catch (e) {
-                return 'Fecha inválida';
+                return 'date inválida';
             }
         }
         

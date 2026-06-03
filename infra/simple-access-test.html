@@ -31,8 +31,8 @@
     </div>
     
     <div class="test">
-        <h3>Prueba 3: API de autenticación</h3>
-        <p id="test3" class="loading">Probando API...</p>
+        <h3>Prueba 3: api de authentication</h3>
+        <p id="test3" class="loading">Probando api...</p>
     </div>
     
     <div class="test">
@@ -42,7 +42,7 @@
         <ul>
             <li><a href="http://182.160.24.205/" target="_blank">http://182.160.24.205/</a> (IP directa)</li>
             <li><a href="http://pulseexpends.duckdns.org/" target="_blank">http://pulseexpends.duckdns.org/</a> (Dominio)</li>
-            <li><a href="http://pulseexpends.duckdns.org/api/auth/health" target="_blank">API de autenticación</a></li>
+            <li><a href="http://pulseexpends.duckdns.org/api/auth/health" target="_blank">api de authentication</a></li>
         </ul>
     </div>
     
@@ -71,11 +71,11 @@
                 const response = await fetch('http://pulseexpends.duckdns.org/api/auth/health');
                 if (response.ok) {
                     const data = await response.json();
-                    element.innerHTML = `✅ API funcionando: ${data.status || 'OK'}`;
+                    element.innerHTML = `✅ api funcionando: ${data.status || 'OK'}`;
                     element.className = 'success';
                     return true;
                 } else {
-                    element.innerHTML = `❌ API error: HTTP ${response.status}`;
+                    element.innerHTML = `❌ api error: HTTP ${response.status}`;
                     element.className = 'error';
                     return false;
                 }
@@ -85,16 +85,16 @@
                     const response = await fetch('http://182.160.24.205/api/auth/health');
                     if (response.ok) {
                         const data = await response.json();
-                        element.innerHTML = `✅ API funcionando por IP: ${data.status || 'OK'}`;
+                        element.innerHTML = `✅ api funcionando por IP: ${data.status || 'OK'}`;
                         element.className = 'success';
                         return true;
                     } else {
-                        element.innerHTML = `❌ API error por IP: HTTP ${response.status}`;
+                        element.innerHTML = `❌ api error por IP: HTTP ${response.status}`;
                         element.className = 'error';
                         return false;
                     }
                 } catch (error2) {
-                    element.innerHTML = '❌ API no accesible';
+                    element.innerHTML = '❌ api no accesible';
                     element.className = 'error';
                     return false;
                 }

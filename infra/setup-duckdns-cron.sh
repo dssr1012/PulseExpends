@@ -6,19 +6,19 @@
 set -e
 
 echo "========================================="
-echo "Configuración de Actualización Automática DuckDNS"
+echo "configuration de Actualización Automática DuckDNS"
 echo "========================================="
 
 # Verificar que el script principal existe
 if [ ! -f "configure-duckdns-secure.sh" ]; then
-    echo "❌ ERROR: No se encontró configure-duckdns-secure.sh"
+    echo "❌ error: No se encontró configure-duckdns-secure.sh"
     echo "   Ejecuta desde el directorio /opt/PulseExpends/"
     exit 1
 fi
 
 # Verificar que el script principal tenga el token configurado
 if grep -q 'TOKEN=""' configure-duckdns-secure.sh; then
-    echo "❌ ERROR: Token no configurado en configure-duckdns-secure.sh"
+    echo "❌ error: Token no configurado en configure-duckdns-secure.sh"
     echo ""
     echo "Primero configura el token:"
     echo "1. Edita configure-duckdns-secure.sh"
@@ -31,10 +31,10 @@ if grep -q 'TOKEN=""' configure-duckdns-secure.sh; then
     exit 1
 fi
 
-# Crear script de actualización seguro
+# create script de actualización seguro
 cat > /usr/local/bin/update-duckdns.sh << 'EOF'
 #!/bin/bash
-# Script seguro para actualizar DuckDNS
+# Script seguro para update DuckDNS
 # Se ejecuta desde cron cada 5 minutos
 
 DOMAIN="pulseexpends.duckdns.org"
@@ -47,9 +47,9 @@ if [ "$IP" != "0.0.0.0" ]; then
 fi
 EOF
 
-# Pedir al usuario que ingrese el token
+# Pedir al user que ingrese el token
 echo ""
-echo "🔐 Configuración del token de DuckDNS"
+echo "🔐 configuration del token de DuckDNS"
 echo "====================================="
 echo "Por favor ingresa tu token de DuckDNS:"
 read -s -p "Token: " DUCKDNS_TOKEN
@@ -62,7 +62,7 @@ sed -i "s/TU_TOKEN_AQUI/$DUCKDNS_TOKEN/" /usr/local/bin/update-duckdns.sh
 chmod 700 /usr/local/bin/update-duckdns.sh
 chown root:root /usr/local/bin/update-duckdns.sh
 
-echo "✅ Script de actualización creado en /usr/local/bin/update-duckdns.sh"
+echo "✅ Script de actualización created en /usr/local/bin/update-duckdns.sh"
 echo "   Permisos: 700 (solo root puede leer/ejecutar)"
 echo ""
 
@@ -75,7 +75,7 @@ echo ""
 echo "📅 Cron jobs activos:"
 crontab -l
 echo ""
-echo "🔍 Para ver logs de ejecución:"
+echo "🔍 Para ver logs de execution:"
 echo "   grep CRON /var/log/syslog | grep update-duckdns"
 echo ""
 echo "🔧 Para ejecutar manualmente:"
@@ -87,4 +87,4 @@ echo "2. Solo root puede leer/ejecutar el archivo (permisos 700)"
 echo "3. El cron job se ejecuta como root"
 echo "4. Nunca compartas este archivo ni lo subas a repositorios públicos"
 echo ""
-echo "🎉 Configuración completada. DuckDNS se actualizará automáticamente cada 5 minutos."
+echo "🎉 configuration completada. DuckDNS se actualizará automáticamente cada 5 minutos."

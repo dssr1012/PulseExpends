@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Script de despliegue para configuración con paths (sin subdominios)
+# Script de despliegue para configuration con paths (sin subdominios)
 # Versión estable que funciona con DuckDNS
 
 set -e
@@ -23,30 +23,30 @@ echo "   - IP del servidor: $SERVER_IP"
 echo ""
 echo "🌐 URLs de acceso:"
 echo "   - Frontend Principal: http://$DOMAIN/"
-echo "   - API MCP Server:     http://$DOMAIN/mcp/"
+echo "   - api MCP Server:     http://$DOMAIN/mcp/"
 echo "   - PDF Parser:         http://$DOMAIN/pdf/"
 echo "   - Status Dashboard:   http://$DOMAIN/status/"
 echo ""
 
 # Verificar que estamos en el directorio correcto
 if [ ! -f "infra/src/nginx/pulseexpends.conf" ]; then
-    echo "❌ Error: No se encontró el archivo de configuración nginx"
+    echo "❌ error: No se encontró el archivo de configuration nginx"
     echo "   Ejecuta desde el directorio raíz del proyecto: /root/PulseExpends"
     exit 1
 fi
 
-echo "📦 Creando backup de configuración actual..."
+echo "📦 Creando backup de configuration actual..."
 sudo mkdir -p $BACKUP_DIR
 if [ -f "$NGINX_CONF_DIR/pulseexpends" ]; then
     sudo cp $NGINX_CONF_DIR/pulseexpends $BACKUP_DIR/pulseexpends.backup.$TIMESTAMP
-    echo "   ✅ Backup creado: $BACKUP_DIR/pulseexpends.backup.$TIMESTAMP"
+    echo "   ✅ Backup created: $BACKUP_DIR/pulseexpends.backup.$TIMESTAMP"
 fi
 
-# Copiar nueva configuración de Nginx
-echo "📝 Copiando configuración de Nginx con paths..."
+# Copiar nueva configuration de Nginx
+echo "📝 Copiando configuration de Nginx con paths..."
 sudo cp infra/src/nginx/pulseexpends.conf $NGINX_CONF_DIR/pulseexpends
 
-# Crear enlace simbólico si no existe
+# create enlace simbólico si no existe
 if [ ! -L "$NGINX_ENABLED_DIR/pulseexpends" ]; then
     echo "🔗 Creando enlace simbólico..."
     sudo ln -s $NGINX_CONF_DIR/pulseexpends $NGINX_ENABLED_DIR/pulseexpends
@@ -87,7 +87,7 @@ if [ $? -eq 0 ]; then
     echo "✅ Sintaxis de Nginx OK"
     
     # Recargar Nginx
-    echo "🔄 Recargando configuración de Nginx..."
+    echo "🔄 Recargando configuration de Nginx..."
     sudo systemctl reload nginx
     
     if [ $? -eq 0 ]; then
@@ -137,30 +137,30 @@ if [ $? -eq 0 ]; then
         echo "🔍 Verificando estado de servicios..."
         echo ""
         
-        echo "📊 Servicio MCP Server:"
-        sudo systemctl status pulseexpends-mcp.service --no-pager | grep -E "(Active|Loaded|Main PID)" || echo "   ⚠️  Servicio no encontrado"
+        echo "📊 service MCP Server:"
+        sudo systemctl status pulseexpends-mcp.service --no-pager | grep -E "(Active|Loaded|Main PID)" || echo "   ⚠️  service no encontrado"
         
         echo ""
-        echo "📊 Servicio PDF Parser:"
-        sudo systemctl status pulseexpends-pdf-parser.service --no-pager | grep -E "(Active|Loaded|Main PID)" || echo "   ⚠️  Servicio no encontrado"
+        echo "📊 service PDF Parser:"
+        sudo systemctl status pulseexpends-pdf-parser.service --no-pager | grep -E "(Active|Loaded|Main PID)" || echo "   ⚠️  service no encontrado"
         
         echo ""
-        echo "📊 Servicio Status Dashboard:"
-        sudo systemctl status pulseexpends-status.service --no-pager | grep -E "(Active|Loaded|Main PID)" || echo "   ⚠️  Servicio no encontrado"
+        echo "📊 service Status Dashboard:"
+        sudo systemctl status pulseexpends-status.service --no-pager | grep -E "(Active|Loaded|Main PID)" || echo "   ⚠️  service no encontrado"
         
         echo ""
-        echo "📊 Servicio Nginx:"
-        sudo systemctl status nginx --no-pager | grep -E "(Active|Loaded|Main PID)" || echo "   ⚠️  Servicio no encontrado"
+        echo "📊 service Nginx:"
+        sudo systemctl status nginx --no-pager | grep -E "(Active|Loaded|Main PID)" || echo "   ⚠️  service no encontrado"
         
         # Mostrar resumen
         echo ""
         echo "========================================="
-        echo "✅ DESPLIEGUE COMPLETADO EXITOSAMENTE"
+        echo "✅ DESPLIEGUE completed EXITOSAMENTE"
         echo "========================================="
         echo ""
         echo "🌐 URLs de acceso:"
         echo "   Frontend Principal: http://$DOMAIN/"
-        echo "   API MCP Server:     http://$DOMAIN/mcp/"
+        echo "   api MCP Server:     http://$DOMAIN/mcp/"
         echo "   PDF Parser:         http://$DOMAIN/pdf/"
         echo "   Status Dashboard:   http://$DOMAIN/status/"
         echo ""
@@ -181,25 +181,25 @@ if [ $? -eq 0 ]; then
         echo "   Inicia la instancia desde Huawei Cloud Console para que los servicios estén disponibles"
         
     else
-        echo "❌ Error al recargar Nginx"
+        echo "❌ error al recargar Nginx"
         echo "   Revertiendo cambios..."
         if [ -f "$BACKUP_DIR/pulseexpends.backup.$TIMESTAMP" ]; then
             sudo cp $BACKUP_DIR/pulseexpends.backup.$TIMESTAMP $NGINX_CONF_DIR/pulseexpends
             sudo systemctl reload nginx
-            echo "   ✅ Configuración restaurada desde backup"
+            echo "   ✅ configuration restaurada desde backup"
         fi
         exit 1
     fi
 else
-    echo "❌ Error en la sintaxis de Nginx"
+    echo "❌ error en la sintaxis de Nginx"
     echo "   Revertiendo cambios..."
     if [ -f "$BACKUP_DIR/pulseexpends.backup.$TIMESTAMP" ]; then
         sudo cp $BACKUP_DIR/pulseexpends.backup.$TIMESTAMP $NGINX_CONF_DIR/pulseexpends
-        echo "   ✅ Configuración restaurada desde backup"
+        echo "   ✅ configuration restaurada desde backup"
     fi
     exit 1
 fi
 
 echo ""
-echo "🎉 ¡Configuración completada! Los servicios están configurados con paths."
+echo "🎉 ¡configuration completada! Los servicios están configurados con paths."
 echo "   Recuerda iniciar la instancia ECS desde Huawei Cloud Console."

@@ -23,7 +23,7 @@ class AIService:
             self.client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
             logger.info("OpenAI client initialized")
         else:
-            logger.warning("OPENAI_API_KEY not set, AI features will be limited")
+            logger.warning("OPENAI_API_KEY not set, AI features will be limitd")
             self.client = None
     
     async def parse_document(
@@ -47,7 +47,7 @@ class AIService:
             # Prepare user prompt with document text
             user_prompt = self._get_user_prompt(text, document_type, language)
             
-            # Call OpenAI API
+            # Call OpenAI api
             response = await self.client.chat.completions.create(
                 model=settings.OPENAI_MODEL,
                 messages=[

@@ -632,7 +632,7 @@
                 <div class="user-avatar">DS</div>
                 <div>
                     <div style="font-weight: 600;">DS SR</div>
-                    <div style="font-size: 14px; color: var(--gray-color);">Usuario Premium</div>
+                    <div style="font-size: 14px; color: var(--gray-color);">user Premium</div>
                 </div>
             </div>
         </header>
@@ -675,7 +675,7 @@
                         <li class="nav-item">
                             <a href="#" class="nav-link" data-page="settings">
                                 <i class="fas fa-cog"></i>
-                                <span>Configuración</span>
+                                <span>configuration</span>
                             </a>
                         </li>
                     </ul>
@@ -725,7 +725,7 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Fecha</label>
+                    <label class="form-label">date</label>
                     <input type="date" class="form-input" id="date" required>
                 </div>
                 <div class="form-group">
@@ -736,7 +736,7 @@
                     </select>
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%; padding: 15px;">
-                    <i class="fas fa-plus"></i> Agregar Transacción
+                    <i class="fas fa-plus"></i> Agregar transaction
                 </button>
             </form>
         </div>
@@ -773,7 +773,7 @@
     </div>
 
     <script>
-        // API Configuration
+        // api Configuration
         const API_BASE_URL = 'http://182.160.24.205:8080';
         const PDF_API_URL = 'http://182.160.24.205:8000';
 
@@ -850,10 +850,10 @@
                     document.getElementById('date').valueAsDate = new Date();
                     loadDashboard();
                 } else {
-                    throw new Error('Error al agregar gasto');
+                    throw new error('error al agregar gasto');
                 }
             } catch (error) {
-                alert('Error: ' + error.message);
+                alert('error: ' + error.message);
             }
         });
 
@@ -945,12 +945,12 @@
                         loadDashboard();
                     }, 2000);
                 } else {
-                    throw new Error(result.error || 'Error al procesar el PDF');
+                    throw new error(result.error || 'error al procesar el PDF');
                 }
             } catch (error) {
                 uploadStatus.innerHTML = `
                     <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 8px;">
-                        <h4><i class="fas fa-exclamation-circle"></i> Error al procesar PDF</h4>
+                        <h4><i class="fas fa-exclamation-circle"></i> error al procesar PDF</h4>
                         <p>${error.message}</p>
                     </div>
                 `;
@@ -1208,7 +1208,7 @@
                                 <i class="fas fa-info-circle"></i>
                             </div>
                             <div class="alert-content">
-                                <h4>Resumen pendiente</h4>
+                                <h4>Resumen pending</h4>
                                 <p>Tu resumen de tarjeta de crédito de Mayo está listo para revisión</p>
                             </div>
                         </div>
@@ -1221,10 +1221,10 @@
                 });
 
             } catch (error) {
-                console.error('Error loading dashboard:', error);
+                console.error('error loading dashboard:', error);
                 mainContent.innerHTML = `
                     <div style="background: #f8d7da; color: #721c24; padding: 20px; border-radius: 8px; text-align: center;">
-                        <h3><i class="fas fa-exclamation-circle"></i> Error al cargar datos</h3>
+                        <h3><i class="fas fa-exclamation-circle"></i> error al cargar datos</h3>
                         <p>No se pudo conectar con el servidor. Por favor, intenta de nuevo más tarde.</p>
                         <button class="btn btn-primary" onclick="loadDashboard()" style="margin-top: 15px;">
                             <i class="fas fa-redo"></i> Reintentar
@@ -1348,10 +1348,10 @@
                 filterType.addEventListener('change', filterTransactions);
 
             } catch (error) {
-                console.error('Error loading transactions:', error);
+                console.error('error loading transactions:', error);
                 mainContent.innerHTML = `
                     <div style="background: #f8d7da; color: #721c24; padding: 20px; border-radius: 8px; text-align: center;">
-                        <h3><i class="fas fa-exclamation-circle"></i> Error al cargar transacciones</h3>
+                        <h3><i class="fas fa-exclamation-circle"></i> error al cargar transacciones</h3>
                         <p>No se pudo conectar con el servidor.</p>
                         <button class="btn btn-primary" onclick="loadTransactions()" style="margin-top: 15px;">
                             <i class="fas fa-redo"></i> Reintentar
@@ -1439,16 +1439,16 @@
                                     <li>Considera establecer un presupuesto para las categorías con mayor gasto</li>
                                     <li>Revisa tus gastos recurrentes en "Servicios" y "Transporte"</li>
                                 </ul>
-                            ` : '<p>Agrega más transacciones para obtener recomendaciones personalizadas.</p>'}
+                            ` : '<p>Agrega más transacciones para get recomendaciones personalizadas.</p>'}
                         </div>
                     </div>
                 `;
 
             } catch (error) {
-                console.error('Error loading categories:', error);
+                console.error('error loading categories:', error);
                 mainContent.innerHTML = `
                     <div style="background: #f8d7da; color: #721c24; padding: 20px; border-radius: 8px; text-align: center;">
-                        <h3><i class="fas fa-exclamation-circle"></i> Error al cargar categorías</h3>
+                        <h3><i class="fas fa-exclamation-circle"></i> error al cargar categorías</h3>
                         <p>No se pudo conectar con el servidor.</p>
                         <button class="btn btn-primary" onclick="loadCategories()" style="margin-top: 15px;">
                             <i class="fas fa-redo"></i> Reintentar
@@ -1486,7 +1486,7 @@
                                     <i class="fas fa-lightbulb"></i> Consejo
                                 </h4>
                                 <p style="color: var(--dark-color);">
-                                    Asegúrate de que el PDF sea legible y contenga información de transacciones. 
+                                    Asegúrate de que el PDF sea legible y contenga information de transacciones. 
                                     El sistema funciona mejor con resúmenes de bancos principales.
                                 </p>
                             </div>
@@ -1552,7 +1552,7 @@
                                     <i class="fas fa-info-circle"></i>
                                 </div>
                                 <div class="alert-content">
-                                    <h4>Resumen pendiente</h4>
+                                    <h4>Resumen pending</h4>
                                     <p>Tu resumen de tarjeta de crédito de Mayo está listo para revisión</p>
                                     <small style="color: var(--gray-color);">Hace 5 días</small>
                                 </div>
@@ -1600,7 +1600,7 @@
                                 </div>
                                 
                                 <button class="btn btn-primary" style="width: 100%; padding: 15px; margin-top: 20px;">
-                                    <i class="fas fa-save"></i> Guardar Configuración
+                                    <i class="fas fa-save"></i> Guardar configuration
                                 </button>
                             </div>
                         </div>
@@ -1613,7 +1613,7 @@
             mainContent.innerHTML = `
                 <div style="background: white; border-radius: var(--border-radius); padding: 30px; box-shadow: var(--box-shadow); grid-column: 1 / -1;">
                     <div class="section-header">
-                        <h2 class="section-title">Configuración</h2>
+                        <h2 class="section-title">configuration</h2>
                         <button class="btn btn-primary" onclick="loadDashboard()">
                             <i class="fas fa-arrow-left"></i> Volver al Dashboard
                         </button>
@@ -1636,7 +1636,7 @@
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label class="form-label">Formato de fecha</label>
+                                    <label class="form-label">Formato de date</label>
                                     <select class="form-select">
                                         <option selected>DD/MM/YYYY</option>
                                         <option>MM/DD/YYYY</option>
@@ -1783,7 +1783,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadPage('dashboard');
             
-            // Check API connectivity
+            // Check api connectivity
             checkAPIConnectivity();
         });
 
@@ -1791,10 +1791,10 @@
             try {
                 const response = await fetch(`${API_BASE_URL}/health`);
                 if (!response.ok) {
-                    console.warn('MCP Server API not responding');
+                    console.warn('MCP Server api not responding');
                 }
             } catch (error) {
-                console.warn('Cannot connect to MCP Server API:', error);
+                console.warn('Cannot connect to MCP Server api:', error);
             }
         }
     </script>

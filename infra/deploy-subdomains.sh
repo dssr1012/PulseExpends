@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Script de despliegue para configuración de subdominios PulseExpends
+# Script de despliegue para configuration de subdominios PulseExpends
 # Este script configura Nginx con subdominios para los diferentes servicios
 
 set -e
 
 echo "========================================="
-echo "Despliegue de configuración de subdominios"
+echo "Despliegue de configuration de subdominios"
 echo "========================================="
 
 # Variables
@@ -19,31 +19,31 @@ TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
 echo "🔧 Configurando subdominios para:"
 echo "   - Frontend: $DOMAIN"
-echo "   - API: api.$DOMAIN"
+echo "   - api: api.$DOMAIN"
 echo "   - PDF Parser: pdf.$DOMAIN"
 echo "   - Status: status.$DOMAIN"
 echo "   - Servidor: $SERVER_IP"
 
 # Verificar que estamos en el directorio correcto
 if [ ! -f "backend/nginx-config/nginx-subdomains.conf" ]; then
-    echo "❌ Error: No se encontró el archivo de configuración nginx-subdomains.conf"
+    echo "❌ error: No se encontró el archivo de configuration nginx-subdomains.conf"
     echo "   Ejecuta desde el directorio raíz del proyecto: /root/PulseExpends"
     exit 1
 fi
 
-# Crear backup de la configuración actual
-echo "📦 Creando backup de configuración actual..."
+# create backup de la configuration actual
+echo "📦 Creando backup de configuration actual..."
 sudo mkdir -p $BACKUP_DIR
 if [ -f "$NGINX_CONF_DIR/pulseexpends" ]; then
     sudo cp $NGINX_CONF_DIR/pulseexpends $BACKUP_DIR/pulseexpends.backup.$TIMESTAMP
-    echo "   ✅ Backup creado: $BACKUP_DIR/pulseexpends.backup.$TIMESTAMP"
+    echo "   ✅ Backup created: $BACKUP_DIR/pulseexpends.backup.$TIMESTAMP"
 fi
 
-# Copiar nueva configuración de Nginx
-echo "📝 Copiando nueva configuración de Nginx..."
+# Copiar nueva configuration de Nginx
+echo "📝 Copiando nueva configuration de Nginx..."
 sudo cp backend/nginx-config/nginx-subdomains.conf $NGINX_CONF_DIR/pulseexpends
 
-# Crear enlace simbólico si no existe
+# create enlace simbólico si no existe
 if [ ! -L "$NGINX_ENABLED_DIR/pulseexpends" ]; then
     echo "🔗 Creando enlace simbólico..."
     sudo ln -s $NGINX_CONF_DIR/pulseexpends $NGINX_ENABLED_DIR/pulseexpends
@@ -57,7 +57,7 @@ if [ $? -eq 0 ]; then
     echo "✅ Sintaxis de Nginx OK"
     
     # Recargar Nginx
-    echo "🔄 Recargando configuración de Nginx..."
+    echo "🔄 Recargando configuration de Nginx..."
     sudo systemctl reload nginx
     
     if [ $? -eq 0 ]; then
@@ -109,16 +109,16 @@ if [ $? -eq 0 ]; then
         # Mostrar resumen
         echo ""
         echo "========================================="
-        echo "✅ DESPLIEGUE COMPLETADO EXITOSAMENTE"
+        echo "✅ DESPLIEGUE completed EXITOSAMENTE"
         echo "========================================="
         echo ""
         echo "🌐 URLs de acceso:"
         echo "   Frontend Principal: http://$DOMAIN"
-        echo "   API MCP Server:     http://api.$DOMAIN"
+        echo "   api MCP Server:     http://api.$DOMAIN"
         echo "   PDF Parser:         http://pdf.$DOMAIN"
         echo "   Status Dashboard:   http://status.$DOMAIN"
         echo ""
-        echo "🔧 Configuración de DNS:"
+        echo "🔧 configuration de DNS:"
         echo "   Asegúrate de que estos registros apunten a $SERVER_IP:"
         echo "   - $DOMAIN"
         echo "   - api.$DOMAIN"
@@ -135,25 +135,25 @@ if [ $? -eq 0 ]; then
         echo "   Inicia la instancia desde Huawei Cloud Console para que los servicios estén disponibles"
         
     else
-        echo "❌ Error al recargar Nginx"
+        echo "❌ error al recargar Nginx"
         echo "   Revertiendo cambios..."
         if [ -f "$BACKUP_DIR/pulseexpends.backup.$TIMESTAMP" ]; then
             sudo cp $BACKUP_DIR/pulseexpends.backup.$TIMESTAMP $NGINX_CONF_DIR/pulseexpends
             sudo systemctl reload nginx
-            echo "   ✅ Configuración restaurada desde backup"
+            echo "   ✅ configuration restaurada desde backup"
         fi
         exit 1
     fi
 else
-    echo "❌ Error en la sintaxis de Nginx"
+    echo "❌ error en la sintaxis de Nginx"
     echo "   Revertiendo cambios..."
     if [ -f "$BACKUP_DIR/pulseexpends.backup.$TIMESTAMP" ]; then
         sudo cp $BACKUP_DIR/pulseexpends.backup.$TIMESTAMP $NGINX_CONF_DIR/pulseexpends
-        echo "   ✅ Configuración restaurada desde backup"
+        echo "   ✅ configuration restaurada desde backup"
     fi
     exit 1
 fi
 
 echo ""
-echo "🎉 ¡Configuración completada! Los subdominios están listos para usar."
+echo "🎉 ¡configuration completada! Los subdominios están listos para usar."
 echo "   Recuerda iniciar la instancia ECS desde Huawei Cloud Console."

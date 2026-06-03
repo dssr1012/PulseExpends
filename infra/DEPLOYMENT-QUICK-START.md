@@ -1,25 +1,25 @@
 # 🚀 Despliegue Rápido - PulseExpends
 
-Guía paso a paso para desplegar la aplicación completa una vez que la infraestructura esté lista.
+Guía paso a paso para desplegar la application completa una vez que la infraestructura esté lista.
 
 ## 📋 Prerrequisitos
 
-1. **Infraestructura Huawei Cloud** desplegada y funcionando
+1. **Infraestructura Huawei Cloud** desplegada y functionando
 2. **IP Pública** asignada a la instancia ECS
 3. **Acceso SSH** configurado con la clave `pulse-expends-key.pem`
 4. **Dominio DuckDNS** configurado para apuntar a la IP pública
 
 ## 🔧 Pasos de Despliegue
 
-### 1. Obtener IP Pública y Credenciales SSH
+### 1. get IP Pública y Credenciales SSH
 ```bash
 # Desde el directorio de Terraform
 cd /root/PulseExpends-Infra
 
-# Obtener la IP pública
+# get la IP pública
 terraform output domain_ip_address
 
-# Obtener comando SSH
+# get comando SSH
 terraform output ssh_connection_command
 ```
 
@@ -29,7 +29,7 @@ terraform output ssh_connection_command
 ssh -i pulse-expends-key.pem ubuntu@<IP_PUBLICA>
 ```
 
-### 3. Clonar el Repositorio en el Servidor
+### 3. Clonar el repository en el Servidor
 ```bash
 # En el servidor ECS:
 cd /opt
@@ -45,7 +45,7 @@ cd /opt/PulseExpends/infra/scripts
 # Editar el script con tu token DuckDNS
 nano configure-duckdns.sh
 
-# Ejecutar configuración
+# Ejecutar configuration
 ./configure-duckdns.sh
 ```
 
@@ -66,7 +66,7 @@ sudo ./infra/deploy-with-paths.sh
 # En el servidor ECS:
 cd /opt/PulseExpends
 
-# Ejecutar script de verificación
+# Ejecutar script de verification
 ./infra/test-paths-config.sh
 
 # Verificar servicios
@@ -77,16 +77,16 @@ sudo systemctl status nginx pulseexpends-mcp.service pulseexpends-pdf-parser.ser
 
 Una vez desplegado, accede a:
 
-| Servicio | URL | Descripción |
+| service | URL | Descripción |
 |----------|-----|-------------|
 | **Frontend Principal** | `http://pulseexpends.duckdns.org/` | Aplicación web completa |
-| **API MCP Server** | `http://pulseexpends.duckdns.org/mcp/` | API REST para transacciones |
-| **PDF Parser API** | `http://pulseexpends.duckdns.org/pdf/` | Procesamiento de PDFs |
+| **api MCP Server** | `http://pulseexpends.duckdns.org/mcp/` | api REST para transactiones |
+| **PDF Parser api** | `http://pulseexpends.duckdns.org/pdf/` | Procesamiento de PDFs |
 | **Status Dashboard** | `http://pulseexpends.duckdns.org/status/` | Panel de monitoreo |
 
 ## 🧪 Health Checks
 
-Verifica que todo funcione:
+Verifica que TODO functione:
 
 ```bash
 # Health checks locales
@@ -154,7 +154,7 @@ sudo journalctl -u pulseexpends-pdf-parser.service --no-pager -n 50
 
 ### 3. Problemas con DuckDNS
 ```bash
-# Actualizar manualmente
+# update manualmente
 curl "https://www.duckdns.org/update?domains=pulseexpends&token=TU_TOKEN&ip=$(curl -s https://api.ipify.org)"
 
 # Verificar resolución DNS
@@ -173,7 +173,7 @@ sudo chown -R ubuntu:ubuntu /opt/PulseExpends
 
 ## 🔄 Actualizaciones
 
-### Actualizar desde GitHub:
+### update desde GitHub:
 ```bash
 cd /opt/PulseExpends
 sudo git pull origin main
@@ -182,7 +182,7 @@ sudo git pull origin main
 sudo ./infra/deploy-with-paths.sh
 ```
 
-### Actualizar solo configuración Nginx:
+### update solo configuration Nginx:
 ```bash
 sudo cp /opt/PulseExpends/infra/src/nginx/pulseexpends.conf /etc/nginx/sites-available/pulseexpends
 sudo nginx -t
@@ -194,31 +194,31 @@ sudo systemctl reload nginx
 ### Dashboard de Status:
 Accede a `http://pulseexpends.duckdns.org/status/` para:
 - Ver estado de todos los servicios
-- Información del sistema
+- information del sistema
 - URLs de acceso
 - Comandos útiles
 
 ### Logs importantes:
 - Nginx: `/var/log/nginx/access.log` y `/var/log/nginx/error.log`
-- Systemd: `sudo journalctl -u [servicio] -f`
-- Aplicación: logs específicos de cada servicio
+- Systemd: `sudo journalctl -u [service] -f`
+- Aplicación: logs específicos de cada service
 
 ## ✅ Checklist de Verificación Final
 
 - [ ] Instancia ECS en estado "RUNNING"
 - [ ] DNS DuckDNS configurado y propagado
-- [ ] Script `deploy-with-paths.sh` ejecutado exitosamente
+- [ ] Script `deploy-with-paths.sh` ejecutado successsamente
 - [ ] Todos los servicios systemd activos
 - [ ] Nginx sirviendo en puerto 80
 - [ ] Frontend accesible: `curl -I http://pulseexpends.duckdns.org/`
 - [ ] APIs responden: `curl http://pulseexpends.duckdns.org/mcp/health`
-- [ ] Status Dashboard funciona: `curl http://pulseexpends.duckdns.org/status/`
+- [ ] Status Dashboard functiona: `curl http://pulseexpends.duckdns.org/status/`
 
 ## 📞 Soporte
 
 ### Recursos:
-- **Repositorio**: https://github.com/dssr1012/PulseExpends
-- **Documentación**: Ver `README.md` en el repositorio
+- **repository**: https://github.com/dssr1012/PulseExpends
+- **Documentación**: Ver `README.md` en el repository
 - **Issues**: Reportar problemas en GitHub Issues
 
 ### Comandos de diagnóstico:

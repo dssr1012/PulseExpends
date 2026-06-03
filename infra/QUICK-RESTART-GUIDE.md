@@ -21,13 +21,13 @@ cp terraform.tfvars.example terraform.tfvars
 terraform init
 terraform apply -auto-approve
 
-# 4. Obtener IP pública
+# 4. get IP pública
 terraform output application_url
 
 # 5. Conectar al servidor
 ssh -i pulse-expends-key.pem root@<IP-PÚBLICA>
 
-# 6. Desplegar aplicación
+# 6. Desplegar application
 cd /opt/PulseExpends
 ./setup-ecs-subdomains.sh
 ```
@@ -45,17 +45,17 @@ cd /opt/PulseExpends
 ### Tiempo Estimado
 - **Terraform apply**: 3-5 minutos
 - **Inicio del servidor**: 2-3 minutos
-- **Despliegue aplicación**: 5-10 minutos
+- **Despliegue application**: 5-10 minutos
 - **Total**: 10-18 minutos
 
-## 🔧 Configuración Post-Reactivar
+## 🔧 configuration Post-Reactivar
 
 ### 1. Configurar DuckDNS
 ```bash
 # En el servidor ECS
 cd /opt/PulseExpends
 nano duckdns-update.sh
-# Actualizar token DuckDNS
+# update token DuckDNS
 ./configure-duckdns-secure.sh
 ```
 
@@ -81,7 +81,7 @@ curl http://<IP-PÚBLICA>/api/pdf/health
 
 ### Para agregar base de datos gestionada:
 ```bash
-# 1. Crear configuración RDS
+# 1. create configuration RDS
 cd /root/PulseExpends-Infra
 cp rds-example.tfvars rds.auto.tfvars
 # EDITAR con credenciales seguras
@@ -89,9 +89,9 @@ cp rds-example.tfvars rds.auto.tfvars
 # 2. Aplicar RDS
 terraform apply -var-file="rds.auto.tfvars"
 
-# 3. Configurar aplicación
+# 3. Configurar application
 # En el servidor ECS:
-echo "DATABASE_URL=postgresql://usuario:contraseña@rds-endpoint:5432/pulseexpends" > /opt/PulseExpends/backend/auth/.env
+echo "DATABASE_URL=postgresql://user:password@rds-endpoint:5432/pulseexpends" > /opt/PulseExpends/backend/auth/.env
 sudo systemctl restart pulseexpends-auth.service
 ```
 
@@ -153,7 +153,7 @@ tail -f /var/log/nginx/error.log
 
 ### Verificación Completa
 ```bash
-# Script de verificación
+# Script de verification
 cd /opt/PulseExpends
 ./check-status.sh
 ```
@@ -188,9 +188,9 @@ terraform plan
 - **Infraestructura**: https://github.com/dssr1012/PulseExpends-Infra
 - **Aplicación**: https://github.com/dssr1012/PulseExpends
 
-### Archivos de Configuración
-- `main.tf` - Configuración principal de Terraform
-- `variables.tf` - Variables de configuración
+### Archivos de configuration
+- `main.tf` - configuration principal de Terraform
+- `variables.tf` - Variables de configuration
 - `outputs.tf` - Outputs de Terraform
 - `rds.tf` - Módulo RDS PostgreSQL
 
@@ -198,6 +198,6 @@ terraform plan
 
 **¡Listo para reactivar cuando sea necesario!** 🚀
 
-**Tiempo estimado para tener todo funcionando:** 15-20 minutos
+**Tiempo estimado para tener TODO functionando:** 15-20 minutos
 **Costo estimado mensual:** $85-130 (dependiendo del tráfico)
-**Estado actual:** ✅ Configuración preservada, lista para reactivar
+**Estado actual:** ✅ configuration preservada, lista para reactivar

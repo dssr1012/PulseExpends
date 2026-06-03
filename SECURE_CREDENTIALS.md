@@ -4,7 +4,7 @@ Este documento describe cómo gestionar credenciales de forma segura en el proye
 
 ## 📋 Archivos Sensibles Excluidos
 
-Los siguientes archivos están excluidos del repositorio (ver `.gitignore`):
+Los siguientes archivos están excluidos del repository (ver `.gitignore`):
 
 ```
 # Claves y certificados
@@ -32,7 +32,7 @@ access_keys.txt
 private_keys/
 ssh-keys/
 
-# Archivos de configuración local
+# Archivos de configuration local
 config.local.*
 settings.local.*
 
@@ -41,7 +41,7 @@ settings.local.*
 credentials-backup.*
 ```
 
-## 🚀 Configuración Inicial Segura
+## 🚀 configuration Inicial Segura
 
 ### 1. Generar Nueva Clave SSH
 ```bash
@@ -57,7 +57,7 @@ export HUAWEI_ACCESS_KEY="tu_access_key"
 export HUAWEI_SECRET_KEY="tu_secret_key"
 export HUAWEI_PROJECT_ID="tu_project_id"
 
-# Opción B: Usar script de configuración
+# Opción B: Usar script de configuration
 cd infra
 ./setup-credentials.sh
 ```
@@ -69,7 +69,7 @@ cd infra
 4. Pegar contenido de `infra/pulse-expends-key.pub`
 5. Click **"OK"**
 
-## 🔧 Script de Configuración
+## 🔧 Script de configuration
 
 El script `infra/setup-credentials.sh` crea `terraform.tfvars` de forma segura:
 
@@ -108,7 +108,7 @@ infra/
 - ✅ `terraform.tfvars.example` (con placeholders)
 - ✅ `.env.example` (con valores de ejemplo)
 - ✅ Claves públicas (`.pub`)
-- ✅ Scripts de configuración
+- ✅ Scripts de configuration
 
 ### Para CI/CD:
 ```bash
@@ -132,11 +132,11 @@ terraform {
 Si sospechas que las credenciales están comprometidas:
 
 ### 1. Huawei Cloud:
-1. Ir a **IAM** → **Users** → Tu usuario
+1. Ir a **IAM** → **Users** → Tu user
 2. **Security credentials** → **Access Keys**
 3. Revocar la key comprometida
 4. Generar nueva Access Key
-5. Actualizar `terraform.tfvars`
+5. update `terraform.tfvars`
 
 ### 2. Clave SSH:
 ```bash
@@ -146,26 +146,26 @@ ssh-keygen -t ed25519 -f pulse-expends-key-new -N ""
 # Importar a Huawei Cloud
 # Bind a la instancia ECS
 
-# Eliminar clave antigua
+# delete clave antigua
 rm pulse-expends-key pulse-expends-key.pub
 ```
 
 ### 3. Otras Credenciales:
 - **Google OAuth**: Google Cloud Console → APIs & Services → Credentials
 - **JWT Secrets**: Regenerar con `openssl rand -base64 32`
-- **Database**: Rotar contraseñas en RDS
+- **Database**: Rotar passwords en RDS
 
 ## 📞 Soporte
 
 ### Problemas Comunes:
 
-**Error: "Access denied" al conectar por SSH**
+**error: "Access denied" al conectar por SSH**
 ```bash
 # Verificar que la clave está bindeada a la instancia
 # En Huawei Cloud Console: ECS → Instances → Tu instancia → More → Change Key Pair
 ```
 
-**Error: "Invalid credentials" en Terraform**
+**error: "Invalid credentials" en Terraform**
 ```bash
 # Verificar variables de entorno
 echo $HUAWEI_ACCESS_KEY
@@ -175,7 +175,7 @@ echo $HUAWEI_PROJECT_ID
 cat infra/terraform.tfvars | head -3
 ```
 
-**Error: "Permission denied" en archivos**
+**error: "Permission denied" en archivos**
 ```bash
 # Establecer permisos correctos
 chmod 600 infra/terraform.tfvars

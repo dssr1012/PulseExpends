@@ -1,15 +1,15 @@
 #!/bin/bash
 
 # Script seguro para configurar DuckDNS
-# NO INCLUYE EL TOKEN - debe ser proporcionado por el usuario
+# NO INCLUYE EL TOKEN - debe ser proporcionado por el user
 
 set -e
 
 echo "========================================="
-echo "Configuración Segura de DuckDNS"
+echo "configuration Segura de DuckDNS"
 echo "========================================="
 
-# Variables (el token debe ser proporcionado por el usuario)
+# Variables (el token debe ser proporcionado por el user)
 DOMAIN="pulseexpends.duckdns.org"
 TOKEN=""
 IP=$(curl -s https://api.ipify.org)
@@ -20,11 +20,11 @@ echo ""
 
 # Verificar que el token esté configurado
 if [ -z "$TOKEN" ]; then
-    echo "❌ ERROR: Token de DuckDNS no configurado"
+    echo "❌ error: Token de DuckDNS no configurado"
     echo ""
-    echo "Instrucciones para obtener el token:"
+    echo "Instrucciones para get el token:"
     echo "1. Ve a https://www.duckdns.org"
-    echo "2. Inicia sesión con tu cuenta"
+    echo "2. Inicia session con tu cuenta"
     echo "3. En la página principal, copia tu token"
     echo "4. Edita este script y reemplaza TOKEN=\"\" con tu token real"
     echo ""
@@ -51,7 +51,7 @@ RESULT=$(curl -s "https://www.duckdns.org/update?domains=status.$DOMAIN&token=$T
 echo "Resultado: $RESULT"
 
 echo ""
-echo "✅ Configuración de DuckDNS completada"
+echo "✅ configuration de DuckDNS completada"
 echo ""
 echo "🌐 URLs configuradas:"
 echo "   • http://$DOMAIN"

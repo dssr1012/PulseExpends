@@ -162,7 +162,7 @@
         <div class="auth-right">
             <div class="auth-card">
                 <div class="auth-header">
-                    <h2>Iniciar Sesión</h2>
+                    <h2>Iniciar session</h2>
                     <p>Ingresa a tu cuenta para gestionar tus finanzas</p>
                 </div>
                 
@@ -170,7 +170,7 @@
                 <div id="authSuccess" class="auth-success"></div>
                 
                 <div class="auth-tabs">
-                    <button class="auth-tab active" onclick="showForm('login')">Iniciar Sesión</button>
+                    <button class="auth-tab active" onclick="showForm('login')">Iniciar session</button>
                     <button class="auth-tab" onclick="showForm('register')">Registrarse</button>
                 </div>
                 
@@ -182,16 +182,16 @@
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">Contraseña</label>
+                        <label class="form-label">password</label>
                         <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required>
                     </div>
                     
                     <div class="forgot-password">
-                        <a href="#" onclick="showForgotPassword()">¿Olvidaste tu contraseña?</a>
+                        <a href="#" onclick="showForgotPassword()">¿Olvidaste tu password?</a>
                     </div>
                     
                     <button type="submit" class="auth-button" id="loginButton">
-                        <span id="loginButtonText">Iniciar Sesión</span>
+                        <span id="loginButtonText">Iniciar session</span>
                         <span id="loginButtonSpinner" style="display: none;">
                             <i class="fas fa-spinner fa-spin"></i> Cargando...
                         </span>
@@ -209,7 +209,7 @@
                     <div class="demo-credentials">
                         <h4><i class="fas fa-info-circle"></i> Credenciales de demostración</h4>
                         <p><strong>Email:</strong> demo@pulseexpends.com</p>
-                        <p><strong>Contraseña:</strong> demo123</p>
+                        <p><strong>password:</strong> demo123</p>
                     </div>
                 </form>
                 
@@ -227,18 +227,18 @@
                     
                     <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label">Contraseña</label>
+                            <label class="form-label">password</label>
                             <input type="password" id="registerPassword" class="form-input" placeholder="••••••••" required minlength="6">
                         </div>
                         
                         <div class="form-group">
-                            <label class="form-label">Confirmar Contraseña</label>
+                            <label class="form-label">Confirmar password</label>
                             <input type="password" id="registerConfirmPassword" class="form-input" placeholder="••••••••" required minlength="6">
                         </div>
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label">Nombre de Usuario (opcional)</label>
+                        <label class="form-label">Nombre de user (opcional)</label>
                         <input type="text" id="registerUsername" class="form-input" placeholder="juanperez">
                     </div>
                     
@@ -248,7 +248,7 @@
                     </div>
                     
                     <button type="submit" class="auth-button" id="registerButton">
-                        <span id="registerButtonText">Crear Cuenta</span>
+                        <span id="registerButtonText">create Cuenta</span>
                         <span id="registerButtonSpinner" style="display: none;">
                             <i class="fas fa-spinner fa-spin"></i> Cargando...
                         </span>
@@ -267,7 +267,7 @@
                 <!-- Forgot Password Form -->
                 <form id="forgotPasswordForm" class="auth-form">
                     <div class="auth-header">
-                        <h2>Recuperar Contraseña</h2>
+                        <h2>Recuperar password</h2>
                         <p>Ingresa tu email para recibir un enlace de recuperación</p>
                     </div>
                     
@@ -285,7 +285,7 @@
                     
                     <div class="auth-footer">
                         <a href="#" onclick="showForm('login')">
-                            <i class="fas fa-arrow-left"></i> Volver al inicio de sesión
+                            <i class="fas fa-arrow-left"></i> Volver al inicio de session
                         </a>
                     </div>
                 </form>
@@ -385,7 +385,7 @@
                     localStorage.setItem('auth_user', JSON.stringify(data.user));
                     
                     // Show success message
-                    document.getElementById('authSuccess').textContent = '¡Inicio de sesión exitoso! Redirigiendo...';
+                    document.getElementById('authSuccess').textContent = '¡Inicio de session exitoso! Redirigiendo...';
                     document.getElementById('authSuccess').classList.add('show');
                     
                     // Redirect to dashboard
@@ -393,7 +393,7 @@
                         window.location.href = '/dashboard.html';
                     }, 1000);
                 } else {
-                    throw new Error(data.message || 'Error al iniciar sesión');
+                    throw new error(data.message || 'error al iniciar session');
                 }
             } catch (error) {
                 document.getElementById('authError').textContent = error.message;
@@ -462,7 +462,7 @@
                         window.location.href = '/dashboard.html';
                     }, 1000);
                 } else {
-                    throw new Error(data.message || 'Error al registrar usuario');
+                    throw new error(data.message || 'error al registrar user');
                 }
             } catch (error) {
                 document.getElementById('authError').textContent = error.message;
@@ -514,7 +514,7 @@
                         document.getElementById('authSuccess').classList.remove('show');
                     }, 3000);
                 } else {
-                    throw new Error(data.message || 'Error al enviar enlace de recuperación');
+                    throw new error(data.message || 'error al enviar enlace de recuperación');
                 }
             } catch (error) {
                 document.getElementById('authError').textContent = error.message;

@@ -6,13 +6,13 @@
 set -e
 
 echo "========================================="
-echo "WORKAROUND PULSEEXPENDS - Configuración Local"
+echo "WORKAROUND PULSEEXPENDS - configuration Local"
 echo "========================================="
 
 echo ""
 echo "📋 DIAGNÓSTICO:"
 echo "   El servidor ECS (182.160.24.205) tiene nginx mal configurado."
-echo "   Las rutas /mcp/* y /pdf/* no redirigen a los servicios correctos."
+echo "   Las routes /mcp/* y /pdf/* no redirigen a los servicios correctos."
 echo "   Status Dashboard (puerto 8081) no está funcionando."
 echo ""
 
@@ -69,8 +69,8 @@ else
     echo "   📍 Accede en: http://localhost:8888"
     echo "   Routing:"
     echo "     /          -> Frontend (puerto 80)"
-    echo "     /mcp/*     -> MCP Server API (puerto 8080)"
-    echo "     /pdf/*     -> PDF Parser API (puerto 8000)"
+    echo "     /mcp/*     -> MCP Server api (puerto 8080)"
+    echo "     /pdf/*     -> PDF Parser api (puerto 8000)"
     echo "     /status/*  -> Status Dashboard (no disponible)"
 fi
 
@@ -78,18 +78,18 @@ fi
 echo ""
 echo "4. Verificando conectividad con APIs remotas..."
 
-echo "   🔍 Probando MCP Server API (puerto 8080)..."
+echo "   🔍 Probando MCP Server api (puerto 8080)..."
 if curl -s http://182.160.24.205:8080/health | grep -q "healthy"; then
-    echo "   ✅ MCP Server API funciona correctamente"
+    echo "   ✅ MCP Server api funciona correctamente"
 else
-    echo "   ❌ MCP Server API no responde"
+    echo "   ❌ MCP Server api no responde"
 fi
 
-echo "   🔍 Probando PDF Parser API (puerto 8000)..."
+echo "   🔍 Probando PDF Parser api (puerto 8000)..."
 if curl -s http://182.160.24.205:8000/health | grep -q "healthy"; then
-    echo "   ✅ PDF Parser API funciona correctamente"
+    echo "   ✅ PDF Parser api funciona correctamente"
 else
-    echo "   ❌ PDF Parser API no responde"
+    echo "   ❌ PDF Parser api no responde"
 fi
 
 echo "   🔍 Probando Frontend remoto (puerto 80)..."
@@ -99,9 +99,9 @@ else
     echo "   ❌ Frontend remoto no responde"
 fi
 
-# Paso 5: Probar rutas problemáticas
+# Paso 5: Probar routes problemáticas
 echo ""
-echo "5. Probando rutas problemáticas (nginx mal configurado)..."
+echo "5. Probando routes problemáticas (nginx mal configurado)..."
 
 echo "   🔍 Probando /mcp/health (debería redirigir a puerto 8080)..."
 curl -s -o /tmp/mcp-test.html -w "%{http_code}" http://182.160.24.205/mcp/health
@@ -138,12 +138,12 @@ echo ""
 echo "🌐 ACCESO REMOTO (con problemas):"
 echo ""
 echo "1. Frontend: http://182.160.24.205/"
-echo "2. MCP API (directo): http://182.160.24.205:8080/"
-echo "3. PDF API (directo): http://182.160.24.205:8000/"
+echo "2. MCP api (directo): http://182.160.24.205:8080/"
+echo "3. PDF api (directo): http://182.160.24.205:8000/"
 echo ""
 echo "⚠️  PROBLEMAS CONOCIDOS:"
 echo "   - Nginx mal configurado en servidor remoto"
-echo "   - Rutas /mcp/* y /pdf/* no funcionan vía nginx"
+echo "   - routes /mcp/* y /pdf/* no funcionan vía nginx"
 echo "   - Status Dashboard no disponible (puerto 8081)"
 echo "   - Acceso SSH bloqueado"
 echo ""

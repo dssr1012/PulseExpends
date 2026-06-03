@@ -639,7 +639,7 @@ def test_cors_headers():
     assert "access-control-allow-origin" in response.headers
 
 def test_api_documentation():
-    """Test API documentation endpoints"""
+    """Test api documentation endpoints"""
     # Test OpenAPI docs
     response = client.get("/docs")
     assert response.status_code == 200

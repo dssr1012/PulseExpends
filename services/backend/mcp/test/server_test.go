@@ -43,7 +43,7 @@ func (m *MockRepositoryManager) Budget() repository.BudgetRepository {
 
 func (m *MockRepositoryManager) Close() error {
 	args := m.Called()
-	return args.Error(0)
+	return args.error(0)
 }
 
 // MockTransactionRepository is a mock implementation of TransactionRepository
@@ -53,37 +53,37 @@ type MockTransactionRepository struct {
 
 func (m *MockTransactionRepository) Create(ctx context.Context, transaction *repository.Transaction) error {
 	args := m.Called(ctx, transaction)
-	return args.Error(0)
+	return args.error(0)
 }
 
 func (m *MockTransactionRepository) FindByID(ctx context.Context, id string) (*repository.Transaction, error) {
 	args := m.Called(ctx, id)
-	return args.Get(0).(*repository.Transaction), args.Error(1)
+	return args.Get(0).(*repository.Transaction), args.error(1)
 }
 
 func (m *MockTransactionRepository) FindByCircle(ctx context.Context, circleID string, filter repository.TransactionFilter) ([]repository.Transaction, error) {
 	args := m.Called(ctx, circleID, filter)
-	return args.Get(0).([]repository.Transaction), args.Error(1)
+	return args.Get(0).([]repository.Transaction), args.error(1)
 }
 
 func (m *MockTransactionRepository) Update(ctx context.Context, transaction *repository.Transaction) error {
 	args := m.Called(ctx, transaction)
-	return args.Error(0)
+	return args.error(0)
 }
 
 func (m *MockTransactionRepository) Delete(ctx context.Context, id string) error {
 	args := m.Called(ctx, id)
-	return args.Error(0)
+	return args.error(0)
 }
 
 func (m *MockTransactionRepository) GetSummary(ctx context.Context, circleID string, startDate, endDate time.Time) (*repository.TransactionSummary, error) {
 	args := m.Called(ctx, circleID, startDate, endDate)
-	return args.Get(0).(*repository.TransactionSummary), args.Error(1)
+	return args.Get(0).(*repository.TransactionSummary), args.error(1)
 }
 
 func (m *MockTransactionRepository) GetMonthlyTrend(ctx context.Context, circleID string, months int) ([]repository.MonthlyTrend, error) {
 	args := m.Called(ctx, circleID, months)
-	return args.Get(0).([]repository.MonthlyTrend), args.Error(1)
+	return args.Get(0).([]repository.MonthlyTrend), args.error(1)
 }
 
 // MockCircleRepository is a mock implementation of CircleRepository
@@ -93,42 +93,42 @@ type MockCircleRepository struct {
 
 func (m *MockCircleRepository) Create(ctx context.Context, circle *repository.Circle) error {
 	args := m.Called(ctx, circle)
-	return args.Error(0)
+	return args.error(0)
 }
 
 func (m *MockCircleRepository) FindByID(ctx context.Context, id string) (*repository.Circle, error) {
 	args := m.Called(ctx, id)
-	return args.Get(0).(*repository.Circle), args.Error(1)
+	return args.Get(0).(*repository.Circle), args.error(1)
 }
 
 func (m *MockCircleRepository) FindByUser(ctx context.Context, userID string) ([]repository.Circle, error) {
 	args := m.Called(ctx, userID)
-	return args.Get(0).([]repository.Circle), args.Error(1)
+	return args.Get(0).([]repository.Circle), args.error(1)
 }
 
 func (m *MockCircleRepository) Update(ctx context.Context, circle *repository.Circle) error {
 	args := m.Called(ctx, circle)
-	return args.Error(0)
+	return args.error(0)
 }
 
 func (m *MockCircleRepository) Delete(ctx context.Context, id string) error {
 	args := m.Called(ctx, id)
-	return args.Error(0)
+	return args.error(0)
 }
 
 func (m *MockCircleRepository) AddMember(ctx context.Context, circleID string, member repository.Member) error {
 	args := m.Called(ctx, circleID, member)
-	return args.Error(0)
+	return args.error(0)
 }
 
 func (m *MockCircleRepository) RemoveMember(ctx context.Context, circleID, userID string) error {
 	args := m.Called(ctx, circleID, userID)
-	return args.Error(0)
+	return args.error(0)
 }
 
 func (m *MockCircleRepository) GetSummary(ctx context.Context, circleID string) (*repository.CircleSummary, error) {
 	args := m.Called(ctx, circleID)
-	return args.Get(0).(*repository.CircleSummary), args.Error(1)
+	return args.Get(0).(*repository.CircleSummary), args.error(1)
 }
 
 func TestMCPServer_HealthCheck(t *testing.T) {
@@ -769,7 +769,7 @@ func TestMCPServer_APIEndpoints(t *testing.T) {
 	// Create server
 	server := mcp.NewMCPServer(mockRepoMgr)
 
-	// Test API endpoint for creating transaction
+	// Test api endpoint for creating transaction
 	transactionData := map[string]interface{}{
 		"circle_id":      "circle-123",
 		"user_id":        "user-456",
@@ -800,7 +800,7 @@ func TestMCPServer_APIEndpoints(t *testing.T) {
 	assert.Contains(t, response, "transaction_id")
 	assert.Equal(t, "Transaction saved successfully", response["message"])
 
-	// Test API endpoint for getting transaction summary
+	// Test api endpoint for getting transaction summary
 	req2 := httptest.NewRequest("GET", "/api/v1/transactions/summary?circle_id=circle-123", nil)
 	w2 := httptest.NewRecorder()
 
@@ -847,7 +847,7 @@ func TestMCPServer_ErrorHandling(t *testing.T) {
 	mockRepoMgr.On("Budget").Return(nil)
 
 	// Mock transaction creation that fails
-	mockTransactionRepo.On("Create", mock.Anything, mock.AnythingOfType("*repository.Transaction")).Return(fmt.Errorf("database connection failed"))
+	mockTransactionRepo.On("Create", mock.Anything, mock.AnythingOfType("*repository.Transaction")).Return(fmt.errorf("database connection failed"))
 
 	// Create server
 	server := mcp.NewMCPServer(mockRepoMgr)

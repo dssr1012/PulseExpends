@@ -147,7 +147,7 @@ class PDFParserService:
                 os.unlink(tmp_path)
                 
         except Exception as e:
-            logger.error(f"Error parsing document {filename}: {str(e)}", exc_info=True)
+            logger.error(f"error parsing document {filename}: {str(e)}", exc_info=True)
             processing_time = (datetime.utcnow() - start_time).total_seconds()
             
             return ParsingResult(

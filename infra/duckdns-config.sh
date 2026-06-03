@@ -6,7 +6,7 @@
 set -e
 
 echo "========================================="
-echo "Configuración de DuckDNS para subdominios"
+echo "configuration de DuckDNS para subdominios"
 echo "========================================="
 
 # Variables
@@ -16,11 +16,11 @@ SERVER_IP="182.160.24.205"
 
 # Verificar que el token esté configurado
 if [ "$TOKEN" = "TU_TOKEN_DE_DUCKDNS_AQUI" ]; then
-    echo "❌ Error: Debes configurar tu token de DuckDNS en el script"
+    echo "❌ error: Debes configurar tu token de DuckDNS en el script"
     echo ""
     echo "Instrucciones:"
     echo "1. Ve a https://www.duckdns.org"
-    echo "2. Inicia sesión con tu cuenta"
+    echo "2. Inicia session con tu cuenta"
     echo "3. Copia tu token de la página principal"
     echo "4. Edita este script y reemplaza 'TU_TOKEN_DE_DUCKDNS_AQUI' con tu token real"
     echo ""
@@ -37,18 +37,18 @@ fi
 
 echo "✅ Conectividad verificada"
 
-# Actualizar dominio principal
+# update dominio principal
 echo "🔄 Actualizando dominio principal: $DOMAIN..."
 curl -s "https://www.duckdns.org/update?domains=$DOMAIN&token=$TOKEN&ip=$SERVER_IP"
 
 if [ $? -eq 0 ]; then
-    echo "✅ Dominio principal actualizado"
+    echo "✅ Dominio principal updated"
 else
-    echo "❌ Error al actualizar dominio principal"
+    echo "❌ error al update dominio principal"
     exit 1
 fi
 
-# Actualizar subdominios
+# update subdominios
 SUBDOMAINS="api pdf status"
 
 for SUBDOMAIN in $SUBDOMAINS; do
@@ -57,12 +57,12 @@ for SUBDOMAIN in $SUBDOMAINS; do
     curl -s "https://www.duckdns.org/update?domains=$FULL_DOMAIN&token=$TOKEN&ip=$SERVER_IP"
     
     if [ $? -eq 0 ]; then
-        echo "✅ Subdominio $SUBDOMAIN actualizado"
+        echo "✅ Subdominio $SUBDOMAIN updated"
     else
-        echo "⚠️  Error al actualizar subdominio $SUBDOMAIN"
+        echo "⚠️  error al update subdominio $SUBDOMAIN"
     fi
     
-    # Pequeña pausa para no sobrecargar la API
+    # Pequeña pausa para no sobrecargar la api
     sleep 1
 done
 
@@ -82,11 +82,11 @@ for DOM in $DOMAIN api.$DOMAIN pdf.$DOMAIN status.$DOMAIN; do
     if dig +short $DOM | grep -q "$SERVER_IP"; then
         echo "✅ OK"
     else
-        echo "⏳ Pendiente de propagación"
+        echo "⏳ pending de propagación"
     fi
 done
 
-# Crear archivo de configuración para cron (actualización automática)
+# create archivo de configuration para cron (actualización automática)
 echo ""
 echo "📅 Configurando actualización automática con cron..."
 CRON_JOB="*/5 * * * * curl -s 'https://www.duckdns.org/update?domains=$DOMAIN,api.$DOMAIN,pdf.$DOMAIN,status.$DOMAIN&token=$TOKEN&ip=' > /dev/null 2>&1"
@@ -99,11 +99,11 @@ else
     echo "ℹ️  Trabajo cron ya existe"
 fi
 
-# Crear script de actualización manual
+# create script de actualización manual
 UPDATE_SCRIPT="/usr/local/bin/update-duckdns.sh"
 sudo tee $UPDATE_SCRIPT > /dev/null << EOF
 #!/bin/bash
-# Script para actualizar DuckDNS manualmente
+# Script para update DuckDNS manualmente
 DOMAIN="$DOMAIN"
 TOKEN="$TOKEN"
 IP=\$(curl -s https://api.ipify.org)
@@ -112,11 +112,11 @@ echo ""
 EOF
 
 sudo chmod +x $UPDATE_SCRIPT
-echo "✅ Script de actualización manual creado en $UPDATE_SCRIPT"
+echo "✅ Script de actualización manual created en $UPDATE_SCRIPT"
 
 echo ""
 echo "========================================="
-echo "✅ CONFIGURACIÓN DE DUCKDNS COMPLETADA"
+echo "✅ configuration DE DUCKDNS COMPLETADA"
 echo "========================================="
 echo ""
 echo "🌐 Dominios configurados:"
@@ -127,9 +127,9 @@ echo "   - status.$DOMAIN"
 echo ""
 echo "📡 IP del servidor: $SERVER_IP"
 echo ""
-echo "⚙️  Configuración automática:"
+echo "⚙️  configuration automática:"
 echo "   - DuckDNS se actualizará automáticamente cada 5 minutos"
-echo "   - Para actualizar manualmente: sudo $UPDATE_SCRIPT"
+echo "   - Para update manualmente: sudo $UPDATE_SCRIPT"
 echo ""
 echo "⚠️  NOTA IMPORTANTE:"
 echo "   La propagación DNS puede tomar hasta 5-10 minutos."

@@ -38,7 +38,7 @@ func NewAuthHandler(db *gorm.DB) *AuthHandler {
 			"https://www.googleapis.com/auth/userinfo.email",
 			"https://www.googleapis.com/auth/userinfo.profile",
 		},
-		Endpoint: google.Endpoint,
+		endpoint: google.endpoint,
 	}
 
 	cookieSecret := os.Getenv("COOKIE_SECRET")
@@ -78,27 +78,27 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
 	if req.Email == "" || req.Password == "" {
-		http.Error(w, "Email and password are required", http.StatusBadRequest)
+		http.error(w, "Email and password are required", http.StatusBadRequest)
 		return
 	}
 
 	// Check if user already exists
 	var existingUser models.User
-	if err := h.db.Where("email = ?", req.Email).First(&existingUser).Error; err == nil {
-		http.Error(w, "User with this email already exists", http.StatusConflict)
+	if err := h.db.Where("email = ?", req.Email).First(&existingUser).error; err == nil {
+		http.error(w, "User with this email already exists", http.StatusConflict)
 		return
 	}
 
 	// Hash password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
-		log.Printf("Error hashing password: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		log.Printf("error hashing password: %v", err)
+		http.error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -125,9 +125,9 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		LastLoginAt: &now,
 	}
 
-	if err := h.db.Create(&user).Error; err != nil {
-		log.Printf("Error creating user: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	if err := h.db.Create(&user).error; err != nil {
+		log.Printf("error creating user: %v", err)
+		http.error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -136,17 +136,17 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		UserID:       user.ID,
 		PasswordHash: string(hashedPassword),
 	}
-	if err := h.db.Create(&userAuth).Error; err != nil {
-		log.Printf("Error creating user auth: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	if err := h.db.Create(&userAuth).error; err != nil {
+		log.Printf("error creating user auth: %v", err)
+		http.error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
 	// Create JWT token
 	token, err := h.createJWTToken(&user)
 	if err != nil {
-		log.Printf("Error creating JWT token: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		log.Printf("error creating JWT token: %v", err)
+		http.error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -160,9 +160,9 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		ExpiresAt: time.Now().Add(7 * 24 * time.Hour),
 	}
 
-	if err := h.db.Create(&session).Error; err != nil {
-		log.Printf("Error creating session: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	if err := h.db.Create(&session).error; err != nil {
+		log.Printf("error creating session: %v", err)
+		http.error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -193,22 +193,22 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
 	// Find user with auth
 	var user models.User
 	if err := h.db.Where("email = ? AND is_active = ?", req.Email, true).
-		Preload("Auth").First(&user).Error; err != nil {
-		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
+		Preload("Auth").First(&user).error; err != nil {
+		http.error(w, "Invalid email or password", http.StatusUnauthorized)
 		return
 	}
 
 	// Verify password against UserAuth.PasswordHash
 	if user.Auth.PasswordHash == "" ||
 		bcrypt.CompareHashAndPassword([]byte(user.Auth.PasswordHash), []byte(req.Password)) != nil {
-		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
+		http.error(w, "Invalid email or password", http.StatusUnauthorized)
 		return
 	}
 
@@ -220,8 +220,8 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	// Create JWT token
 	token, err := h.createJWTToken(&user)
 	if err != nil {
-		log.Printf("Error creating JWT token: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		log.Printf("error creating JWT token: %v", err)
+		http.error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -235,9 +235,9 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		ExpiresAt: time.Now().Add(7 * 24 * time.Hour),
 	}
 
-	if err := h.db.Create(&session).Error; err != nil {
-		log.Printf("Error creating session: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	if err := h.db.Create(&session).error; err != nil {
+		log.Printf("error creating session: %v", err)
+		http.error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -281,7 +281,7 @@ func (h *AuthHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	sess.Save(r, w)
 
 	if r.URL.Query().Get("state") != state {
-		http.Error(w, "Invalid state parameter", http.StatusBadRequest)
+		http.error(w, "Invalid state parameter", http.StatusBadRequest)
 		return
 	}
 
@@ -289,8 +289,8 @@ func (h *AuthHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
 	token, err := h.oauthConfig.Exchange(context.Background(), code)
 	if err != nil {
-		log.Printf("Error exchanging code: %v", err)
-		http.Error(w, "Failed to exchange authorization code", http.StatusInternalServerError)
+		log.Printf("error exchanging code: %v", err)
+		http.error(w, "Failed to exchange authorization code", http.StatusInternalServerError)
 		return
 	}
 
@@ -298,8 +298,8 @@ func (h *AuthHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	client := h.oauthConfig.Client(context.Background(), token)
 	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
 	if err != nil {
-		log.Printf("Error getting user info: %v", err)
-		http.Error(w, "Failed to get user info", http.StatusInternalServerError)
+		log.Printf("error getting user info: %v", err)
+		http.error(w, "Failed to get user info", http.StatusInternalServerError)
 		return
 	}
 	defer resp.Body.Close()
@@ -312,14 +312,14 @@ func (h *AuthHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&googleUser); err != nil {
-		log.Printf("Error decoding user info: %v", err)
-		http.Error(w, "Failed to decode user info", http.StatusInternalServerError)
+		log.Printf("error decoding user info: %v", err)
+		http.error(w, "Failed to decode user info", http.StatusInternalServerError)
 		return
 	}
 
 	// Find or create user
 	var user models.User
-	err = h.db.Where("provider = ? AND provider_id = ?", "google", googleUser.ID).First(&user).Error
+	err = h.db.Where("provider = ? AND provider_id = ?", "google", googleUser.ID).First(&user).error
 
 	if err == gorm.ErrRecordNotFound {
 		now := time.Now()
@@ -334,14 +334,14 @@ func (h *AuthHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 			LastLoginAt: &now,
 		}
 
-		if err := h.db.Create(&user).Error; err != nil {
-			log.Printf("Error creating user: %v", err)
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
+		if err := h.db.Create(&user).error; err != nil {
+			log.Printf("error creating user: %v", err)
+			http.error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
 	} else if err != nil {
-		log.Printf("Error finding user: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		log.Printf("error finding user: %v", err)
+		http.error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	} else {
 		now := time.Now()
@@ -353,8 +353,8 @@ func (h *AuthHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	// Create JWT token
 	jwtToken, err := h.createJWTToken(&user)
 	if err != nil {
-		log.Printf("Error creating JWT token: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		log.Printf("error creating JWT token: %v", err)
+		http.error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -368,9 +368,9 @@ func (h *AuthHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		ExpiresAt: time.Now().Add(7 * 24 * time.Hour),
 	}
 
-	if err := h.db.Create(&session).Error; err != nil {
-		log.Printf("Error creating session: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	if err := h.db.Create(&session).error; err != nil {
+		log.Printf("error creating session: %v", err)
+		http.error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -453,14 +453,14 @@ func (h *AuthHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
 	if req.Username != "" {
 		var existingUser models.User
-		if err := h.db.Where("username = ? AND id != ?", req.Username, user.ID).First(&existingUser).Error; err == nil {
-			http.Error(w, "Username already in use", http.StatusConflict)
+		if err := h.db.Where("username = ? AND id != ?", req.Username, user.ID).First(&existingUser).error; err == nil {
+			http.error(w, "Username already in use", http.StatusConflict)
 			return
 		}
 		user.Username = req.Username
@@ -482,9 +482,9 @@ func (h *AuthHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		user.Preferences.DefaultCurrency = req.Currency
 	}
 
-	if err := h.db.Save(&user).Error; err != nil {
-		log.Printf("Error updating user: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	if err := h.db.Save(&user).error; err != nil {
+		log.Printf("error updating user: %v", err)
+		http.error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -515,36 +515,36 @@ func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
 	// Fetch auth record
 	var userAuth models.UserAuth
-	if err := h.db.Where("user_id = ?", user.ID).First(&userAuth).Error; err != nil {
-		http.Error(w, "Auth record not found", http.StatusInternalServerError)
+	if err := h.db.Where("user_id = ?", user.ID).First(&userAuth).error; err != nil {
+		http.error(w, "Auth record not found", http.StatusInternalServerError)
 		return
 	}
 
 	// Verify current password
 	if userAuth.PasswordHash == "" ||
 		bcrypt.CompareHashAndPassword([]byte(userAuth.PasswordHash), []byte(req.CurrentPassword)) != nil {
-		http.Error(w, "Current password is incorrect", http.StatusUnauthorized)
+		http.error(w, "Current password is incorrect", http.StatusUnauthorized)
 		return
 	}
 
 	// Hash new password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
 	if err != nil {
-		log.Printf("Error hashing password: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		log.Printf("error hashing password: %v", err)
+		http.error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
 	userAuth.PasswordHash = string(hashedPassword)
-	if err := h.db.Save(&userAuth).Error; err != nil {
-		log.Printf("Error updating password: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	if err := h.db.Save(&userAuth).error; err != nil {
+		log.Printf("error updating password: %v", err)
+		http.error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -564,7 +564,7 @@ func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
@@ -586,7 +586,7 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
@@ -618,9 +618,9 @@ func (h *AuthHandler) GetSessions(w http.ResponseWriter, r *http.Request) {
 
 	var sessions []models.UserSession
 	if err := h.db.Where("user_id = ? AND expires_at > ?", user.ID, time.Now()).
-		Find(&sessions).Error; err != nil {
-		log.Printf("Error fetching sessions: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		Find(&sessions).error; err != nil {
+		log.Printf("error fetching sessions: %v", err)
+		http.error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -639,9 +639,9 @@ func (h *AuthHandler) RevokeSession(w http.ResponseWriter, r *http.Request) {
 	sessionID := mux.Vars(r)["id"]
 
 	if err := h.db.Where("id = ? AND user_id = ?", sessionID, user.ID).
-		Delete(&models.UserSession{}).Error; err != nil {
-		log.Printf("Error revoking session: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		Delete(&models.UserSession{}).error; err != nil {
+		log.Printf("error revoking session: %v", err)
+		http.error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 

@@ -1,17 +1,17 @@
 #!/bin/bash
 
-# Script para ejecutar el servidor de autenticación PulseExpends
+# Script para ejecutar el servidor de authentication PulseExpends
 
 set -e
 
-echo "🚀 Iniciando servidor de autenticación PulseExpends..."
+echo "🚀 Iniciando servidor de authentication PulseExpends..."
 
 # Verificar que las variables de entorno estén configuradas
 if [ ! -f .env ]; then
     echo "⚠️  Archivo .env no encontrado. Creando desde .env.example..."
     if [ -f .env.example ]; then
         cp .env.example .env
-        echo "✅ Archivo .env creado desde .env.example"
+        echo "✅ Archivo .env created desde .env.example"
         echo "⚠️  Por favor, configura las variables de entorno en .env antes de continuar"
         exit 1
     else
@@ -47,9 +47,9 @@ go build -o auth-server main.go
 # Ejecutar el servidor
 echo "🌐 Iniciando servidor en http://localhost:$PORT"
 echo "📊 Health check: http://localhost:$PORT/health"
-echo "📚 API Docs: http://localhost:$PORT/swagger/index.html"
+echo "📚 api Docs: http://localhost:$PORT/swagger/index.html"
 echo ""
-echo "📋 Configuración:"
+echo "📋 configuration:"
 echo "   Port: $PORT"
 echo "   Database: $DATABASE_URL"
 echo "   Google OAuth: $ENABLE_GOOGLE_OAUTH"

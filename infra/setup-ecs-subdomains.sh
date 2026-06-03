@@ -6,7 +6,7 @@
 set -e
 
 echo "========================================="
-echo "Configuración de Subdominios en ECS"
+echo "configuration de Subdominios en ECS"
 echo "========================================="
 
 # Variables
@@ -16,7 +16,7 @@ SERVER_IP=$(curl -s https://api.ipify.org)
 echo "🌐 Configurando subdominios para IP: $SERVER_IP"
 echo "   Dominio: $DOMAIN"
 
-# Actualizar sistema
+# update sistema
 echo "🔄 Actualizando sistema..."
 sudo apt update && sudo apt upgrade -y
 
@@ -45,20 +45,20 @@ fi
 echo "📦 Instalando dependencias de Python..."
 sudo pip3 install fastapi uvicorn pymupdf pytesseract Pillow python-multipart
 
-# Crear directorios necesarios
+# create directorios necesarios
 echo "📁 Creando directorios..."
 sudo mkdir -p /var/www/pulseexpends-frontend
 sudo mkdir -p /var/www/pulseexpends-status
 sudo mkdir -p /opt/PulseExpends
 sudo mkdir -p /opt/PulseExpends/python/pdf-parser/src
 
-# Clonar o copiar código del repositorio
-echo "📥 Obteniendo código del repositorio..."
+# Clonar o copiar código del repository
+echo "📥 Obteniendo código del repository..."
 cd /opt/PulseExpends
 
-# Si no existe el código, clonar el repositorio
+# Si no existe el código, clonar el repository
 if [ ! -d ".git" ]; then
-    echo "📦 Clonando repositorio..."
+    echo "📦 Clonando repository..."
     sudo git clone https://github.com/dssr1012/PulseExpends.git /tmp/pulseexpends-temp
     sudo cp -r /tmp/pulseexpends-temp/* .
     sudo cp -r /tmp/pulseexpends-temp/.* . 2>/dev/null || true
@@ -88,12 +88,12 @@ sudo pip3 install -r requirements.txt
 echo "🌐 Configurando Nginx..."
 sudo cp /opt/PulseExpends/backend/nginx-config/nginx-subdomains.conf /etc/nginx/sites-available/pulseexpends
 
-# Crear enlace simbólico si no existe
+# create enlace simbólico si no existe
 if [ ! -L "/etc/nginx/sites-enabled/pulseexpends" ]; then
     sudo ln -s /etc/nginx/sites-available/pulseexpends /etc/nginx/sites-enabled/
 fi
 
-# Remover configuración por defecto de Nginx
+# Remover configuration por defecto de Nginx
 if [ -L "/etc/nginx/sites-enabled/default" ]; then
     sudo rm /etc/nginx/sites-enabled/default
 fi
@@ -163,7 +163,7 @@ StandardError=journal
 WantedBy=multi-user.target
 EOF
 
-# Crear dashboard de status simple
+# create dashboard de status simple
 sudo tee /var/www/pulseexpends-status/index.html > /dev/null << EOF
 <!DOCTYPE html>
 <html lang="es">
@@ -221,11 +221,11 @@ sudo tee /var/www/pulseexpends-status/index.html > /dev/null << EOF
                     <span class="status up" id="status-frontend">UP</span>
                 </div>
                 <div class="service-status">
-                    <span class="service-name">API MCP Server</span>
+                    <span class="service-name">api MCP Server</span>
                     <span class="status up" id="status-api">UP</span>
                 </div>
                 <div class="service-status">
-                    <span class="service-name">PDF Parser API</span>
+                    <span class="service-name">PDF Parser api</span>
                     <span class="status up" id="status-pdf">UP</span>
                 </div>
                 <div class="service-status">
@@ -235,7 +235,7 @@ sudo tee /var/www/pulseexpends-status/index.html > /dev/null << EOF
             </div>
             
             <div class="status-card">
-                <h2>Información del Sistema</h2>
+                <h2>information del Sistema</h2>
                 <div class="info-grid">
                     <div class="info-item">
                         <div class="label">Servidor IP</div>
@@ -246,7 +246,7 @@ sudo tee /var/www/pulseexpends-status/index.html > /dev/null << EOF
                         <div class="value">pulseexpends.duckdns.org</div>
                     </div>
                     <div class="info-item">
-                        <div class="label">Fecha/Hora</div>
+                        <div class="label">date/time</div>
                         <div class="value" id="current-time">Cargando...</div>
                     </div>
                     <div class="info-item">
@@ -261,8 +261,8 @@ sudo tee /var/www/pulseexpends-status/index.html > /dev/null << EOF
             <h2>URLs de Acceso</h2>
             <ul class="url-list">
                 <li><a href="http://pulseexpends.duckdns.org" target="_blank">🌐 Frontend Principal</a> - Aplicación web completa</li>
-                <li><a href="http://api.pulseexpends.duckdns.org" target="_blank">🔧 API MCP Server</a> - API REST para transacciones</li>
-                <li><a href="http://pdf.pulseexpends.duckdns.org" target="_blank">📄 PDF Parser API</a> - Procesamiento de PDFs</li>
+                <li><a href="http://api.pulseexpends.duckdns.org" target="_blank">🔧 api MCP Server</a> - api REST para transacciones</li>
+                <li><a href="http://pdf.pulseexpends.duckdns.org" target="_blank">📄 PDF Parser api</a> - Procesamiento de PDFs</li>
                 <li><a href="http://status.pulseexpends.duckdns.org" target="_blank">📊 Status Dashboard</a> - Esta página de monitoreo</li>
             </ul>
         </div>
@@ -306,12 +306,12 @@ sudo tee /var/www/pulseexpends-status/index.html > /dev/null << EOF
     </div>
     
     <script>
-        // Actualizar información del sistema
+        // update information del sistema
         function updateSystemInfo() {
             // IP del servidor
             document.getElementById('server-ip').textContent = window.location.hostname;
             
-            // Hora actual
+            // time actual
             const now = new Date();
             document.getElementById('current-time').textContent = now.toLocaleString('es-ES');
             
@@ -350,7 +350,7 @@ sudo tee /var/www/pulseexpends-status/index.html > /dev/null << EOF
             }
         }
         
-        // Actualizar cada 30 segundos
+        // update cada 30 segundos
         updateSystemInfo();
         setInterval(updateSystemInfo, 30000);
         
@@ -377,8 +377,8 @@ sudo systemctl enable pulseexpends-mcp-server
 sudo systemctl enable pulseexpends-pdf-parser
 sudo systemctl enable pulseexpends-status
 
-# Verificar configuración de Nginx
-echo "🔍 Verificando configuración de Nginx..."
+# Verificar configuration de Nginx
+echo "🔍 Verificando configuration de Nginx..."
 sudo nginx -t
 
 if [ $? -eq 0 ]; then
@@ -412,17 +412,17 @@ if [ $? -eq 0 ]; then
         echo "🌐 Configurando DuckDNS..."
         curl -s "https://www.duckdns.org/update?domains=$DOMAIN,api.$DOMAIN,pdf.$DOMAIN,status.$DOMAIN&token=$DUCKDNS_TOKEN&ip=$SERVER_IP"
         echo ""
-        echo "✅ DuckDNS actualizado"
+        echo "✅ DuckDNS updated"
     fi
     
     echo ""
     echo "========================================="
-    echo "✅ CONFIGURACIÓN COMPLETADA EXITOSAMENTE"
+    echo "✅ configuration COMPLETADA EXITOSAMENTE"
     echo "========================================="
     echo ""
     echo "🌐 URLs de acceso:"
     echo "   Frontend Principal: http://$DOMAIN"
-    echo "   API MCP Server:     http://api.$DOMAIN"
+    echo "   api MCP Server:     http://api.$DOMAIN"
     echo "   PDF Parser:         http://pdf.$DOMAIN"
     echo "   Status Dashboard:   http://status.$DOMAIN"
     echo ""
@@ -432,16 +432,16 @@ if [ $? -eq 0 ]; then
     echo "   curl http://pdf.$DOMAIN/health"
     echo ""
     echo "📋 Comandos útiles:"
-    echo "   Ver logs: sudo journalctl -fu [servicio]"
-    echo "   Reiniciar: sudo systemctl restart [servicio]"
-    echo "   Estado: sudo systemctl status [servicio]"
+    echo "   Ver logs: sudo journalctl -fu [service]"
+    echo "   Reiniciar: sudo systemctl restart [service]"
+    echo "   Estado: sudo systemctl status [service]"
     
 else
-    echo "❌ Error en la sintaxis de Nginx"
-    echo "   Revisa la configuración en /etc/nginx/sites-available/pulseexpends"
+    echo "❌ error en la sintaxis de Nginx"
+    echo "   Revisa la configuration en /etc/nginx/sites-available/pulseexpends"
     exit 1
 fi
 
 echo ""
-echo "🎉 ¡Configuración completada! Los servicios están listos."
+echo "🎉 ¡configuration completada! Los servicios están listos."
 echo "   Recuerda configurar DuckDNS si aún no lo has hecho."

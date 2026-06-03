@@ -66,10 +66,10 @@ class AuthService {
                 
                 return { success: true, user: data.user };
             } else {
-                return { success: false, error: data.message || 'Error al iniciar sesión' };
+                return { success: false, error: data.message || 'error al iniciar session' };
             }
         } catch (error) {
-            return { success: false, error: 'Error de conexión. Por favor, intenta nuevamente.' };
+            return { success: false, error: 'error de conexión. Por favor, intenta nuevamente.' };
         }
     }
 
@@ -96,10 +96,10 @@ class AuthService {
                 
                 return { success: true, user: data.user };
             } else {
-                return { success: false, error: data.message || 'Error al registrar usuario' };
+                return { success: false, error: data.message || 'error al registrar user' };
             }
         } catch (error) {
-            return { success: false, error: 'Error de conexión. Por favor, intenta nuevamente.' };
+            return { success: false, error: 'error de conexión. Por favor, intenta nuevamente.' };
         }
     }
 
@@ -132,10 +132,10 @@ class AuthService {
                 
                 return { success: true, user: data.user };
             } else {
-                return { success: false, error: data.message || 'Error al verificar token de Google' };
+                return { success: false, error: data.message || 'error al verificar token de Google' };
             }
         } catch (error) {
-            return { success: false, error: 'Error de conexión. Por favor, intenta nuevamente.' };
+            return { success: false, error: 'error de conexión. Por favor, intenta nuevamente.' };
         }
     }
 
@@ -194,10 +194,10 @@ class AuthService {
                 localStorage.setItem('auth_user', JSON.stringify(this.user));
                 return { success: true, user: data.user };
             } else {
-                return { success: false, error: data.message || 'Error al actualizar perfil' };
+                return { success: false, error: data.message || 'error al update perfil' };
             }
         } catch (error) {
-            return { success: false, error: 'Error de conexión. Por favor, intenta nuevamente.' };
+            return { success: false, error: 'error de conexión. Por favor, intenta nuevamente.' };
         }
     }
 
@@ -218,10 +218,10 @@ class AuthService {
             if (response.ok) {
                 return { success: true, message: data.message };
             } else {
-                return { success: false, error: data.message || 'Error al cambiar contraseña' };
+                return { success: false, error: data.message || 'error al cambiar password' };
             }
         } catch (error) {
-            return { success: false, error: 'Error de conexión. Por favor, intenta nuevamente.' };
+            return { success: false, error: 'error de conexión. Por favor, intenta nuevamente.' };
         }
     }
 
@@ -241,10 +241,10 @@ class AuthService {
             if (response.ok) {
                 return { success: true, message: data.message };
             } else {
-                return { success: false, error: data.message || 'Error al solicitar recuperación' };
+                return { success: false, error: data.message || 'error al solicitar recuperación' };
             }
         } catch (error) {
-            return { success: false, error: 'Error de conexión. Por favor, intenta nuevamente.' };
+            return { success: false, error: 'error de conexión. Por favor, intenta nuevamente.' };
         }
     }
 
@@ -264,10 +264,10 @@ class AuthService {
             if (response.ok) {
                 return { success: true, message: data.message };
             } else {
-                return { success: false, error: data.message || 'Error al restablecer contraseña' };
+                return { success: false, error: data.message || 'error al restablecer password' };
             }
         } catch (error) {
-            return { success: false, error: 'Error de conexión. Por favor, intenta nuevamente.' };
+            return { success: false, error: 'error de conexión. Por favor, intenta nuevamente.' };
         }
     }
 
@@ -285,10 +285,10 @@ class AuthService {
             if (response.ok) {
                 return { success: true, sessions: data.sessions };
             } else {
-                return { success: false, error: data.message || 'Error al obtener sesiones' };
+                return { success: false, error: data.message || 'error al get sessiones' };
             }
         } catch (error) {
-            return { success: false, error: 'Error de conexión. Por favor, intenta nuevamente.' };
+            return { success: false, error: 'error de conexión. Por favor, intenta nuevamente.' };
         }
     }
 
@@ -307,14 +307,14 @@ class AuthService {
             if (response.ok) {
                 return { success: true, message: data.message };
             } else {
-                return { success: false, error: data.message || 'Error al revocar sesión' };
+                return { success: false, error: data.message || 'error al revocar session' };
             }
         } catch (error) {
-            return { success: false, error: 'Error de conexión. Por favor, intenta nuevamente.' };
+            return { success: false, error: 'error de conexión. Por favor, intenta nuevamente.' };
         }
     }
 
-    // Make authenticated API requests
+    // Make authenticated api requests
     async fetchWithAuth(url, options = {}) {
         const headers = {
             'Authorization': `Bearer ${this.token}`,
@@ -330,7 +330,7 @@ class AuthService {
         // Handle 401 Unauthorized
         if (response.status === 401) {
             this.logout();
-            throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente.');
+            throw new error('session expirada. Por favor, inicia session nuevamente.');
         }
 
         return response;
@@ -368,7 +368,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 sessionStorage.removeItem('redirectAfterLogin');
                 window.location.href = redirectUrl;
             } else {
-                alert('Error al iniciar sesión con Google: ' + result.error);
+                alert('error al iniciar session con Google: ' + result.error);
                 window.location.href = '/auth/login.html';
             }
         });

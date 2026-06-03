@@ -1,26 +1,26 @@
-# Sistema de Autenticación PulseExpends
+# Sistema de authentication PulseExpends
 
-Este documento describe el sistema de autenticación completo para PulseExpends, que incluye:
+Este documento describe el sistema de authentication completo para PulseExpends, que incluye:
 
 1. **Registro con email/password tradicional**
 2. **Login con Google OAuth**
 3. **Gestión de grupos familiares (circles) dentro de la app**
-4. **Autenticación JWT con sesiones**
+4. **authentication JWT con sessiones**
 5. **Base de datos PostgreSQL para persistencia**
 
 ## 🚀 Características Principales
 
-### 1. Autenticación Dual
-- **Registro tradicional**: Email + contraseña
+### 1. authentication Dual
+- **Registro tradicional**: Email + password
 - **Login con Google**: OAuth 2.0 con Google
 - **Sesiones persistentes**: JWT tokens con refresh
-- **Recuperación de contraseña**: Email con tokens temporales
+- **Recuperación de password**: Email con tokens temporales
 
 ### 2. Grupos Familiares (Circles)
 - **Creación de grupos**: Para compartir gastos familiares
 - **Roles**: Admin, Miembro, Solo lectura
 - **Códigos de invitación**: Para unirse a grupos privados
-- **Configuración granular**: Permisos por grupo
+- **configuration granular**: Permisos por grupo
 - **Presupuestos grupales**: Control de gastos compartidos
 
 ### 3. Seguridad
@@ -39,34 +39,34 @@ Este documento describe el sistema de autenticación completo para PulseExpends,
 - Nginx (para producción)
 
 ### Credenciales Google OAuth
-1. Crear proyecto en [Google Cloud Console](https://console.cloud.google.com/)
-2. Habilitar Google+ API
-3. Crear credenciales OAuth 2.0
+1. create proyecto en [Google Cloud Console](https://console.cloud.google.com/)
+2. Habilitar Google+ api
+3. create credenciales OAuth 2.0
 4. Configurar URIs de redirección
 
 ## 🛠️ Instalación Rápida
 
 ### 1. Configurar Base de Datos
 ```bash
-# Dar permisos de ejecución al script
+# Dar permisos de execution al script
 chmod +x setup-auth-database.sh
 
-# Ejecutar script de configuración
+# Ejecutar script de configuration
 ./setup-auth-database.sh
 ```
 
 ### 2. Configurar Google OAuth
 ```bash
-# Ejecutar script de configuración
+# Ejecutar script de configuration
 ./configure-google-oauth.sh
 
 # Editar archivo .env con tus credenciales
 nano backend/auth/.env
 ```
 
-### 3. Iniciar Servidor de Autenticación
+### 3. Iniciar Servidor de authentication
 ```bash
-# Iniciar servicio
+# Iniciar service
 sudo systemctl start pulseexpends-auth-server
 
 # Verificar estado
@@ -78,7 +78,7 @@ sudo journalctl -u pulseexpends-auth-server -f
 
 ### 4. Configurar Nginx (Producción)
 ```nginx
-# Configuración para auth server
+# configuration para auth server
 server {
     listen 80;
     server_name api.pulseexpends.duckdns.org;
@@ -93,7 +93,7 @@ server {
 }
 ```
 
-## 🔧 Configuración Detallada
+## 🔧 configuration Detallada
 
 ### Variables de Entorno (.env)
 ```bash
@@ -103,7 +103,7 @@ GOOGLE_CLIENT_SECRET=tu-client-secret
 GOOGLE_REDIRECT_URL=http://tu-dominio.com/api/auth/google/callback
 
 # Base de Datos
-DATABASE_URL=postgresql://usuario:contraseña@localhost:5432/pulseexpends
+DATABASE_URL=postgresql://user:password@localhost:5432/pulseexpends
 
 # JWT y Cookies
 JWT_SECRET=generar-con-openssl-rand-hex-32
@@ -114,7 +114,7 @@ FRONTEND_URL=http://tu-dominio.com
 CORS_ALLOWED_ORIGINS=http://localhost:3000,http://tu-dominio.com
 ```
 
-### Configuración Google OAuth
+### configuration Google OAuth
 1. **Google Cloud Console** → APIs & Services → Credentials
 2. **Create Credentials** → OAuth 2.0 Client IDs
 3. **Application type**: Web application
@@ -125,57 +125,57 @@ CORS_ALLOWED_ORIGINS=http://localhost:3000,http://tu-dominio.com
    - http://localhost:8082/api/auth/google/callback (desarrollo)
    - http://tu-dominio.com/api/auth/google/callback (producción)
 
-## 📡 Endpoints de la API
+## 📡 Endpoints de la api
 
-### Autenticación
+### authentication
 ```
-POST   /api/auth/register      # Registrar usuario
+POST   /api/auth/register      # Registrar user
 POST   /api/auth/login         # Login con email/password
 GET    /api/auth/google        # Iniciar flujo Google OAuth
 GET    /api/auth/google/callback # Callback Google OAuth
-POST   /api/auth/logout        # Cerrar sesión
-GET    /api/auth/profile       # Obtener perfil
-PUT    /api/auth/profile       # Actualizar perfil
-POST   /api/auth/change-password # Cambiar contraseña
-POST   /api/auth/forgot-password # Olvidé contraseña
-POST   /api/auth/reset-password  # Restablecer contraseña
-GET    /api/auth/sessions      # Listar sesiones activas
-DELETE /api/auth/sessions/{id} # Revocar sesión
+POST   /api/auth/logout        # Cerrar session
+GET    /api/auth/profile       # get perfil
+PUT    /api/auth/profile       # update perfil
+POST   /api/auth/change-password # Cambiar password
+POST   /api/auth/forgot-password # Olvidé password
+POST   /api/auth/reset-password  # Restablecer password
+GET    /api/auth/sessions      # list sessiones activas
+DELETE /api/auth/sessions/{id} # Revocar session
 ```
 
 ### Grupos Familiares (Circles)
 ```
-GET    /api/circles            # Listar grupos del usuario
-GET    /api/circles/{id}       # Obtener grupo específico
-POST   /api/circles            # Crear nuevo grupo
-PUT    /api/circles/{id}       # Actualizar grupo
-DELETE /api/circles/{id}       # Eliminar grupo
-GET    /api/circles/{id}/members # Listar miembros
+GET    /api/circles            # list grupos del user
+GET    /api/circles/{id}       # get grupo específico
+POST   /api/circles            # create nuevo grupo
+PUT    /api/circles/{id}       # update grupo
+DELETE /api/circles/{id}       # delete grupo
+GET    /api/circles/{id}/members # list miembros
 POST   /api/circles/{id}/members # Agregar miembro
 DELETE /api/circles/{id}/members/{userId} # Remover miembro
 PUT    /api/circles/{id}/members/{userId}/role # Cambiar rol
 POST   /api/circles/join/{code} # Unirse con código
 POST   /api/circles/{id}/invite # Invitar por email
-GET    /api/circles/{id}/transactions # Transacciones del grupo
+GET    /api/circles/{id}/transactions # Transactiones del grupo
 GET    /api/circles/{id}/activities # Actividad del grupo
 ```
 
-### Transacciones
+### Transactiones
 ```
-GET    /api/transactions       # Listar transacciones
-GET    /api/transactions/{id}  # Obtener transacción
-POST   /api/transactions       # Crear transacción
-PUT    /api/transactions/{id}  # Actualizar transacción
-DELETE /api/transactions/{id}  # Eliminar transacción
-GET    /api/transactions/circle/{circleId} # Transacciones por grupo
-POST   /api/transactions/{id}/split # Dividir transacción
-POST   /api/transactions/{id}/approve # Aprobar transacción
-POST   /api/transactions/{id}/reject # Rechazar transacción
+GET    /api/transactions       # list transactiones
+GET    /api/transactions/{id}  # get transaction
+POST   /api/transactions       # create transaction
+PUT    /api/transactions/{id}  # update transaction
+DELETE /api/transactions/{id}  # delete transaction
+GET    /api/transactions/circle/{circleId} # Transactiones por grupo
+POST   /api/transactions/{id}/split # Dividir transaction
+POST   /api/transactions/{id}/approve # Aprobar transaction
+POST   /api/transactions/{id}/reject # Rechazar transaction
 ```
 
 ### Estadísticas
 ```
-GET    /api/stats              # Estadísticas del usuario
+GET    /api/stats              # Estadísticas del user
 GET    /api/stats/circle/{circleId} # Estadísticas del grupo
 GET    /api/stats/monthly      # Estadísticas mensuales
 GET    /api/stats/categories   # Estadísticas por categoría
@@ -186,37 +186,37 @@ GET    /api/stats/categories   # Estadísticas por categoría
 ### 1. Login/Register (`/auth/login.html`)
 - Formulario de registro con email/password
 - Botón de login con Google
-- Recuperación de contraseña
+- Recuperación de password
 - Credenciales de demostración
 
 ### 2. Dashboard (`/dashboard.html`)
 - Resumen financiero personal
 - Grupos familiares recientes
-- Transacciones recientes
+- Transactiones recientes
 - Estadísticas rápidas
 
 ### 3. Grupos Familiares (`/circles.html`)
 - Listado de grupos
-- Crear nuevo grupo
+- create nuevo grupo
 - Unirse con código
 - Invitar miembros
-- Configuración de permisos
+- configuration de permisos
 
-### 4. Transacciones (`/transactions.html`)
-- Listado completo de transacciones
-- Filtros por categoría/tipo/fecha
-- Agregar transacciones manuales
-- Editar/eliminar transacciones
+### 4. Transactiones (`/transactions.html`)
+- Listado completo de transactiones
+- Filtros por categoría/tipo/date
+- Agregar transactiones manuales
+- Editar/delete transactiones
 
 ### 5. Subir PDF (`/upload.html`)
 - Drag & drop de archivos PDF
-- Extracción automática de transacciones
+- Extraction automática de transactiones
 - Confirmación de datos extraídos
 
-### 6. Configuración (`/settings.html`)
-- Preferencias de usuario
+### 6. configuration (`/settings.html`)
+- Preferencias de user
 - Categorías personalizadas
-- Alertas y notificaciones
+- Alertas y notificationes
 - Exportación de datos
 
 ## 🗄️ Modelos de Base de Datos
@@ -312,13 +312,13 @@ CREATE TABLE transactions (
 - Tokens firmados con HMAC SHA256
 - Expiración configurable (default: 7 días)
 - Refresh tokens opcionales
-- Validación de firma en cada request
+- validation de firma en cada request
 
 ### 2. Cookies HTTP-only
 - No accesibles desde JavaScript
 - Secure flag en producción
 - SameSite=Lax para protección CSRF
-- Path=/ para toda la aplicación
+- Path=/ para toda la application
 
 ### 3. CORS
 - Orígenes permitidos configurados
@@ -328,9 +328,9 @@ CREATE TABLE transactions (
 
 ### 4. Rate Limiting
 - Límite por IP
-- Límite por usuario
+- Límite por user
 - Ventana de tiempo configurable
-- Headers de información
+- Headers de information
 
 ### 5. PostgreSQL
 - Encriptación en reposo
@@ -340,7 +340,7 @@ CREATE TABLE transactions (
 
 ## 🚨 Solución de Problemas
 
-### Error: "Database connection failed"
+### error: "Database connection failed"
 ```bash
 # Verificar PostgreSQL
 sudo systemctl status postgresql
@@ -352,7 +352,7 @@ PGPASSWORD=pulseexpends_password psql -h localhost -U pulseexpends -d pulseexpen
 sudo journalctl -u postgresql -f
 ```
 
-### Error: "Google OAuth failed"
+### error: "Google OAuth failed"
 ```bash
 # Verificar credenciales
 cat backend/auth/.env | grep GOOGLE
@@ -364,7 +364,7 @@ curl -v "http://localhost:8082/api/auth/google"
 sudo journalctl -u pulseexpends-auth-server -f
 ```
 
-### Error: "CORS policy"
+### error: "CORS policy"
 ```bash
 # Verificar CORS_ALLOWED_ORIGINS
 cat backend/auth/.env | grep CORS
@@ -373,7 +373,7 @@ cat backend/auth/.env | grep CORS
 # Abrir consola del navegador y revisar errores
 ```
 
-### Error: "JWT validation failed"
+### error: "JWT validation failed"
 ```bash
 # Verificar JWT_SECRET
 cat backend/auth/.env | grep JWT_SECRET
@@ -381,7 +381,7 @@ cat backend/auth/.env | grep JWT_SECRET
 # Regenerar secret
 openssl rand -hex 32
 
-# Actualizar .env y reiniciar
+# update .env y reiniciar
 sudo systemctl restart pulseexpends-auth-server
 ```
 
@@ -407,7 +407,7 @@ SELECT COUNT(*) FROM users WHERE is_active = true;
 -- Grupos creados
 SELECT COUNT(*) FROM circles WHERE deleted_at IS NULL;
 
--- Transacciones por mes
+-- Transactiones por mes
 SELECT DATE_TRUNC('month', created_at) as month, 
        COUNT(*) as transactions,
        SUM(amount) as total
@@ -416,7 +416,7 @@ WHERE type = 'expense'
 GROUP BY month 
 ORDER BY month DESC;
 
--- Actividad de usuarios
+-- Actividad de users
 SELECT u.email, COUNT(t.id) as transaction_count
 FROM users u
 LEFT JOIN transactions t ON u.id = t.user_id
@@ -438,7 +438,7 @@ curl http://localhost:8082/metrics
 
 ## 🔄 Actualizaciones
 
-### Actualizar Base de Datos
+### update Base de Datos
 ```bash
 # Detener servidor
 sudo systemctl stop pulseexpends-auth-server
@@ -446,7 +446,7 @@ sudo systemctl stop pulseexpends-auth-server
 # Hacer backup
 pg_dump -U pulseexpends pulseexpends > backup_$(date +%Y%m%d).sql
 
-# Actualizar código
+# update código
 git pull origin main
 
 # Recompilar
@@ -457,12 +457,12 @@ go build -o auth-server main.go
 sudo systemctl start pulseexpends-auth-server
 ```
 
-### Actualizar Variables de Entorno
+### update Variables de Entorno
 ```bash
 # Editar .env
 nano backend/auth/.env
 
-# Recargar configuración
+# Recargar configuration
 sudo systemctl restart pulseexpends-auth-server
 ```
 
@@ -470,15 +470,15 @@ sudo systemctl restart pulseexpends-auth-server
 
 ### Reportar Issues
 1. Revisar issues existentes
-2. Crear nuevo issue con:
+2. create nuevo issue con:
    - Descripción del problema
    - Pasos para reproducir
    - Logs relevantes
-   - Configuración del entorno
+   - configuration del entorno
 
 ### Enviar Pull Requests
-1. Fork del repositorio
-2. Crear rama feature
+1. Fork del repository
+2. create rama feature
 3. Commit cambios
 4. Tests y documentación
 5. Pull request
@@ -497,7 +497,7 @@ sudo systemctl restart pulseexpends-auth-server
 - Email: support@pulseexpends.duckdns.org
 
 ### Documentación
-- [API Documentation](http://api.pulseexpends.duckdns.org/docs)
+- [api Documentation](http://api.pulseexpends.duckdns.org/docs)
 - [Frontend Guide](http://pulseexpends.duckdns.org/guide)
 - [Deployment Guide](DEPLOYMENT.md)
 

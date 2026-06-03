@@ -1,8 +1,8 @@
-# 📋 Instrucciones para Crear el Pull Request en GitHub
+# 📋 Instrucciones para create el Pull Request en GitHub
 
 ## 🔗 Enlaces Directos
 
-### 1. **Crear Pull Request (Web UI):**
+### 1. **create Pull Request (Web UI):**
 https://github.com/dssr1012/PulseExpends/pull/new/feature/migration-to-monorepo
 
 ### 2. **Comparar Cambios:**
@@ -11,7 +11,7 @@ https://github.com/dssr1012/PulseExpends/compare/main...feature/migration-to-mon
 ### 3. **Ver Rama:**
 https://github.com/dssr1012/PulseExpends/tree/feature/migration-to-monorepo
 
-## 📝 Pasos para Crear el PR
+## 📝 Pasos para create el PR
 
 ### Opción A: Usando la Interfaz Web de GitHub (Recomendado)
 
@@ -51,7 +51,7 @@ gh pr create \
 # Configura tu token de GitHub (reemplaza YOUR_TOKEN)
 GITHUB_TOKEN="tu_token_aqui"
 
-# Crea el PR usando la API de GitHub
+# Crea el PR usando la api de GitHub
 curl -X POST \
   -H "Authorization: token $GITHUB_TOKEN" \
   -H "Accept: application/vnd.github.v3+json" \
@@ -232,21 +232,21 @@ If issues arise:
 
 ## 👥 Reviewers Sugeridos
 
-- **dssr1012** (propietario del repositorio)
+- **dssr1012** (propietario del repository)
 - Cualquier otro miembro del equipo que conozca la infraestructura
 
-## ✅ Pasos Después de Crear el PR
+## ✅ Pasos Después de create el PR
 
 1. **Revisar los cambios** en la interfaz de GitHub
 2. **Ejecutar checks** de CI/CD si están configurados
 3. **Solicitar review** a los revisores
 4. **Aprobar y mergear** después de la revisión
-5. **Eliminar la rama** `feature/migration-to-monorepo` después del merge
-6. **Archivar** el repositorio `PulseExpends-Infra`
+5. **delete la rama** `feature/migration-to-monorepo` después del merge
+6. **Archivar** el repository `PulseExpends-Infra`
 
 ## 🔍 Verificación Final
 
-Antes de crear el PR, verifica:
+Antes de create el PR, verifica:
 
 1. **Todos los cambios están pusheados:**
    ```bash
@@ -268,30 +268,30 @@ Antes de crear el PR, verifica:
 ## 🚨 Notas Importantes
 
 ### Archivo Grande (62 MB)
-GitHub mostrará una advertencia por el archivo `infra/terraform` (62 MB). Esto es aceptable ya que:
+GitHub mostrará una warning por el archivo `infra/terraform` (62 MB). Esto es aceptable ya que:
 - GitHub permite archivos hasta 100 MB
 - Es un binario necesario para Terraform
-- Se puede eliminar en una limpieza futura
+- Se puede delete en una limpieza futura
 
-### Seguridad para Eliminar PulseExpends-Infra
-**✅ GREEN LIGHT - SEGURO ELIMINAR/ARCHIVAR**
+### Seguridad para delete PulseExpends-Infra
+**✅ GREEN LIGHT - SEGURO delete/ARCHIVAR**
 
 Después de mergear este PR:
 1. **NO ELIMINES** inmediatamente - primero archiva
-2. **Verifica** que todo funciona en el monorepo
+2. **Verifica** que TODO functiona en el monorepo
 3. **Actualiza** cualquier enlace o referencia
 4. **Luego** marca como archivado en GitHub
 
 ## 📞 Soporte
 
-Si encuentras problemas al crear el PR:
-1. Verifica que tienes permisos de escritura en el repositorio
+Si encuentras problemas al create el PR:
+1. Verifica que tienes permisos de escritura en el repository
 2. Asegúrate de que la rama `feature/migration-to-monorepo` existe en GitHub
 3. Revisa que no haya PRs abiertos con el mismo nombre
-4. Contacta al administrador del repositorio si necesitas ayuda
+4. Contacta al administrador del repository si necesitas ayuda
 
 ---
 
-**¡Listo para crear el Pull Request!** 🚀
+**¡Listo para create el Pull Request!** 🚀
 
 **Enlace directo:** https://github.com/dssr1012/PulseExpends/pull/new/feature/migration-to-monorepo

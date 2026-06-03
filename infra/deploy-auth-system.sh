@@ -277,25 +277,25 @@ echo ""
 echo "🎨 Updating frontend configuration..."
 echo ""
 
-# Update auth.js with correct API URL
+# Update auth.js with correct api URL
 FRONTEND_AUTH_JS="frontend/src/auth.js"
 if [ -f "$FRONTEND_AUTH_JS" ]; then
     # Check if already configured
     if ! grep -q "api.pulseexpends.duckdns.org" "$FRONTEND_AUTH_JS"; then
         sed -i 's|http://localhost:8082/api|http://api.pulseexpends.duckdns.org/api|g' "$FRONTEND_AUTH_JS"
-        print_status "Frontend API URL updated for production"
+        print_status "Frontend api URL updated for production"
     else
         print_status "Frontend already configured for production"
     fi
 fi
 
-# Update app.js with correct API URL
+# Update app.js with correct api URL
 FRONTEND_APP_JS="frontend/src/app.js"
 if [ -f "$FRONTEND_APP_JS" ]; then
     # Check if already configured
     if ! grep -q "api.pulseexpends.duckdns.org" "$FRONTEND_APP_JS"; then
         sed -i 's|http://localhost:8082|http://api.pulseexpends.duckdns.org|g' "$FRONTEND_APP_JS"
-        print_status "App.js API URL updated for production"
+        print_status "App.js api URL updated for production"
     else
         print_status "App.js already configured for production"
     fi
@@ -345,13 +345,13 @@ else
     sudo journalctl -u pulseexpends-auth-server -n 10 --no-pager
 fi
 
-# Test API endpoint
-echo "Testing API endpoint..."
+# Test api endpoint
+echo "Testing api endpoint..."
 API_RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8082/api/health || echo "FAILED")
 if [ "$API_RESPONSE" = "200" ]; then
-    print_status "API endpoint working (HTTP $API_RESPONSE)"
+    print_status "api endpoint working (HTTP $API_RESPONSE)"
 else
-    print_warning "API endpoint check failed (HTTP $API_RESPONSE)"
+    print_warning "api endpoint check failed (HTTP $API_RESPONSE)"
 fi
 
 # Test Nginx proxy
@@ -377,7 +377,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo ""
     read -p "Enter admin full name: " ADMIN_NAME
     
-    # Create admin user via API
+    # Create admin user via api
     curl -X POST http://localhost:8082/api/auth/register \
         -H "Content-Type: application/json" \
         -d "{\"email\":\"$ADMIN_EMAIL\",\"password\":\"$ADMIN_PASSWORD\",\"fullName\":\"$ADMIN_NAME\",\"username\":\"admin\"}" \
@@ -431,7 +431,7 @@ echo "   Logs: sudo journalctl -u pulseexpends-auth-server -f"
 echo ""
 echo "🌐 URLs:"
 echo "   Frontend: http://pulseexpends.duckdns.org"
-echo "   Auth API: http://api.pulseexpends.duckdns.org"
+echo "   Auth api: http://api.pulseexpends.duckdns.org"
 echo "   Health: http://api.pulseexpends.duckdns.org/health"
 echo ""
 echo "🔐 Security checklist:"
@@ -444,9 +444,9 @@ echo ""
 echo "📞 Need help?"
 echo "   Check logs: sudo journalctl -u pulseexpends-auth-server"
 echo "   Check Nginx: sudo nginx -t"
-echo "   Test API: curl http://localhost:8082/api/health"
+echo "   Test api: curl http://localhost:8082/api/health"
 echo "   Database: sudo -u postgres psql -d pulseexpends"
 echo ""
 echo "=============================================="
-echo "  ¡Sistema de autenticación listo!           "
+echo "  ¡Sistema de authentication listo!           "
 echo "=============================================="

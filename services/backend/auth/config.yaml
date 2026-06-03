@@ -1,4 +1,4 @@
-# Configuración del servidor de autenticación PulseExpends
+# configuration del servidor de authentication PulseExpends
 
 server:
   port: 8082

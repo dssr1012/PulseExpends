@@ -25,7 +25,7 @@ func NewCircleHandler(db *gorm.DB) *CircleHandler {
 func (h *CircleHandler) GetCircles(w http.ResponseWriter, r *http.Request) {
 	user := middleware.GetUserFromContext(r.Context())
 	if user == nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		http.error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
@@ -34,10 +34,10 @@ func (h *CircleHandler) GetCircles(w http.ResponseWriter, r *http.Request) {
 		Where("circle_members.user_id = ? AND circle_members.is_active = ? AND circles.is_active = ?", 
 			user.ID, true, true).
 		Preload("Members").
-		Find(&circles).Error
+		Find(&circles).error
 
 	if err != nil {
-		http.Error(w, "Failed to fetch circles", http.StatusInternalServerError)
+		http.error(w, "Failed to fetch circles", http.StatusInternalServerError)
 		return
 	}
 
@@ -54,7 +54,7 @@ func (h *CircleHandler) GetCircles(w http.ResponseWriter, r *http.Request) {
 func (h *CircleHandler) GetCircle(w http.ResponseWriter, r *http.Request) {
 	user := middleware.GetUserFromContext(r.Context())
 	if user == nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		http.error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 	vars := mux.Vars(r)
@@ -66,10 +66,10 @@ func (h *CircleHandler) GetCircle(w http.ResponseWriter, r *http.Request) {
 			circleID, user.ID, true, true).
 		Preload("Members").
 		Preload("Transactions").
-		First(&circle).Error
+		First(&circle).error
 
 	if err != nil {
-		http.Error(w, "Circle not found or access denied", http.StatusNotFound)
+		http.error(w, "Circle not found or access denied", http.StatusNotFound)
 		return
 	}
 
@@ -86,7 +86,7 @@ func (h *CircleHandler) GetCircle(w http.ResponseWriter, r *http.Request) {
 func (h *CircleHandler) CreateCircle(w http.ResponseWriter, r *http.Request) {
 	user := middleware.GetUserFromContext(r.Context())
 	if user == nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		http.error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
@@ -98,13 +98,13 @@ func (h *CircleHandler) CreateCircle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
 	// Validate required fields
 	if req.Name == "" {
-		http.Error(w, "Circle name is required", http.StatusBadRequest)
+		http.error(w, "Circle name is required", http.StatusBadRequest)
 		return
 	}
 
@@ -120,8 +120,8 @@ func (h *CircleHandler) CreateCircle(w http.ResponseWriter, r *http.Request) {
 		Settings:    models.CircleSettings{BudgetAlertsEnabled: true, DefaultCategories: []string{"food", "transport", "entertainment", "utilities", "health"}},
 	}
 
-	if err := h.db.Create(&circle).Error; err != nil {
-		http.Error(w, "Failed to create circle", http.StatusInternalServerError)
+	if err := h.db.Create(&circle).error; err != nil {
+		http.error(w, "Failed to create circle", http.StatusInternalServerError)
 		return
 	}
 
@@ -134,10 +134,10 @@ func (h *CircleHandler) CreateCircle(w http.ResponseWriter, r *http.Request) {
 		IsActive: true,
 	}
 
-	if err := h.db.Create(&member).Error; err != nil {
+	if err := h.db.Create(&member).error; err != nil {
 		// Rollback circle creation
 		h.db.Delete(&circle)
-		http.Error(w, "Failed to add creator to circle", http.StatusInternalServerError)
+		http.error(w, "Failed to add creator to circle", http.StatusInternalServerError)
 		return
 	}
 
@@ -155,7 +155,7 @@ func (h *CircleHandler) CreateCircle(w http.ResponseWriter, r *http.Request) {
 func (h *CircleHandler) UpdateCircle(w http.ResponseWriter, r *http.Request) {
 	user := middleware.GetUserFromContext(r.Context())
 	if user == nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		http.error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 	vars := mux.Vars(r)
@@ -164,10 +164,10 @@ func (h *CircleHandler) UpdateCircle(w http.ResponseWriter, r *http.Request) {
 	// Check permissions (only admin/owner can update)
 	var member models.CircleMember
 	err := h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?", circleID, user.ID, true).
-		First(&member).Error
+		First(&member).error
 
 	if err != nil || (member.Role != "owner" && member.Role != "admin") {
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		http.error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	}
 
@@ -180,14 +180,14 @@ func (h *CircleHandler) UpdateCircle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
 	// Find circle
 	var circle models.Circle
-	if err := h.db.Where("id = ? AND is_active = ?", circleID, true).First(&circle).Error; err != nil {
-		http.Error(w, "Circle not found", http.StatusNotFound)
+	if err := h.db.Where("id = ? AND is_active = ?", circleID, true).First(&circle).error; err != nil {
+		http.error(w, "Circle not found", http.StatusNotFound)
 		return
 	}
 
@@ -206,8 +206,8 @@ func (h *CircleHandler) UpdateCircle(w http.ResponseWriter, r *http.Request) {
 	}
 	circle.Settings = req.Settings
 
-	if err := h.db.Save(&circle).Error; err != nil {
-		http.Error(w, "Failed to update circle", http.StatusInternalServerError)
+	if err := h.db.Save(&circle).error; err != nil {
+		http.error(w, "Failed to update circle", http.StatusInternalServerError)
 		return
 	}
 
@@ -225,7 +225,7 @@ func (h *CircleHandler) UpdateCircle(w http.ResponseWriter, r *http.Request) {
 func (h *CircleHandler) DeleteCircle(w http.ResponseWriter, r *http.Request) {
 	user := middleware.GetUserFromContext(r.Context())
 	if user == nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		http.error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 	vars := mux.Vars(r)
@@ -234,22 +234,22 @@ func (h *CircleHandler) DeleteCircle(w http.ResponseWriter, r *http.Request) {
 	// Check permissions (only owner can delete)
 	var member models.CircleMember
 	err := h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?", circleID, user.ID, true).
-		First(&member).Error
+		First(&member).error
 
 	if err != nil || member.Role != "owner" {
-		http.Error(w, "Only the owner can delete the circle", http.StatusForbidden)
+		http.error(w, "Only the owner can delete the circle", http.StatusForbidden)
 		return
 	}
 
 	// Soft delete circle
-	if err := h.db.Model(&models.Circle{}).Where("id = ?", circleID).Update("is_active", false).Error; err != nil {
-		http.Error(w, "Failed to delete circle", http.StatusInternalServerError)
+	if err := h.db.Model(&models.Circle{}).Where("id = ?", circleID).Update("is_active", false).error; err != nil {
+		http.error(w, "Failed to delete circle", http.StatusInternalServerError)
 		return
 	}
 
 	// Deactivate all members
-	if err := h.db.Model(&models.CircleMember{}).Where("circle_id = ?", circleID).Update("is_active", false).Error; err != nil {
-		http.Error(w, "Failed to deactivate circle members", http.StatusInternalServerError)
+	if err := h.db.Model(&models.CircleMember{}).Where("circle_id = ?", circleID).Update("is_active", false).error; err != nil {
+		http.error(w, "Failed to deactivate circle members", http.StatusInternalServerError)
 		return
 	}
 
@@ -266,7 +266,7 @@ func (h *CircleHandler) DeleteCircle(w http.ResponseWriter, r *http.Request) {
 func (h *CircleHandler) GetCircleMembers(w http.ResponseWriter, r *http.Request) {
 	user := middleware.GetUserFromContext(r.Context())
 	if user == nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		http.error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 	vars := mux.Vars(r)
@@ -275,20 +275,20 @@ func (h *CircleHandler) GetCircleMembers(w http.ResponseWriter, r *http.Request)
 	// Verify user is a member of the circle
 	var member models.CircleMember
 	err := h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?", circleID, user.ID, true).
-		First(&member).Error
+		First(&member).error
 
 	if err != nil {
-		http.Error(w, "Access denied", http.StatusForbidden)
+		http.error(w, "Access denied", http.StatusForbidden)
 		return
 	}
 
 	var members []models.CircleMember
 	err = h.db.Where("circle_id = ? AND is_active = ?", circleID, true).
 		Preload("User").
-		Find(&members).Error
+		Find(&members).error
 
 	if err != nil {
-		http.Error(w, "Failed to fetch circle members", http.StatusInternalServerError)
+		http.error(w, "Failed to fetch circle members", http.StatusInternalServerError)
 		return
 	}
 
@@ -305,7 +305,7 @@ func (h *CircleHandler) GetCircleMembers(w http.ResponseWriter, r *http.Request)
 func (h *CircleHandler) AddMember(w http.ResponseWriter, r *http.Request) {
 	user := middleware.GetUserFromContext(r.Context())
 	if user == nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		http.error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 	vars := mux.Vars(r)
@@ -314,10 +314,10 @@ func (h *CircleHandler) AddMember(w http.ResponseWriter, r *http.Request) {
 	// Check permissions (only admin/owner can add members)
 	var member models.CircleMember
 	err := h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?", circleID, user.ID, true).
-		First(&member).Error
+		First(&member).error
 
 	if err != nil || (member.Role != "owner" && member.Role != "admin") {
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		http.error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	}
 
@@ -327,36 +327,36 @@ func (h *CircleHandler) AddMember(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
 	// Validate role
 	if req.Role != "member" && req.Role != "admin" && req.Role != "viewer" {
-		http.Error(w, "Invalid role. Must be 'member', 'admin', or 'viewer'", http.StatusBadRequest)
+		http.error(w, "Invalid role. Must be 'member', 'admin', or 'viewer'", http.StatusBadRequest)
 		return
 	}
 
 	// Check if user exists
 	var targetUser models.User
-	if err := h.db.Where("id = ? AND is_active = ?", req.UserID, true).First(&targetUser).Error; err != nil {
-		http.Error(w, "User not found", http.StatusNotFound)
+	if err := h.db.Where("id = ? AND is_active = ?", req.UserID, true).First(&targetUser).error; err != nil {
+		http.error(w, "User not found", http.StatusNotFound)
 		return
 	}
 
 	// Check if user is already a member
 	var existingMember models.CircleMember
-	err = h.db.Where("circle_id = ? AND user_id = ?", circleID, req.UserID).First(&existingMember).Error
+	err = h.db.Where("circle_id = ? AND user_id = ?", circleID, req.UserID).First(&existingMember).error
 	if err == nil {
 		if existingMember.IsActive {
-			http.Error(w, "User is already a member of this circle", http.StatusConflict)
+			http.error(w, "User is already a member of this circle", http.StatusConflict)
 			return
 		}
 		// Reactivate existing membership
 		existingMember.IsActive = true
 		existingMember.Role = req.Role
-		if err := h.db.Save(&existingMember).Error; err != nil {
-			http.Error(w, "Failed to add member", http.StatusInternalServerError)
+		if err := h.db.Save(&existingMember).error; err != nil {
+			http.error(w, "Failed to add member", http.StatusInternalServerError)
 			return
 		}
 	} else {
@@ -368,8 +368,8 @@ func (h *CircleHandler) AddMember(w http.ResponseWriter, r *http.Request) {
 			JoinedAt: time.Now(),
 			IsActive: true,
 		}
-		if err := h.db.Create(&newMember).Error; err != nil {
-			http.Error(w, "Failed to add member", http.StatusInternalServerError)
+		if err := h.db.Create(&newMember).error; err != nil {
+			http.error(w, "Failed to add member", http.StatusInternalServerError)
 			return
 		}
 	}
@@ -387,7 +387,7 @@ func (h *CircleHandler) AddMember(w http.ResponseWriter, r *http.Request) {
 func (h *CircleHandler) RemoveMember(w http.ResponseWriter, r *http.Request) {
 	user := middleware.GetUserFromContext(r.Context())
 	if user == nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		http.error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 	vars := mux.Vars(r)
@@ -397,24 +397,24 @@ func (h *CircleHandler) RemoveMember(w http.ResponseWriter, r *http.Request) {
 	// Check permissions (only admin/owner can remove members, owners cannot remove themselves)
 	var currentMember models.CircleMember
 	err := h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?", circleID, user.ID, true).
-		First(&currentMember).Error
+		First(&currentMember).error
 
 	if err != nil || (currentMember.Role != "owner" && currentMember.Role != "admin") {
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		http.error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	}
 
 	// Check if trying to remove self (owners cannot remove themselves)
 	if memberID == user.ID && currentMember.Role == "owner" {
-		http.Error(w, "Owners cannot remove themselves from the circle", http.StatusBadRequest)
+		http.error(w, "Owners cannot remove themselves from the circle", http.StatusBadRequest)
 		return
 	}
 
 	// Deactivate membership
 	if err := h.db.Model(&models.CircleMember{}).
 		Where("circle_id = ? AND user_id = ?", circleID, memberID).
-		Update("is_active", false).Error; err != nil {
-		http.Error(w, "Failed to remove member", http.StatusInternalServerError)
+		Update("is_active", false).error; err != nil {
+		http.error(w, "Failed to remove member", http.StatusInternalServerError)
 		return
 	}
 
@@ -431,7 +431,7 @@ func (h *CircleHandler) RemoveMember(w http.ResponseWriter, r *http.Request) {
 func (h *CircleHandler) UpdateMemberRole(w http.ResponseWriter, r *http.Request) {
 	user := middleware.GetUserFromContext(r.Context())
 	if user == nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		http.error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 	vars := mux.Vars(r)
@@ -441,10 +441,10 @@ func (h *CircleHandler) UpdateMemberRole(w http.ResponseWriter, r *http.Request)
 	// Check permissions (only owner can change roles)
 	var currentMember models.CircleMember
 	err := h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?", circleID, user.ID, true).
-		First(&currentMember).Error
+		First(&currentMember).error
 
 	if err != nil || currentMember.Role != "owner" {
-		http.Error(w, "Only the owner can change member roles", http.StatusForbidden)
+		http.error(w, "Only the owner can change member roles", http.StatusForbidden)
 		return
 	}
 
@@ -453,21 +453,21 @@ func (h *CircleHandler) UpdateMemberRole(w http.ResponseWriter, r *http.Request)
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
 	// Validate role
 	if req.Role != "owner" && req.Role != "admin" && req.Role != "member" && req.Role != "viewer" {
-		http.Error(w, "Invalid role", http.StatusBadRequest)
+		http.error(w, "Invalid role", http.StatusBadRequest)
 		return
 	}
 
 	// Update role
 	if err := h.db.Model(&models.CircleMember{}).
 		Where("circle_id = ? AND user_id = ?", circleID, memberID).
-		Update("role", req.Role).Error; err != nil {
-		http.Error(w, "Failed to update member role", http.StatusInternalServerError)
+		Update("role", req.Role).error; err != nil {
+		http.error(w, "Failed to update member role", http.StatusInternalServerError)
 		return
 	}
 
@@ -484,7 +484,7 @@ func (h *CircleHandler) UpdateMemberRole(w http.ResponseWriter, r *http.Request)
 func (h *CircleHandler) JoinCircle(w http.ResponseWriter, r *http.Request) {
 	user := middleware.GetUserFromContext(r.Context())
 	if user == nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		http.error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 	vars := mux.Vars(r)
@@ -493,25 +493,25 @@ func (h *CircleHandler) JoinCircle(w http.ResponseWriter, r *http.Request) {
 	// Find circle by join code
 	var circle models.Circle
 	err := h.db.Where("join_code = ? AND is_active = ? AND is_public = ?", joinCode, true, true).
-		First(&circle).Error
+		First(&circle).error
 
 	if err != nil {
-		http.Error(w, "Invalid or expired join code", http.StatusNotFound)
+		http.error(w, "Invalid or expired join code", http.StatusNotFound)
 		return
 	}
 
 	// Check if user is already a member
 	var existingMember models.CircleMember
-	err = h.db.Where("circle_id = ? AND user_id = ?", circle.ID, user.ID).First(&existingMember).Error
+	err = h.db.Where("circle_id = ? AND user_id = ?", circle.ID, user.ID).First(&existingMember).error
 	if err == nil {
 		if existingMember.IsActive {
-			http.Error(w, "You are already a member of this circle", http.StatusConflict)
+			http.error(w, "You are already a member of this circle", http.StatusConflict)
 			return
 		}
 		// Reactivate membership
 		existingMember.IsActive = true
-		if err := h.db.Save(&existingMember).Error; err != nil {
-			http.Error(w, "Failed to join circle", http.StatusInternalServerError)
+		if err := h.db.Save(&existingMember).error; err != nil {
+			http.error(w, "Failed to join circle", http.StatusInternalServerError)
 			return
 		}
 	} else {
@@ -523,8 +523,8 @@ func (h *CircleHandler) JoinCircle(w http.ResponseWriter, r *http.Request) {
 			JoinedAt: time.Now(),
 			IsActive: true,
 		}
-		if err := h.db.Create(&newMember).Error; err != nil {
-			http.Error(w, "Failed to join circle", http.StatusInternalServerError)
+		if err := h.db.Create(&newMember).error; err != nil {
+			http.error(w, "Failed to join circle", http.StatusInternalServerError)
 			return
 		}
 	}
@@ -543,7 +543,7 @@ func (h *CircleHandler) JoinCircle(w http.ResponseWriter, r *http.Request) {
 func (h *CircleHandler) InviteToCircle(w http.ResponseWriter, r *http.Request) {
 	user := middleware.GetUserFromContext(r.Context())
 	if user == nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		http.error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 	vars := mux.Vars(r)
@@ -552,10 +552,10 @@ func (h *CircleHandler) InviteToCircle(w http.ResponseWriter, r *http.Request) {
 	// Check permissions (only admin/owner can invite)
 	var member models.CircleMember
 	err := h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?", circleID, user.ID, true).
-		First(&member).Error
+		First(&member).error
 
 	if err != nil || (member.Role != "owner" && member.Role != "admin") {
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		http.error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	}
 
@@ -565,28 +565,28 @@ func (h *CircleHandler) InviteToCircle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
 	// Validate role
 	if req.Role != "member" && req.Role != "admin" && req.Role != "viewer" {
-		http.Error(w, "Invalid role", http.StatusBadRequest)
+		http.error(w, "Invalid role", http.StatusBadRequest)
 		return
 	}
 
 	// Find user by email
 	var targetUser models.User
-	if err := h.db.Where("email = ? AND is_active = ?", req.Email, true).First(&targetUser).Error; err != nil {
-		http.Error(w, "User not found", http.StatusNotFound)
+	if err := h.db.Where("email = ? AND is_active = ?", req.Email, true).First(&targetUser).error; err != nil {
+		http.error(w, "User not found", http.StatusNotFound)
 		return
 	}
 
 	// Check if user is already a member
 	var existingMember models.CircleMember
-	err = h.db.Where("circle_id = ? AND user_id = ?", circleID, targetUser.ID).First(&existingMember).Error
+	err = h.db.Where("circle_id = ? AND user_id = ?", circleID, targetUser.ID).First(&existingMember).error
 	if err == nil {
-		http.Error(w, "User is already a member of this circle", http.StatusConflict)
+		http.error(w, "User is already a member of this circle", http.StatusConflict)
 		return
 	}
 
@@ -601,8 +601,8 @@ func (h *CircleHandler) InviteToCircle(w http.ResponseWriter, r *http.Request) {
 		Accepted:  false,
 	}
 
-	if err := h.db.Create(&invitation).Error; err != nil {
-		http.Error(w, "Failed to create invitation", http.StatusInternalServerError)
+	if err := h.db.Create(&invitation).error; err != nil {
+		http.error(w, "Failed to create invitation", http.StatusInternalServerError)
 		return
 	}
 
@@ -627,7 +627,7 @@ func (h *CircleHandler) InviteToCircle(w http.ResponseWriter, r *http.Request) {
 func (h *CircleHandler) GetCircleTransactions(w http.ResponseWriter, r *http.Request) {
 	user := middleware.GetUserFromContext(r.Context())
 	if user == nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		http.error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 	vars := mux.Vars(r)
@@ -636,10 +636,10 @@ func (h *CircleHandler) GetCircleTransactions(w http.ResponseWriter, r *http.Req
 	// Verify user is a member of the circle
 	var member models.CircleMember
 	err := h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?", circleID, user.ID, true).
-		First(&member).Error
+		First(&member).error
 
 	if err != nil {
-		http.Error(w, "Access denied", http.StatusForbidden)
+		http.error(w, "Access denied", http.StatusForbidden)
 		return
 	}
 
@@ -679,9 +679,9 @@ func (h *CircleHandler) GetCircleTransactions(w http.ResponseWriter, r *http.Req
 	}
 
 	var transactions []models.Transaction
-	err = dbQuery.Order("date DESC").Find(&transactions).Error
+	err = dbQuery.Order("date DESC").Find(&transactions).error
 	if err != nil {
-		http.Error(w, "Failed to fetch transactions", http.StatusInternalServerError)
+		http.error(w, "Failed to fetch transactions", http.StatusInternalServerError)
 		return
 	}
 
@@ -699,7 +699,7 @@ func (h *CircleHandler) GetCircleTransactions(w http.ResponseWriter, r *http.Req
 func (h *CircleHandler) GetCircleActivities(w http.ResponseWriter, r *http.Request) {
 	user := middleware.GetUserFromContext(r.Context())
 	if user == nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		http.error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 	vars := mux.Vars(r)
@@ -708,10 +708,10 @@ func (h *CircleHandler) GetCircleActivities(w http.ResponseWriter, r *http.Reque
 	// Verify user is a member of the circle
 	var member models.CircleMember
 	err := h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?", circleID, user.ID, true).
-		First(&member).Error
+		First(&member).error
 
 	if err != nil {
-		http.Error(w, "Access denied", http.StatusForbidden)
+		http.error(w, "Access denied", http.StatusForbidden)
 		return
 	}
 
@@ -730,10 +730,10 @@ func (h *CircleHandler) GetCircleActivities(w http.ResponseWriter, r *http.Reque
 		Order("created_at DESC").
 		Limit(limitInt).
 		Preload("User").
-		Find(&activities).Error
+		Find(&activities).error
 
 	if err != nil {
-		http.Error(w, "Failed to fetch activities", http.StatusInternalServerError)
+		http.error(w, "Failed to fetch activities", http.StatusInternalServerError)
 		return
 	}
 
@@ -750,7 +750,7 @@ func (h *CircleHandler) GetCircleActivities(w http.ResponseWriter, r *http.Reque
 func (h *CircleHandler) GetCircleStats(w http.ResponseWriter, r *http.Request) {
 	user := middleware.GetUserFromContext(r.Context())
 	if user == nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		http.error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 	vars := mux.Vars(r)
@@ -759,10 +759,10 @@ func (h *CircleHandler) GetCircleStats(w http.ResponseWriter, r *http.Request) {
 	// Verify user is a member of the circle
 	var member models.CircleMember
 	err := h.db.Where("circle_id = ? AND user_id = ? AND is_active = ?", circleID, user.ID, true).
-		First(&member).Error
+		First(&member).error
 
 	if err != nil {
-		http.Error(w, "Access denied", http.StatusForbidden)
+		http.error(w, "Access denied", http.StatusForbidden)
 		return
 	}
 
@@ -784,15 +784,15 @@ func (h *CircleHandler) GetCircleStats(w http.ResponseWriter, r *http.Request) {
 
 	// Get total income
 	var totalIncome float64
-	if err := dbQuery.Where("type = ?", "income").Select("COALESCE(SUM(amount), 0)").Scan(&totalIncome).Error; err != nil {
-		http.Error(w, "Failed to calculate income", http.StatusInternalServerError)
+	if err := dbQuery.Where("type = ?", "income").Select("COALESCE(SUM(amount), 0)").Scan(&totalIncome).error; err != nil {
+		http.error(w, "Failed to calculate income", http.StatusInternalServerError)
 		return
 	}
 
 	// Get total expenses
 	var totalExpenses float64
-	if err := dbQuery.Where("type = ?", "expense").Select("COALESCE(SUM(amount), 0)").Scan(&totalExpenses).Error; err != nil {
-		http.Error(w, "Failed to calculate expenses", http.StatusInternalServerError)
+	if err := dbQuery.Where("type = ?", "expense").Select("COALESCE(SUM(amount), 0)").Scan(&totalExpenses).error; err != nil {
+		http.error(w, "Failed to calculate expenses", http.StatusInternalServerError)
 		return
 	}
 
@@ -807,10 +807,10 @@ func (h *CircleHandler) GetCircleStats(w http.ResponseWriter, r *http.Request) {
 		Select("category, SUM(amount) as total, COUNT(*) as count").
 		Group("category").
 		Order("total DESC").
-		Scan(&categoryBreakdown).Error
+		Scan(&categoryBreakdown).error
 
 	if err != nil {
-		http.Error(w, "Failed to calculate category breakdown", http.StatusInternalServerError)
+		http.error(w, "Failed to calculate category breakdown", http.StatusInternalServerError)
 		return
 	}
 
@@ -818,8 +818,8 @@ func (h *CircleHandler) GetCircleStats(w http.ResponseWriter, r *http.Request) {
 	var memberCount int64
 	if err := h.db.Model(&models.CircleMember{}).
 		Where("circle_id = ? AND is_active = ?", circleID, true).
-		Count(&memberCount).Error; err != nil {
-		http.Error(w, "Failed to count members", http.StatusInternalServerError)
+		Count(&memberCount).error; err != nil {
+		http.error(w, "Failed to count members", http.StatusInternalServerError)
 		return
 	}
 

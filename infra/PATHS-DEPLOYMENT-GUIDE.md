@@ -1,12 +1,12 @@
 # Guía de Despliegue con Paths (Versión Estable)
 
-Esta guía explica cómo desplegar PulseExpends usando paths en lugar de subdominios. Esta es la **versión estable** que funciona con DuckDNS y cualquier servicio DNS.
+Esta guía explica cómo desplegar PulseExpends usando paths en lugar de subdominios. Esta es la **versión estable** que functiona con DuckDNS y cualquier service DNS.
 
 ## 🎯 ¿Por qué Paths en lugar de Subdominios?
 
 ### **Problema con DuckDNS:**
 - DuckDNS no soporta subdominios de forma nativa
-- Requeriría crear dominios separados (`api-pulseexpends.duckdns.org`, etc.)
+- Requeriría create dominios separados (`api-pulseexpends.duckdns.org`, etc.)
 - Más complejo de configurar y mantener
 
 ### **Solución con Paths:**
@@ -17,11 +17,11 @@ Esta guía explica cómo desplegar PulseExpends usando paths en lugar de subdomi
 
 ## 🌐 URLs de Acceso
 
-| Path | Servicio | Puerto Interno | Descripción |
+| Path | service | Puerto Interno | Descripción |
 |------|----------|----------------|-------------|
 | **`http://pulseexpends.duckdns.org/`** | Frontend Principal | 80 | Aplicación web completa |
-| **`http://pulseexpends.duckdns.org/mcp/`** | MCP Server API | 8080 | API REST para transacciones |
-| **`http://pulseexpends.duckdns.org/pdf/`** | PDF Parser API | 8000 | Procesamiento de PDFs |
+| **`http://pulseexpends.duckdns.org/mcp/`** | MCP Server api | 8080 | api REST para transactiones |
+| **`http://pulseexpends.duckdns.org/pdf/`** | PDF Parser api | 8000 | Procesamiento de PDFs |
 | **`http://pulseexpends.duckdns.org/status/`** | Status Dashboard | 8081 | Panel de monitoreo |
 
 ## 📋 Prerrequisitos
@@ -38,19 +38,19 @@ Esta guía explica cómo desplegar PulseExpends usando paths en lugar de subdomi
 ssh -i pulse-expends-key.pem ubuntu@182.160.24.205
 ```
 
-### 2. Clonar el repositorio (si no está clonado)
+### 2. Clonar el repository (si no está clonado)
 ```bash
 cd /opt
 sudo git clone https://github.com/dssr1012/PulseExpends.git
 cd PulseExpends
 ```
 
-### 3. Ejecutar script de configuración automática
+### 3. Ejecutar script de configuration automática
 ```bash
 # Hacer el script ejecutable
 chmod +x infra/deploy-with-paths.sh
 
-# Ejecutar configuración completa
+# Ejecutar configuration completa
 sudo ./infra/deploy-with-paths.sh
 ```
 
@@ -59,19 +59,19 @@ sudo ./infra/deploy-with-paths.sh
 # Solo necesitas configurar el dominio principal
 # Ya debería estar configurado para apuntar a 182.160.24.205
 
-# Verificar configuración DNS
+# Verificar configuration DNS
 nslookup pulseexpends.duckdns.org
 # Debería devolver: 182.160.24.205
 ```
 
-## 🔧 Configuración Manual
+## 🔧 configuration Manual
 
 ### Estructura de Directorios:
 ```
 /opt/PulseExpends/
 ├── infra/
 │   ├── deploy-with-paths.sh          # Script de despliegue
-│   ├── src/nginx/pulseexpends.conf   # Configuración Nginx
+│   ├── src/nginx/pulseexpends.conf   # configuration Nginx
 │   └── src/scripts/                  # Servicios systemd
 ├── services/
 │   ├── backend/                      # Backend (MCP Server, PDF Parser)
@@ -79,7 +79,7 @@ nslookup pulseexpends.duckdns.org
 └── infra/dashboard/                  # Status Dashboard
 ```
 
-### Configuración Nginx (`/etc/nginx/sites-available/pulseexpends`):
+### configuration Nginx (`/etc/nginx/sites-available/pulseexpends`):
 ```nginx
 server {
     listen 80 default_server;
@@ -93,7 +93,7 @@ server {
         try_files $uri $uri/ /index.html;
     }
     
-    # MCP Server API
+    # MCP Server api
     location /mcp/ {
         proxy_pass http://localhost:8080/;
         proxy_set_header Host $host;
@@ -103,7 +103,7 @@ server {
         proxy_redirect off;
     }
     
-    # PDF Parser API
+    # PDF Parser api
     location /pdf/ {
         proxy_pass http://localhost:8000/;
         proxy_set_header Host $host;
@@ -113,7 +113,7 @@ server {
         proxy_redirect off;
     }
     
-    # Status Dashboard API
+    # Status Dashboard api
     location /status/ {
         proxy_pass http://localhost:8081/;
         proxy_set_header Host $host;
@@ -177,12 +177,12 @@ curl http://localhost:8000/health
 curl http://localhost:8081/
 ```
 
-### 2. Verificar configuración Nginx:
+### 2. Verificar configuration Nginx:
 ```bash
 # Verificar sintaxis
 sudo nginx -t
 
-# Verificar configuración cargada
+# Verificar configuration cargada
 sudo nginx -T | grep -A 20 "server_name _"
 
 # Ver logs de acceso
@@ -231,7 +231,7 @@ sudo systemctl status pulseexpends-mcp.service pulseexpends-pdf-parser.service p
 # Verificar puertos
 sudo netstat -tlnp | grep -E "8080|8000|8081"
 
-# Verificar logs de cada servicio
+# Verificar logs de cada service
 sudo journalctl -u pulseexpends-mcp.service --no-pager -n 50
 sudo journalctl -u pulseexpends-pdf-parser.service --no-pager -n 50
 sudo journalctl -u pulseexpends-status.service --no-pager -n 50
@@ -252,13 +252,13 @@ sudo chown -R ubuntu:ubuntu /opt/PulseExpends
 # Verificar resolución DNS
 nslookup pulseexpends.duckdns.org
 
-# Actualizar DuckDNS manualmente
+# update DuckDNS manualmente
 curl "https://www.duckdns.org/update?domains=pulseexpends&token=TU_TOKEN&ip=$(curl -s https://api.ipify.org)"
 ```
 
 ## 🔄 Actualizaciones
 
-### Actualizar desde GitHub:
+### update desde GitHub:
 ```bash
 cd /opt/PulseExpends
 sudo git pull origin main
@@ -267,7 +267,7 @@ sudo git pull origin main
 sudo ./infra/deploy-with-paths.sh
 ```
 
-### Actualizar solo configuración Nginx:
+### update solo configuration Nginx:
 ```bash
 sudo cp /opt/PulseExpends/infra/src/nginx/pulseexpends.conf /etc/nginx/sites-available/pulseexpends
 sudo nginx -t
@@ -279,7 +279,7 @@ sudo systemctl reload nginx
 ### Dashboard de Status:
 Accede a `http://pulseexpends.duckdns.org/status/` para ver:
 - Estado de todos los servicios
-- Información del sistema
+- information del sistema
 - URLs de acceso
 - Comandos útiles
 
@@ -308,10 +308,10 @@ curl http://pulseexpends.duckdns.org/status/health
 
 2. **Configurar SSL/HTTPS** (para producción):
    - Usar Let's Encrypt con Certbot
-   - Actualizar Nginx para usar puerto 443
+   - update Nginx para usar puerto 443
 
 3. **Restringir acceso SSH**:
-   - Usar claves SSH en lugar de contraseñas
+   - Usar claves SSH en lugar de passwords
    - Cambiar puerto SSH por defecto
    - Usar fail2ban
 
@@ -324,7 +324,7 @@ Cuando estés listo para migrar a Cloudflare:
    ```
    pulseexpends.tudominio.com A → 182.160.24.205
    ```
-3. **Actualizar configuración Nginx** para usar el nuevo dominio
+3. **update configuration Nginx** para usar el nuevo dominio
 4. **Configurar SSL** con Cloudflare (gratis)
 5. **Habilitar CDN** y otras características de Cloudflare
 
@@ -343,18 +343,18 @@ Cuando estés listo para migrar a Cloudflare:
 - [ ] Servicios systemd activos: `sudo systemctl status nginx pulseexpends-*`
 - [ ] Frontend accesible: `curl -I http://pulseexpends.duckdns.org/`
 - [ ] APIs responden: `curl http://pulseexpends.duckdns.org/mcp/health`
-- [ ] Status Dashboard funciona: `curl http://pulseexpends.duckdns.org/status/`
+- [ ] Status Dashboard functiona: `curl http://pulseexpends.duckdns.org/status/`
 
 ## 📞 Soporte
 
 ### Logs importantes:
 - Nginx: `/var/log/nginx/access.log` y `/var/log/nginx/error.log`
-- Systemd: `sudo journalctl -u [servicio] -f`
-- Aplicación: logs específicos de cada servicio
+- Systemd: `sudo journalctl -u [service] -f`
+- Aplicación: logs específicos de cada service
 
 ### Recursos:
-- **Repositorio**: https://github.com/dssr1012/PulseExpends
-- **Documentación**: Ver `README.md` en el repositorio
+- **repository**: https://github.com/dssr1012/PulseExpends
+- **Documentación**: Ver `README.md` en el repository
 - **Issues**: Reportar problemas en GitHub Issues
 
 ---

@@ -26,9 +26,9 @@ type OBSRepository struct {
 // NewRepository creates a new OBS repository instance
 func NewRepository(cfg config.OBSConfig) (*OBSRepository, error) {
 	// Initialize OBS client
-	client, err := obs.New(cfg.AccessKeyID, cfg.SecretAccessKey, cfg.Endpoint)
+	client, err := obs.New(cfg.AccessKeyID, cfg.SecretAccessKey, cfg.endpoint)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create OBS client: %w", err)
+		return nil, fmt.errorf("failed to create OBS client: %w", err)
 	}
 
 	// Create bucket if it doesn't exist
@@ -43,7 +43,7 @@ func NewRepository(cfg config.OBSConfig) (*OBSRepository, error) {
 		}
 		_, err = client.CreateBucket(input)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create bucket: %w", err)
+			return nil, fmt.errorf("failed to create bucket: %w", err)
 		}
 	}
 
@@ -89,7 +89,7 @@ func (r *OBSTransactionRepository) Create(ctx context.Context, transaction *mode
 	// Convert to JSON
 	data, err := json.Marshal(transaction)
 	if err != nil {
-		return fmt.Errorf("failed to marshal transaction: %w", err)
+		return fmt.errorf("failed to marshal transaction: %w", err)
 	}
 
 	// Encrypt data if encryption key is provided
@@ -117,20 +117,20 @@ func (r *OBSTransactionRepository) Create(ctx context.Context, transaction *mode
 
 	_, err = r.client.PutObject(input)
 	if err != nil {
-		return fmt.Errorf("failed to save transaction to OBS: %w", err)
+		return fmt.errorf("failed to save transaction to OBS: %w", err)
 	}
 
 	// Update family transaction index
 	err = r.updateFamilyTransactionIndex(ctx, transaction.FamilyID, transaction.ID, transaction.TransactionDate)
 	if err != nil {
-		r.logger.Error().Err(err).Msg("Failed to update transaction index")
+		r.logger.error().Err(err).Msg("Failed to update transaction index")
 		// Don't fail the transaction creation if index update fails
 	}
 
 	// Update user transaction index
 	err = r.updateUserTransactionIndex(ctx, transaction.UserID, transaction.ID, transaction.TransactionDate)
 	if err != nil {
-		r.logger.Error().Err(err).Msg("Failed to update user transaction index")
+		r.logger.error().Err(err).Msg("Failed to update user transaction index")
 	}
 
 	return nil
@@ -163,13 +163,13 @@ func (r *OBSTransactionRepository) FindByID(ctx context.Context, id uuid.UUID) (
 
 		var transaction model.Transaction
 		if err := json.NewDecoder(output.Body).Decode(&transaction); err != nil {
-			return nil, fmt.Errorf("failed to decode transaction: %w", err)
+			return nil, fmt.errorf("failed to decode transaction: %w", err)
 		}
 
 		return &transaction, nil
 	}
 
-	return nil, fmt.Errorf("transaction not found: %s", id)
+	return nil, fmt.errorf("transaction not found: %s", id)
 }
 
 func (r *OBSTransactionRepository) FindByFamily(ctx context.Context, familyID uuid.UUID, filters repository.TransactionFilters) ([]model.Transaction, error) {
@@ -190,14 +190,14 @@ func (r *OBSTransactionRepository) FindByFamily(ctx context.Context, familyID uu
 			},
 		})
 		if err != nil {
-			r.logger.Error().Err(err).Str("transaction_id", txID.String()).Msg("Failed to fetch transaction")
+			r.logger.error().Err(err).Str("transaction_id", txID.String()).Msg("Failed to fetch transaction")
 			continue
 		}
 		defer output.Body.Close()
 
 		var transaction model.Transaction
 		if err := json.NewDecoder(output.Body).Decode(&transaction); err != nil {
-			r.logger.Error().Err(err).Str("transaction_id", txID.String()).Msg("Failed to decode transaction")
+			r.logger.error().Err(err).Str("transaction_id", txID.String()).Msg("Failed to decode transaction")
 			continue
 		}
 
@@ -240,7 +240,7 @@ func (r *OBSTransactionRepository) Update(ctx context.Context, transaction *mode
 	// Save updated transaction
 	data, err := json.Marshal(transaction)
 	if err != nil {
-		return fmt.Errorf("failed to marshal transaction: %w", err)
+		return fmt.errorf("failed to marshal transaction: %w", err)
 	}
 
 	key := r.transactionKey(transaction.FamilyID, transaction.ID)
@@ -261,7 +261,7 @@ func (r *OBSTransactionRepository) Update(ctx context.Context, transaction *mode
 
 	_, err = r.client.PutObject(input)
 	if err != nil {
-		return fmt.Errorf("failed to update transaction in OBS: %w", err)
+		return fmt.errorf("failed to update transaction in OBS: %w", err)
 	}
 
 	return nil
@@ -281,18 +281,18 @@ func (r *OBSTransactionRepository) Delete(ctx context.Context, id uuid.UUID) err
 		Key:    key,
 	})
 	if err != nil {
-		return fmt.Errorf("failed to delete transaction from OBS: %w", err)
+		return fmt.errorf("failed to delete transaction from OBS: %w", err)
 	}
 
 	// Remove from indexes
 	err = r.removeFromFamilyTransactionIndex(ctx, transaction.FamilyID, id)
 	if err != nil {
-		r.logger.Error().Err(err).Msg("Failed to remove from family transaction index")
+		r.logger.error().Err(err).Msg("Failed to remove from family transaction index")
 	}
 
 	err = r.removeFromUserTransactionIndex(ctx, transaction.UserID, id)
 	if err != nil {
-		r.logger.Error().Err(err).Msg("Failed to remove from user transaction index")
+		r.logger.error().Err(err).Msg("Failed to remove from user transaction index")
 	}
 
 	return nil
@@ -345,7 +345,7 @@ func (r *OBSTransactionRepository) getTransactionIndex(ctx context.Context, key 
 
 	var index transactionIndex
 	if err := json.NewDecoder(output.Body).Decode(&index); err != nil {
-		return nil, fmt.Errorf("failed to decode transaction index: %w", err)
+		return nil, fmt.errorf("failed to decode transaction index: %w", err)
 	}
 
 	return &index, nil
@@ -373,7 +373,7 @@ func (r *OBSTransactionRepository) updateFamilyTransactionIndex(ctx context.Cont
 
 		data, err := json.Marshal(index)
 		if err != nil {
-			return fmt.Errorf("failed to marshal transaction index: %w", err)
+			return fmt.errorf("failed to marshal transaction index: %w", err)
 		}
 
 		input := &obs.PutObjectInput{
@@ -386,7 +386,7 @@ func (r *OBSTransactionRepository) updateFamilyTransactionIndex(ctx context.Cont
 
 		_, err = r.client.PutObject(input)
 		if err != nil {
-			return fmt.Errorf("failed to update transaction index: %w", err)
+			return fmt.errorf("failed to update transaction index: %w", err)
 		}
 	}
 
@@ -419,7 +419,7 @@ func (r *OBSTransactionRepository) removeFromFamilyTransactionIndex(ctx context.
 
 	data, err := json.Marshal(index)
 	if err != nil {
-		return fmt.Errorf("failed to marshal transaction index: %w", err)
+		return fmt.errorf("failed to marshal transaction index: %w", err)
 	}
 
 	input := &obs.PutObjectInput{
@@ -432,7 +432,7 @@ func (r *OBSTransactionRepository) removeFromFamilyTransactionIndex(ctx context.
 
 	_, err = r.client.PutObject(input)
 	if err != nil {
-		return fmt.Errorf("failed to update transaction index: %w", err)
+		return fmt.errorf("failed to update transaction index: %w", err)
 	}
 
 	return nil
@@ -518,7 +518,7 @@ func (r *OBSTransactionRepository) listFamilies(ctx context.Context) ([]uuid.UUI
 
 	output, err := r.client.ListObjects(input)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list families: %w", err)
+		return nil, fmt.errorf("failed to list families: %w", err)
 	}
 
 	var families []uuid.UUID

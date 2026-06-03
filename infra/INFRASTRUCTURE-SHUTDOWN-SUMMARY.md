@@ -1,7 +1,7 @@
 # 📋 Resumen de Apagado de Infraestructura Huawei Cloud
 
-**Fecha**: 2026-05-20  
-**Hora**: 09:07 (UTC+8)  
+**date**: 2026-05-20  
+**time**: 09:07 (UTC+8)  
 **Estado**: ✅ INFRAESTRUCTURA APAGADA COMPLETAMENTE
 
 ## 🗑️ Recursos Destruidos
@@ -35,15 +35,15 @@
 
 | Recurso | Costo Estimado | Estado |
 |---------|---------------|--------|
-| ECS Instance (ac8.large.2) | $70-100/mes | ❌ ELIMINADO |
+| ECS Instance (ac8.large.2) | $70-100/mes | ❌ deleted |
 | EIP (IP Pública) | $10-20/mes | ❌ LIBERADO |
-| OBS Storage (2 buckets) | $5-10/mes | ❌ ELIMINADO |
+| OBS Storage (2 buckets) | $5-10/mes | ❌ deleted |
 | **Total Ahorro** | **$85-130/mes** | ✅ |
 
 ## 💾 Estado Preservado
 
 ### ✅ **Archivos Guardados**
-1. **Configuración Terraform**: `/root/PulseExpends-Infra/`
+1. **configuration Terraform**: `/root/PulseExpends-Infra/`
    - `main.tf`, `variables.tf`, `outputs.tf`
    - `rds.tf` (nuevo módulo RDS PostgreSQL)
    - `terraform.tfstate.backup.20260520_090453`
@@ -94,7 +94,7 @@ terraform init
 terraform plan
 ```
 
-### Paso 4: Aplicar Configuración
+### Paso 4: Aplicar configuration
 ```bash
 terraform apply -auto-approve
 ```
@@ -104,27 +104,27 @@ terraform apply -auto-approve
 # Conectar al servidor
 ssh -i pulse-expends-key.pem root@<nueva-ip>
 
-# Desplegar aplicación
+# Desplegar application
 cd /opt/PulseExpends
 ./setup-ecs-subdomains.sh
 ```
 
-## 🎯 Pendientes para la Próxima Sesión
+## 🎯 Pendientes para la Próxima session
 
 ### 1. **Problema de Subdominios/Dominios**
 - **Problema**: DuckDNS no soporta subdominios automáticos
-- **Solución**: Configurar dominios separados o usar rutas Nginx
+- **Solución**: Configurar dominios separados o usar routes Nginx
 - **Alternativas**: Cloudflare, Namecheap, Google Domains
 
 ### 2. **Base de Datos RDS PostgreSQL**
-- **Configuración**: Ya implementada en `rds.tf`
+- **configuration**: Ya implementada en `rds.tf`
 - **Variables**: Configurar en `rds.auto.tfvars`
 - **Características**: Alta disponibilidad, backups automáticos, encriptación KMS
 
 ### 3. **SSL/HTTPS**
 - **Herramienta**: Certbot + Let's Encrypt
 - **Dominios**: `pulseexpends.duckdns.org`, `api.*`, `pdf.*`, `status.*`
-- **Configuración**: Nginx + SSL
+- **configuration**: Nginx + SSL
 
 ### 4. **Mejoras de Acceso**
 - **CDN**: Cloudflare para mejor rendimiento y seguridad
@@ -133,20 +133,20 @@ cd /opt/PulseExpends
 
 ## 📊 Estado Actual del Proyecto
 
-### ✅ **Completado**
+### ✅ **completed**
 - [x] Infraestructura básica implementada y probada
-- [x] Sistema de autenticación completo
+- [x] Sistema de authentication completo
 - [x] Módulo RDS PostgreSQL configurado
 - [x] Páginas de diagnóstico creadas
 - [x] Repositorios GitHub actualizados
 - [x] Documentación completa
 
-### ⏳ **Pendiente**
+### ⏳ **pending**
 - [ ] Configurar dominios/subdominios alternativos
 - [ ] Implementar RDS PostgreSQL (cuando se reactive)
 - [ ] Configurar SSL/HTTPS
-- [ ] Resolver problemas de acceso para usuarios externos
-- [ ] Crear scripts de automatización para despliegue rápido
+- [ ] Resolver problemas de acceso para users externos
+- [ ] create scripts de automatización para despliegue rápido
 
 ## 🔧 Scripts Disponibles
 
@@ -160,7 +160,7 @@ cd /root/PulseExpends-Infra
 cd /opt/PulseExpends
 ./configure-duckdns-secure.sh
 
-# 3. Desplegar aplicación
+# 3. Desplegar application
 ./setup-ecs-subdomains.sh
 ```
 
@@ -175,25 +175,25 @@ cd /opt/PulseExpends
 
 ## 📞 Contacto y Soporte
 
-### Archivos de Configuración
+### Archivos de configuration
 - **Terraform**: `/root/PulseExpends-Infra/`
 - **Aplicación**: `/root/PulseExpends/`
 - **Documentación**: Archivos `.md` en ambos directorios
 
 ### Backups
 - **Estado Terraform**: `terraform.tfstate.backup.20260520_090453`
-- **Configuración**: Todos los archivos `.tf` preservados
-- **Scripts**: Completos y funcionales
+- **configuration**: Todos los archivos `.tf` preservados
+- **Scripts**: Completos y functionales
 
 ### Notas Finales
 - **La infraestructura puede reactivarse en 5-10 minutos**
 - **Los costos se han detenido completamente**
-- **Todo el código y configuración están preservados**
-- **La próxima sesión puede comenzar desde donde quedamos**
+- **TODO el código y configuration están preservados**
+- **La próxima session puede comenzar desde donde quedamos**
 
 ---
 
-**¡Infraestructura apagada exitosamente!** 🎉
+**¡Infraestructura apagada successsamente!** 🎉
 
 **Próximos pasos cuando se reactive:**
 1. Configurar dominios/subdominios

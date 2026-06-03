@@ -23,13 +23,13 @@ func AuthMiddleware(db *gorm.DB) func(http.Handler) http.Handler {
 			// Get Authorization header
 			authHeader := r.Header.Get("Authorization")
 			if authHeader == "" {
-				http.Error(w, "Authorization header required", http.StatusUnauthorized)
+				http.error(w, "Authorization header required", http.StatusUnauthorized)
 				return
 			}
 
 			// Check if it's a Bearer token
 			if !strings.HasPrefix(authHeader, "Bearer ") {
-				http.Error(w, "Bearer token required", http.StatusUnauthorized)
+				http.error(w, "Bearer token required", http.StatusUnauthorized)
 				return
 			}
 
@@ -39,7 +39,7 @@ func AuthMiddleware(db *gorm.DB) func(http.Handler) http.Handler {
 			// Validate token and get user
 			user, err := validateTokenAndGetUser(db, token)
 			if err != nil {
-				http.Error(w, "Invalid token", http.StatusUnauthorized)
+				http.error(w, "Invalid token", http.StatusUnauthorized)
 				return
 			}
 
@@ -82,7 +82,7 @@ func RequireAuth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := GetUserFromContext(r.Context())
 		if user == nil {
-			http.Error(w, "Authentication required", http.StatusUnauthorized)
+			http.error(w, "Authentication required", http.StatusUnauthorized)
 			return
 		}
 		next.ServeHTTP(w, r)
@@ -95,7 +95,7 @@ func RequireCircleMember(db *gorm.DB, circleID string) func(http.HandlerFunc) ht
 		return func(w http.ResponseWriter, r *http.Request) {
 			user := GetUserFromContext(r.Context())
 			if user == nil {
-				http.Error(w, "Authentication required", http.StatusUnauthorized)
+				http.error(w, "Authentication required", http.StatusUnauthorized)
 				return
 			}
 
@@ -103,10 +103,10 @@ func RequireCircleMember(db *gorm.DB, circleID string) func(http.HandlerFunc) ht
 			var count int64
 			err := db.Model(&model.FamilyMember{}).
 				Where("family_id = ? AND user_id = ? AND is_active = ?", circleID, user.ID, true).
-				Count(&count).Error
+				Count(&count).error
 			
 			if err != nil || count == 0 {
-				http.Error(w, "User is not a member of this circle", http.StatusForbidden)
+				http.error(w, "User is not a member of this circle", http.StatusForbidden)
 				return
 			}
 
@@ -121,22 +121,22 @@ func RequireCircleAdmin(db *gorm.DB, circleID string) func(http.HandlerFunc) htt
 		return func(w http.ResponseWriter, r *http.Request) {
 			user := GetUserFromContext(r.Context())
 			if user == nil {
-				http.Error(w, "Authentication required", http.StatusUnauthorized)
+				http.error(w, "Authentication required", http.StatusUnauthorized)
 				return
 			}
 
 			// Check if user is admin or owner of circle
 			var member model.FamilyMember
 			err := db.Where("family_id = ? AND user_id = ? AND is_active = ?", circleID, user.ID, true).
-				First(&member).Error
+				First(&member).error
 			
 			if err != nil {
-				http.Error(w, "User is not a member of this circle", http.StatusForbidden)
+				http.error(w, "User is not a member of this circle", http.StatusForbidden)
 				return
 			}
 
 			if member.Role != "admin" && member.Role != "owner" {
-				http.Error(w, "Admin privileges required", http.StatusForbidden)
+				http.error(w, "Admin privileges required", http.StatusForbidden)
 				return
 			}
 
@@ -151,22 +151,22 @@ func RequireCircleOwner(db *gorm.DB, circleID string) func(http.HandlerFunc) htt
 		return func(w http.ResponseWriter, r *http.Request) {
 			user := GetUserFromContext(r.Context())
 			if user == nil {
-				http.Error(w, "Authentication required", http.StatusUnauthorized)
+				http.error(w, "Authentication required", http.StatusUnauthorized)
 				return
 			}
 
 			// Check if user is owner of circle
 			var member model.FamilyMember
 			err := db.Where("family_id = ? AND user_id = ? AND is_active = ?", circleID, user.ID, true).
-				First(&member).Error
+				First(&member).error
 			
 			if err != nil {
-				http.Error(w, "User is not a member of this circle", http.StatusForbidden)
+				http.error(w, "User is not a member of this circle", http.StatusForbidden)
 				return
 			}
 
 			if member.Role != "owner" {
-				http.Error(w, "Owner privileges required", http.StatusForbidden)
+				http.error(w, "Owner privileges required", http.StatusForbidden)
 				return
 			}
 
@@ -180,7 +180,7 @@ func ValidateContentType(contentType string) func(http.HandlerFunc) http.Handler
 	return func(next http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			if r.Header.Get("Content-Type") != contentType {
-				http.Error(w, "Content-Type must be "+contentType, http.StatusUnsupportedMediaType)
+				http.error(w, "Content-Type must be "+contentType, http.StatusUnsupportedMediaType)
 				return
 			}
 			next.ServeHTTP(w, r)
@@ -224,7 +224,7 @@ func RateLimitMiddleware(requestsPerMinute int) func(http.Handler) http.Handler 
 			}
 			
 			if info.count > requestsPerMinute {
-				http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
+				http.error(w, "Rate limit exceeded", http.StatusTooManyRequests)
 				return
 			}
 			
@@ -258,8 +258,8 @@ func (rw *responseWriter) WriteHeader(status int) {
 	rw.ResponseWriter.WriteHeader(status)
 }
 
-// ErrorHandlerMiddleware handles panics and returns JSON errors
-func ErrorHandlerMiddleware(next http.Handler) http.Handler {
+// errorHandlerMiddleware handles panics and returns JSON errors
+func errorHandlerMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {

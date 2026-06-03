@@ -1,6 +1,6 @@
 # 🗄️ RDS PostgreSQL para PulseExpends
 
-Este módulo Terraform implementa una base de datos PostgreSQL gestionada en Huawei Cloud RDS para la aplicación PulseExpends.
+Este módulo Terraform implementa una base de datos PostgreSQL gestionada en Huawei Cloud RDS para la application PulseExpends.
 
 ## 📋 Características
 
@@ -21,7 +21,7 @@ Este módulo Terraform implementa una base de datos PostgreSQL gestionada en Hua
 - **Ventana de backup**: 03:00-04:00 UTC
 - **Ventana de mantenimiento**: Domingos 04:00-05:00 UTC
 
-## 🚀 **Implementación**
+## 🚀 **implementation**
 
 ### **1. Configurar Variables**
 Copia el archivo de ejemplo y personalízalo:
@@ -37,17 +37,17 @@ Edita `rds.auto.tfvars` con tus valores:
 rds_username = "pulseexpends_admin"
 rds_password = "TuContraseñaSegura123!"  # ⚠️ CAMBIAR ESTO
 
-# Configuración de red
+# configuration de red
 enable_rds_public_access = false  # Solo acceso desde VPC
 rds_allowed_cidr_blocks = ["10.0.0.0/16"]  # Solo desde la VPC
 ```
 
-### **2. Aplicar Configuración**
+### **2. Aplicar configuration**
 ```bash
 # Inicializar Terraform (si no se ha hecho)
 terraform init
 
-# Ver plan de implementación
+# Ver plan de implementation
 terraform plan -var-file="rds.auto.tfvars"
 
 # Aplicar cambios
@@ -55,7 +55,7 @@ terraform apply -var-file="rds.auto.tfvars"
 ```
 
 ### **3. Configurar Aplicación**
-Después de implementar RDS, actualiza la configuración de la aplicación:
+Después de implementar RDS, actualiza la configuration de la application:
 
 ```bash
 # En el servidor ECS
@@ -67,20 +67,20 @@ nano .env
 
 Actualiza `DATABASE_URL`:
 ```bash
-# Formato: postgresql://usuario:contraseña@endpoint:5432/nombre_bd
+# Formato: postgresql://user:password@endpoint:5432/nombre_bd
 DATABASE_URL=postgresql://pulseexpends_admin:TuContraseñaSegura123!@rds-endpoint:5432/pulseexpends
 ```
 
 ## 🔒 **Seguridad**
 
 ### **Mejores Prácticas:**
-1. **Contraseñas seguras**: Usa contraseñas complejas de al menos 16 caracteres
+1. **Contraseñas seguras**: Usa passwords complejas de al menos 16 caracteres
 2. **Acceso restringido**: Solo permite acceso desde la VPC (`enable_rds_public_access = false`)
 3. **Backups automáticos**: Configura retención según necesidades (7-35 días)
 4. **Monitoreo**: Habilita alertas en Cloud Eye
 5. **Encriptación**: KMS está habilitado por defecto
 
-### **Configuración de Red:**
+### **configuration de Red:**
 ```hcl
 # Solo acceso desde VPC (recomendado para producción)
 enable_rds_public_access = false
@@ -117,9 +117,9 @@ rds_allowed_cidr_blocks = ["0.0.0.0/0"]  # ⚠️ PELIGROSO para producción
 PGPASSWORD=TuContraseñaSegura123! psql -h rds-endpoint -U pulseexpends_admin -d pulseexpends
 
 # Comandos útiles
-\l                          # Listar bases de datos
+\l                          # list bases de datos
 \c pulseexpends            # Conectar a la base de datos
-\dt                         # Listar tablas
+\dt                         # list tablas
 \d+ tabla                  # Ver estructura de tabla
 ```
 
@@ -153,25 +153,25 @@ rds_storage = 200  # Aumentar almacenamiento
 
 ### **Escalado Horizontal:**
 - **Lecturas**: Configurar réplicas de solo lectura
-- **Escrituras**: Actualizar a instancia más grande
-- **Particionamiento**: Implementar a nivel de aplicación
+- **Escrituras**: update a instancia más grande
+- **Particionamiento**: Implementar a nivel de application
 
 ## 🔧 **Solución de Problemas**
 
 ### **Problemas Comunes:**
 
-#### **1. Error de Conexión**
+#### **1. error de Conexión**
 ```bash
 # Verificar que el security group permite el puerto 5432
-# Verificar que la VPC tenga rutas correctas
+# Verificar que la VPC tenga routes correctas
 # Probar conexión desde ECS:
 telnet rds-endpoint 5432
 ```
 
-#### **2. Autenticación Fallida**
+#### **2. authentication Fallida**
 ```bash
 # Verificar credenciales
-# Verificar que el usuario tenga permisos
+# Verificar que el user tenga permisos
 # Revisar logs de RDS en Cloud Eye
 ```
 
@@ -195,7 +195,7 @@ telnet rds-endpoint 5432
 
 ### **Parámetros Recomendados:**
 ```sql
--- Configuración para aplicaciones web
+-- configuration para applicationes web
 ALTER SYSTEM SET shared_buffers = '1GB';
 ALTER SYSTEM SET effective_cache_size = '3GB';
 ALTER SYSTEM SET maintenance_work_mem = '256MB';
@@ -206,11 +206,11 @@ ALTER SYSTEM SET default_statistics_target = 100;
 
 ### **Índices Recomendados:**
 ```sql
--- Para tablas de autenticación
+-- Para tablas de authentication
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_created_at ON users(created_at);
 
--- Para tablas de transacciones
+-- Para tablas de transactiones
 CREATE INDEX idx_transactions_user_id ON transactions(user_id);
 CREATE INDEX idx_transactions_date ON transactions(date);
 CREATE INDEX idx_transactions_category ON transactions(category);
@@ -223,7 +223,7 @@ CREATE INDEX idx_transactions_category ON transactions(category);
 pg_dump -U postgres -d pulseexpends -Fc -f backup.dump
 ```
 
-### **2. Crear Base de Datos en RDS:**
+### **2. create Base de Datos en RDS:**
 ```bash
 # Conectar a RDS
 PGPASSWORD=TuContraseñaSegura123! psql -h rds-endpoint -U pulseexpends_admin -d postgres -c "CREATE DATABASE pulseexpends;"
@@ -234,12 +234,12 @@ PGPASSWORD=TuContraseñaSegura123! psql -h rds-endpoint -U pulseexpends_admin -d
 pg_restore -h rds-endpoint -U pulseexpends_admin -d pulseexpends backup.dump
 ```
 
-### **4. Actualizar Aplicación:**
+### **4. update Aplicación:**
 ```bash
-# Actualizar DATABASE_URL en .env
+# update DATABASE_URL en .env
 DATABASE_URL=postgresql://pulseexpends_admin:TuContraseñaSegura123!@rds-endpoint:5432/pulseexpends
 
-# Reiniciar aplicación
+# Reiniciar application
 sudo systemctl restart pulseexpends-auth.service
 ```
 
@@ -280,7 +280,7 @@ Configurar en Cloud Eye:
 ## 🎯 **Próximos Pasos**
 
 1. **Implementar RDS** con `terraform apply`
-2. **Configurar aplicación** con nueva conexión
+2. **Configurar application** con nueva conexión
 3. **Migrar datos** desde PostgreSQL local
 4. **Configurar monitoreo** y alertas
 5. **Establecer política de backups**
@@ -308,4 +308,4 @@ terraform output rds_instructions
 
 ---
 
-**⚠️ IMPORTANTE**: Nunca commits credenciales en el repositorio. Usa variables de entorno o sistemas de gestión de secretos como Huawei Cloud KMS o Vault.
+**⚠️ IMPORTANTE**: Nunca commits credenciales en el repository. Usa variables de entorno o sistemas de gestión de secretos como Huawei Cloud KMS o Vault.

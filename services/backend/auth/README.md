@@ -1,16 +1,16 @@
 # PulseExpends Authentication Server
 
-Servidor de autenticación y gestión de usuarios para PulseExpends, con soporte para Google OAuth y grupos familiares (círculos).
+Servidor de authentication y gestión de users para PulseExpends, con soporte para Google OAuth y grupos familiares (círculos).
 
 ## Características
 
-- ✅ Autenticación con email/contraseña
-- ✅ Autenticación con Google OAuth 2.0
-- ✅ Gestión de perfiles de usuario
+- ✅ authentication con email/password
+- ✅ authentication con Google OAuth 2.0
+- ✅ Gestión de perfiles de user
 - ✅ Sistema de círculos familiares
 - ✅ Roles y permisos (admin, member, viewer)
-- ✅ Gestión de transacciones compartidas
-- ✅ API RESTful con JWT
+- ✅ Gestión de transactiones compartidas
+- ✅ api RESTful con JWT
 - ✅ Base de datos PostgreSQL
 - ✅ CORS configurable
 - ✅ Rate limiting
@@ -22,7 +22,7 @@ Servidor de autenticación y gestión de usuarios para PulseExpends, con soporte
 - PostgreSQL 14+
 - Google OAuth credentials
 
-## Configuración
+## configuration
 
 ### 1. Configurar Google OAuth
 
@@ -71,10 +71,10 @@ HOST=0.0.0.0
 ### 3. Inicializar base de datos
 
 ```bash
-# Dar permisos de ejecución al script
+# Dar permisos de execution al script
 chmod +x database/init-db.sh
 
-# Ejecutar script de inicialización
+# Ejecutar script de initialization
 ./database/init-db.sh
 ```
 
@@ -84,7 +84,7 @@ chmod +x database/init-db.sh
 go mod download
 ```
 
-## Ejecución
+## execution
 
 ### Desarrollo
 
@@ -119,60 +119,60 @@ cd /root/PulseExpends
 docker-compose up -d
 ```
 
-## API Endpoints
+## api Endpoints
 
-### Autenticación
+### authentication
 
-- `POST /api/auth/register` - Registrar nuevo usuario
-- `POST /api/auth/login` - Iniciar sesión
-- `GET /api/auth/google` - Iniciar sesión con Google
+- `POST /api/auth/register` - Registrar nuevo user
+- `POST /api/auth/login` - Iniciar session
+- `GET /api/auth/google` - Iniciar session con Google
 - `GET /api/auth/google/callback` - Callback de Google OAuth
-- `POST /api/auth/logout` - Cerrar sesión
+- `POST /api/auth/logout` - Cerrar session
 - `GET /api/auth/verify` - Verificar token JWT
-- `GET /api/auth/profile` - Obtener perfil de usuario
-- `PUT /api/auth/profile` - Actualizar perfil
-- `POST /api/auth/change-password` - Cambiar contraseña
+- `GET /api/auth/profile` - get perfil de user
+- `PUT /api/auth/profile` - update perfil
+- `POST /api/auth/change-password` - Cambiar password
 - `POST /api/auth/forgot-password` - Solicitar recuperación
-- `POST /api/auth/reset-password` - Restablecer contraseña
+- `POST /api/auth/reset-password` - Restablecer password
 
 ### Círculos Familiares
 
-- `GET /api/circles` - Listar círculos del usuario
-- `GET /api/circles/:id` - Obtener círculo por ID
-- `POST /api/circles` - Crear nuevo círculo
-- `PUT /api/circles/:id` - Actualizar círculo
-- `DELETE /api/circles/:id` - Eliminar círculo
+- `GET /api/circles` - list círculos del user
+- `GET /api/circles/:id` - get círculo por ID
+- `POST /api/circles` - create nuevo círculo
+- `PUT /api/circles/:id` - update círculo
+- `DELETE /api/circles/:id` - delete círculo
 - `POST /api/circles/:id/members` - Agregar miembro
 - `DELETE /api/circles/:id/members/:userId` - Remover miembro
-- `PUT /api/circles/:id/members/:userId` - Actualizar rol
+- `PUT /api/circles/:id/members/:userId` - update rol
 - `POST /api/circles/join/:code` - Unirse a círculo con código
 - `POST /api/circles/:id/invite` - Invitar a círculo por email
-- `GET /api/circles/:id/transactions` - Transacciones del círculo
+- `GET /api/circles/:id/transactions` - Transactiones del círculo
 - `GET /api/circles/:id/members` - Miembros del círculo
 - `GET /api/circles/:id/activities` - Actividades del círculo
 
-### Transacciones
+### Transactiones
 
-- `GET /api/transactions` - Listar transacciones del usuario
-- `GET /api/transactions/:id` - Obtener transacción por ID
-- `POST /api/transactions` - Crear nueva transacción
-- `PUT /api/transactions/:id` - Actualizar transacción
-- `DELETE /api/transactions/:id` - Eliminar transacción
-- `GET /api/transactions/circle/:circleId` - Transacciones de círculo
-- `POST /api/transactions/:id/split` - Dividir transacción
-- `POST /api/transactions/:id/approve` - Aprobar transacción
-- `POST /api/transactions/:id/reject` - Rechazar transacción
+- `GET /api/transactions` - list transactiones del user
+- `GET /api/transactions/:id` - get transaction por ID
+- `POST /api/transactions` - create nueva transaction
+- `PUT /api/transactions/:id` - update transaction
+- `DELETE /api/transactions/:id` - delete transaction
+- `GET /api/transactions/circle/:circleId` - Transactiones de círculo
+- `POST /api/transactions/:id/split` - Dividir transaction
+- `POST /api/transactions/:id/approve` - Aprobar transaction
+- `POST /api/transactions/:id/reject` - Rechazar transaction
 
 ### Estadísticas
 
-- `GET /api/stats` - Estadísticas del usuario
+- `GET /api/stats` - Estadísticas del user
 - `GET /api/stats/circle/:circleId` - Estadísticas del círculo
 - `GET /api/stats/monthly` - Estadísticas mensuales
 - `GET /api/stats/categories` - Estadísticas por categoría
 
 ## Modelos de Datos
 
-### Usuario (User)
+### user (User)
 ```go
 type User struct {
     ID           uuid.UUID `gorm:"type:uuid;primary_key"`
@@ -222,7 +222,7 @@ type CircleMember struct {
 }
 ```
 
-### Transacción (Transaction)
+### transaction (Transaction)
 ```go
 type Transaction struct {
     ID           uuid.UUID `gorm:"type:uuid;primary_key"`
@@ -254,7 +254,7 @@ type Transaction struct {
 ## Seguridad
 
 - **JWT**: Tokens firmados con clave secreta, expiración de 7 días
-- **BCrypt**: Hash de contraseñas con costo 12
+- **BCrypt**: Hash de passwords con costo 12
 - **CORS**: Orígenes configurados explícitamente
 - **Rate Limiting**: 100 solicitudes por minuto por IP
 - **Cookies**: HttpOnly, Secure, SameSite=Lax
@@ -269,7 +269,7 @@ type Transaction struct {
 export GOOGLE_CLIENT_ID=tu-client-id-produccion
 export GOOGLE_CLIENT_SECRET=tu-client-secret-produccion
 export JWT_SECRET=clave-secreta-fuerte-produccion
-export DATABASE_URL=postgresql://usuario:contraseña@servidor:5432/pulseexpends
+export DATABASE_URL=postgresql://user:password@servidor:5432/pulseexpends
 export COOKIE_SECURE=true
 export CORS_ALLOWED_ORIGINS=https://pulseexpends.duckdns.org
 ```
@@ -313,7 +313,7 @@ server {
 
 ## Solución de Problemas
 
-### Error de conexión a PostgreSQL
+### error de conexión a PostgreSQL
 ```bash
 # Verificar que PostgreSQL esté ejecutándose
 sudo systemctl status postgresql
@@ -322,12 +322,12 @@ sudo systemctl status postgresql
 PGPASSWORD=pulseexpends_password psql -h localhost -p 5432 -U pulseexpends -d pulseexpends -c "SELECT 1"
 ```
 
-### Error de Google OAuth
+### error de Google OAuth
 1. Verificar que las URIs de redirección estén configuradas correctamente
 2. Verificar que el Client ID y Secret sean correctos
 3. Verificar que el dominio esté autorizado en Google Cloud Console
 
-### Error de JWT
+### error de JWT
 ```bash
 # Generar nueva clave secreta
 openssl rand -base64 32

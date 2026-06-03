@@ -5,7 +5,7 @@
 // Note: Since we're using ES modules, we need to load auth.js as a module
 // For now, we'll include the auth service inline and refactor later
 
-// API Configuration with subdomains
+// api Configuration with subdomains
 // In production, use subdomains
 // In development, fallback to relative paths
 const isProduction = window.location.hostname === 'pulseexpends.duckdns.org' || 
@@ -64,7 +64,7 @@ class AuthService {
 
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.message || 'Login failed');
+                throw new error(error.message || 'Login failed');
             }
 
             const data = await response.json();
@@ -95,7 +95,7 @@ class AuthService {
 
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.message || 'Registration failed');
+                throw new error(error.message || 'Registration failed');
             }
 
             const data = await response.json();
@@ -156,7 +156,7 @@ class AuthService {
                     this.logout();
                     return { success: false, error: 'Session expired' };
                 }
-                throw new Error('Failed to fetch circles');
+                throw new error('Failed to fetch circles');
             }
 
             const data = await response.json();
@@ -184,7 +184,7 @@ class AuthService {
 
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.message || 'Failed to create transaction');
+                throw new error(error.message || 'Failed to create transaction');
             }
 
             const data = await response.json();
@@ -217,7 +217,7 @@ class AuthService {
                     this.logout();
                     return { success: false, error: 'Session expired' };
                 }
-                throw new Error('Failed to fetch transactions');
+                throw new error('Failed to fetch transactions');
             }
 
             const data = await response.json();
@@ -247,7 +247,7 @@ class AuthService {
                     this.logout();
                     return { success: false, error: 'Session expired' };
                 }
-                throw new Error('Failed to fetch stats');
+                throw new error('Failed to fetch stats');
             }
 
             const data = await response.json();
@@ -275,7 +275,7 @@ class AuthService {
 
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.message || 'Failed to create circle');
+                throw new error(error.message || 'Failed to create circle');
             }
 
             const data = await response.json();
@@ -302,7 +302,7 @@ class AuthService {
 
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.message || 'Failed to join circle');
+                throw new error(error.message || 'Failed to join circle');
             }
 
             const data = await response.json();
@@ -351,7 +351,7 @@ async function initApp() {
     // Load initial page
     loadPage('dashboard');
     
-    // Check API connectivity
+    // Check api connectivity
     checkAPIConnectivity();
 }
 
@@ -415,16 +415,16 @@ function setupExpenseForm() {
             const result = await auth.createTransaction(expenseData);
             
             if (result.success) {
-                alert('¡Gasto agregado exitosamente!');
+                alert('¡Gasto agregado successsamente!');
                 addExpenseModal.classList.remove('active');
                 expenseForm.reset();
                 document.getElementById('date').valueAsDate = new Date();
                 loadDashboard();
             } else {
-                throw new Error(result.error || 'Error al agregar gasto');
+                throw new error(result.error || 'error al agregar gasto');
             }
         } catch (error) {
-            alert('Error: ' + error.message);
+            alert('error: ' + error.message);
         }
     });
 }
@@ -507,7 +507,7 @@ async function handleFiles(files) {
         if (response.ok) {
             uploadStatus.innerHTML = `
                 <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 8px;">
-                    <h4><i class="fas fa-check-circle"></i> PDF procesado exitosamente</h4>
+                    <h4><i class="fas fa-check-circle"></i> PDF procesado successsamente</h4>
                     <p>${result.message}</p>
                     <p><strong>Texto extraído:</strong> ${result.data?.text?.substring(0, 200) || 'No se extrajo texto'}...</p>
                 </div>
@@ -521,12 +521,12 @@ async function handleFiles(files) {
                 loadDashboard();
             }, 2000);
         } else {
-            throw new Error(result.error || 'Error al procesar el PDF');
+            throw new error(result.error || 'error al procesar el PDF');
         }
     } catch (error) {
         uploadStatus.innerHTML = `
             <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 8px;">
-                <h4><i class="fas fa-exclamation-circle"></i> Error al procesar PDF</h4>
+                <h4><i class="fas fa-exclamation-circle"></i> error al procesar PDF</h4>
                 <p>${error.message}</p>
             </div>
         `;
@@ -609,7 +609,7 @@ async function loadDashboard() {
         ]);
 
         if (!transactionsResult.success || !summaryResult.success) {
-            throw new Error('Error al cargar datos del servidor');
+            throw new error('error al cargar datos del servidor');
         }
 
         transactions = transactionsResult.data?.transactions || [];
@@ -671,7 +671,7 @@ async function loadDashboard() {
                 
                 <div class="stat-card">
                     <div class="stat-header">
-                        <h3 class="stat-title">Transacciones</h3>
+                        <h3 class="stat-title">transactiones</h3>
                         <div class="stat-icon transactions">
                             <i class="fas fa-receipt"></i>
                         </div>
@@ -686,7 +686,7 @@ async function loadDashboard() {
 
             <div class="recent-transactions">
                 <div class="section-header">
-                    <h2 class="section-title">Transacciones Recientes</h2>
+                    <h2 class="section-title">transactiones Recientes</h2>
                     <button class="btn btn-primary" id="addExpenseBtn">
                         <i class="fas fa-plus"></i> Agregar Gasto
                     </button>
@@ -710,7 +710,7 @@ async function loadDashboard() {
                                 </div>
                             </div>
                         `).join('') :
-                        '<p style="text-align: center; color: var(--gray-color); padding: 40px;">No hay transacciones recientes</p>'
+                        '<p style="text-align: center; color: var(--gray-color); padding: 40px;">No hay transactiones recientes</p>'
                     }
                 </div>
             </div>
@@ -798,7 +798,7 @@ async function loadDashboard() {
                         <i class="fas fa-info-circle"></i>
                     </div>
                     <div class="alert-content">
-                        <h4>Resumen pendiente</h4>
+                        <h4>Resumen pending</h4>
                         <p>Tu resumen de tarjeta de crédito de Mayo está listo para revisión</p>
                     </div>
                 </div>
@@ -814,10 +814,10 @@ async function loadDashboard() {
         }
 
     } catch (error) {
-        console.error('Error loading dashboard:', error);
+        console.error('error loading dashboard:', error);
         mainContent.innerHTML = `
             <div style="background: #f8d7da; color: #721c24; padding: 20px; border-radius: 8px; text-align: center;">
-                <h3><i class="fas fa-exclamation-circle"></i> Error al cargar datos</h3>
+                <h3><i class="fas fa-exclamation-circle"></i> error al cargar datos</h3>
                 <p>No se pudo conectar con el servidor. Por favor, intenta de nuevo más tarde.</p>
                 <button class="btn btn-primary" onclick="loadDashboard()" style="margin-top: 15px;">
                     <i class="fas fa-redo"></i> Reintentar
@@ -830,14 +830,14 @@ async function loadDashboard() {
 async function loadTransactions() {
     try {
         const result = await auth.getTransactions();
-        if (!result.success) throw new Error(result.error || 'Error al cargar transacciones');
+        if (!result.success) throw new error(result.error || 'error al cargar transactiones');
         
         transactions = result.data?.transactions || [];
 
         mainContent.innerHTML = `
             <div class="recent-transactions" style="grid-column: 1 / -1;">
                 <div class="section-header">
-                    <h2 class="section-title">Todas las Transacciones</h2>
+                    <h2 class="section-title">Todas las transactiones</h2>
                     <div>
                         <button class="btn btn-primary" id="addExpenseBtn">
                             <i class="fas fa-plus"></i> Agregar Gasto
@@ -849,7 +849,7 @@ async function loadTransactions() {
                 </div>
                 
                 <div style="margin-bottom: 20px; display: flex; gap: 10px;">
-                    <input type="text" id="searchTransactions" class="form-input" placeholder="Buscar transacciones..." style="flex: 1;">
+                    <input type="text" id="searchTransactions" class="form-input" placeholder="Buscar transactiones..." style="flex: 1;">
                     <select id="filterCategory" class="form-select" style="width: 200px;">
                         <option value="">Todas las categorías</option>
                         <option value="Food">Alimentos</option>
@@ -857,13 +857,13 @@ async function loadTransactions() {
                         <option value="Shopping">Compras</option>
                         <option value="Entertainment">Entretenimiento</option>
                         <option value="Coffee">Café</option>
-                        <option value="Utilities">Servicios</option>
+                        <option value="Utilities">services</option>
                         <option value="Healthcare">Salud</option>
                         <option value="Education">Educación</option>
                         <option value="Other">Otros</option>
                     </select>
                     <select id="filterType" class="form-select" style="width: 150px;">
-                        <option value="">Todos los tipos</option>
+                        <option value="">TODOs los tipos</option>
                         <option value="expense">Gastos</option>
                         <option value="income">Ingresos</option>
                     </select>
@@ -887,7 +887,7 @@ async function loadTransactions() {
                                 </div>
                             </div>
                         `).join('') :
-                        '<p style="text-align: center; color: var(--gray-color); padding: 40px;">No hay transacciones registradas</p>'
+                        '<p style="text-align: center; color: var(--gray-color); padding: 40px;">No hay transactiones registradas</p>'
                     }
                 </div>
             </div>
@@ -937,7 +937,7 @@ async function loadTransactions() {
                         </div>
                     </div>
                 `).join('') :
-                '<p style="text-align: center; color: var(--gray-color); padding: 40px;">No se encontraron transacciones</p>';
+                '<p style="text-align: center; color: var(--gray-color); padding: 40px;">No se encontraron transactiones</p>';
         }
 
         if (searchInput) searchInput.addEventListener('input', filterTransactions);
@@ -945,10 +945,10 @@ async function loadTransactions() {
         if (filterType) filterType.addEventListener('change', filterTransactions);
 
     } catch (error) {
-        console.error('Error loading transactions:', error);
+        console.error('error loading transactions:', error);
         mainContent.innerHTML = `
             <div style="background: #f8d7da; color: #721c24; padding: 20px; border-radius: 8px; text-align: center;">
-                <h3><i class="fas fa-exclamation-circle"></i> Error al cargar transacciones</h3>
+                <h3><i class="fas fa-exclamation-circle"></i> error al cargar transactiones</h3>
                 <p>No se pudo conectar con el servidor.</p>
                 <button class="btn btn-primary" onclick="loadTransactions()" style="margin-top: 15px;">
                     <i class="fas fa-redo"></i> Reintentar
@@ -961,12 +961,12 @@ async function loadTransactions() {
 async function loadCategories() {
     try {
         const result = await auth.getUserStats();
-        if (!result.success) throw new Error(result.error || 'Error al cargar categorías');
+        if (!result.success) throw new error(result.error || 'error al cargar categorías');
         
         const stats = result.data?.stats || {};
         const totalExpenses = stats.totalExpenses || 1;
         
-        // For now, use dummy categories - in a real app, you'd get these from the API
+        // For now, use dummy categories - in a real app, you'd get these from the api
         const categories = {
             'Food': totalExpenses * 0.4,
             'Transportation': totalExpenses * 0.25,
@@ -1043,18 +1043,18 @@ async function loadCategories() {
                         <ul style="margin-top: 10px; padding-left: 20px;">
                             <li>Tu categoría más alta es <strong>${Object.entries(categories).reduce((a, b) => a[1] > b[1] ? a : b)[0]}</strong></li>
                             <li>Considera establecer un presupuesto para las categorías con mayor gasto</li>
-                            <li>Revisa tus gastos recurrentes en "Servicios" y "Transporte"</li>
+                            <li>Revisa tus gastos recurrentes en "services" y "Transporte"</li>
                         </ul>
-                    ` : '<p>Agrega más transacciones para obtener recomendaciones personalizadas.</p>'}
+                    ` : '<p>Agrega más transactiones para get recomendaciones personalizadas.</p>'}
                 </div>
             </div>
         `;
 
     } catch (error) {
-        console.error('Error loading categories:', error);
+        console.error('error loading categories:', error);
         mainContent.innerHTML = `
             <div style="background: #f8d7da; color: #721c24; padding: 20px; border-radius: 8px; text-align: center;">
-                <h3><i class="fas fa-exclamation-circle"></i> Error al cargar categorías</h3>
+                <h3><i class="fas fa-exclamation-circle"></i> error al cargar categorías</h3>
                 <p>No se pudo conectar con el servidor.</p>
                 <button class="btn btn-primary" onclick="loadCategories()" style="margin-top: 15px;">
                     <i class="fas fa-redo"></i> Reintentar
@@ -1076,13 +1076,13 @@ function loadUpload() {
             
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px;">
                 <div>
-                    <h3 style="margin-bottom: 15px; color: var(--dark-color);">Cómo funciona</h3>
+                    <h3 style="margin-bottom: 15px; color: var(--dark-color);">Cómo functiona</h3>
                     <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: var(--box-shadow);">
                         <ol style="padding-left: 20px; line-height: 2;">
                             <li>Descarga el resumen de tu tarjeta de crédito en formato PDF</li>
                             <li>Sube el archivo usando el botón de abajo</li>
-                            <li>Nuestro sistema extraerá automáticamente las transacciones</li>
-                            <li>Revisa y confirma las transacciones detectadas</li>
+                            <li>Nuestro sistema extraerá automáticamente las transactiones</li>
+                            <li>Revisa y confirma las transactiones detectadas</li>
                             <li>¡Listo! Los gastos se agregarán a tu dashboard</li>
                         </ol>
                     </div>
@@ -1092,8 +1092,8 @@ function loadUpload() {
                             <i class="fas fa-lightbulb"></i> Consejo
                         </h4>
                         <p style="color: var(--dark-color);">
-                            Asegúrate de que el PDF sea legible y contenga información de transacciones. 
-                            El sistema funciona mejor con resúmenes de bancos principales.
+                            Asegúrate de que el PDF sea legible y contenga information de transactiones. 
+                            El sistema functiona mejor con resúmenes de bancos principales.
                         </p>
                     </div>
                 </div>
@@ -1158,7 +1158,7 @@ function loadAlerts() {
                             <i class="fas fa-info-circle"></i>
                         </div>
                         <div class="alert-content">
-                            <h4>Resumen pendiente</h4>
+                            <h4>Resumen pending</h4>
                             <p>Tu resumen de tarjeta de crédito de Mayo está listo para revisión</p>
                             <small style="color: var(--gray-color);">Hace 5 días</small>
                         </div>
@@ -1206,7 +1206,7 @@ function loadAlerts() {
                         </div>
                         
                         <button class="btn btn-primary" style="width: 100%; padding: 15px; margin-top: 20px;">
-                            <i class="fas fa-save"></i> Guardar Configuración
+                            <i class="fas fa-save"></i> Guardar configuration
                         </button>
                     </div>
                 </div>
@@ -1219,7 +1219,7 @@ function loadSettings() {
     mainContent.innerHTML = `
         <div style="background: white; border-radius: var(--border-radius); padding: 30px; box-shadow: var(--box-shadow); grid-column: 1 / -1;">
             <div class="section-header">
-                <h2 class="section-title">Configuración</h2>
+                <h2 class="section-title">configuration</h2>
                 <button class="btn btn-primary" onclick="loadDashboard()">
                     <i class="fas fa-arrow-left"></i> Volver al Dashboard
                 </button>
@@ -1242,7 +1242,7 @@ function loadSettings() {
                         </div>
                         
                         <div class="form-group">
-                            <label class="form-label">Formato de fecha</label>
+                            <label class="form-label">Formato de date</label>
                             <select class="form-select">
                                 <option selected>DD/MM/YYYY</option>
                                 <option>MM/DD/YYYY</option>
@@ -1339,7 +1339,7 @@ function loadSettings() {
 async function loadCirclesPage() {
     try {
         const result = await auth.getCircles();
-        if (!result.success) throw new Error(result.error || 'Error al cargar círculos');
+        if (!result.success) throw new error(result.error || 'error al cargar círculos');
         
         const circles = result.data?.circles || [];
         userCircles = circles;
@@ -1350,7 +1350,7 @@ async function loadCirclesPage() {
                     <h2 class="section-title">Círculos Familiares</h2>
                     <div>
                         <button class="btn btn-primary" onclick="createCircle()">
-                            <i class="fas fa-plus"></i> Crear Círculo
+                            <i class="fas fa-plus"></i> create Círculo
                         </button>
                         <button class="btn btn-success" onclick="joinCircle()" style="margin-left: 10px;">
                             <i class="fas fa-user-plus"></i> Unirse a Círculo
@@ -1390,7 +1390,7 @@ async function loadCirclesPage() {
                             <h3>No tienes círculos familiares</h3>
                             <p>Crea tu primer círculo para compartir gastos con familiares o amigos.</p>
                             <button class="btn btn-primary" onclick="createCircle()" style="margin-top: 20px;">
-                                <i class="fas fa-plus"></i> Crear Primer Círculo
+                                <i class="fas fa-plus"></i> create Primer Círculo
                             </button>
                         </div>
                     `}
@@ -1402,22 +1402,22 @@ async function loadCirclesPage() {
                     </h4>
                     <p style="color: var(--dark-color); margin-bottom: 10px;">
                         Los círculos familiares te permiten compartir gastos e ingresos con tu familia o grupo de amigos.
-                        Cada círculo tiene su propio balance y transacciones compartidas.
+                        Cada círculo tiene su propio balance y transactiones compartidas.
                     </p>
                     <ul style="color: var(--dark-color); padding-left: 20px;">
-                        <li><strong>Creador/Owner:</strong> Puede administrar miembros y eliminar el círculo</li>
-                        <li><strong>Admin:</strong> Puede agregar/eliminar miembros y aprobar transacciones</li>
-                        <li><strong>Member:</strong> Puede agregar transacciones y ver el balance</li>
-                        <li><strong>Viewer:</strong> Solo puede ver transacciones (no puede agregar)</li>
+                        <li><strong>createdr/Owner:</strong> Puede administrar miembros y delete el círculo</li>
+                        <li><strong>Admin:</strong> Puede agregar/delete miembros y aprobar transactiones</li>
+                        <li><strong>Member:</strong> Puede agregar transactiones y ver el balance</li>
+                        <li><strong>Viewer:</strong> Solo puede ver transactiones (no puede agregar)</li>
                     </ul>
                 </div>
             </div>
         `;
     } catch (error) {
-        console.error('Error loading circles:', error);
+        console.error('error loading circles:', error);
         mainContent.innerHTML = `
             <div style="background: #f8d7da; color: #721c24; padding: 20px; border-radius: 8px; text-align: center;">
-                <h3><i class="fas fa-exclamation-circle"></i> Error al cargar círculos</h3>
+                <h3><i class="fas fa-exclamation-circle"></i> error al cargar círculos</h3>
                 <p>${error.message}</p>
                 <button class="btn btn-primary" onclick="loadCirclesPage()" style="margin-top: 15px;">
                     <i class="fas fa-redo"></i> Reintentar
@@ -1476,7 +1476,7 @@ function formatDate(dateString) {
             year: 'numeric'
         });
     } catch (e) {
-        return 'Fecha inválida';
+        return 'date inválida';
     }
 }
 
@@ -1489,7 +1489,7 @@ async function loadUserCircles() {
             updateCircleSelector();
         }
     } catch (error) {
-        console.error('Error loading circles:', error);
+        console.error('error loading circles:', error);
     }
 }
 
@@ -1521,14 +1521,14 @@ async function createCircle() {
     try {
         const result = await auth.createCircle(name, description, currency);
         if (result.success) {
-            alert('Círculo creado exitosamente!');
+            alert('Círculo created successsamente!');
             await loadUserCircles();
             loadCirclesPage();
         } else {
-            alert('Error: ' + result.error);
+            alert('error: ' + result.error);
         }
     } catch (error) {
-        alert('Error: ' + error.message);
+        alert('error: ' + error.message);
     }
 }
 
@@ -1540,14 +1540,14 @@ async function joinCircle() {
     try {
         const result = await auth.joinCircle(code);
         if (result.success) {
-            alert('Te has unido al círculo exitosamente!');
+            alert('Te has unido al círculo successsamente!');
             await loadUserCircles();
             loadCirclesPage();
         } else {
-            alert('Error: ' + result.error);
+            alert('error: ' + result.error);
         }
     } catch (error) {
-        alert('Error: ' + error.message);
+        alert('error: ' + error.message);
     }
 }
 
@@ -1608,10 +1608,10 @@ async function checkAPIConnectivity() {
     try {
         const response = await fetch(`${API_BASE_URL}/health`);
         if (!response.ok) {
-            console.warn('MCP Server API not responding');
+            console.warn('MCP Server api not responding');
         }
     } catch (error) {
-        console.warn('Cannot connect to MCP Server API:', error);
+        console.warn('Cannot connect to MCP Server api:', error);
     }
 }
 

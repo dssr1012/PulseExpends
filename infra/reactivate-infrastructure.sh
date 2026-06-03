@@ -8,19 +8,19 @@ set -e
 echo "========================================="
 echo "🔧 Reactivación de Infraestructura PulseExpends"
 echo "========================================="
-echo "Fecha: $(date)"
+echo "date: $(date)"
 echo ""
 
 # Verificar que estamos en el directorio correcto
 if [ ! -f "main.tf" ]; then
-    echo "❌ Error: No se encuentra main.tf"
+    echo "❌ error: No se encuentra main.tf"
     echo "Ejecuta desde: /root/PulseExpends-Infra/"
     exit 1
 fi
 
 # Verificar credenciales
 if [ ! -f "terraform.tfvars" ] && [ ! -f "terraform.tfvars.example" ]; then
-    echo "❌ Error: No se encuentra terraform.tfvars o terraform.tfvars.example"
+    echo "❌ error: No se encuentra terraform.tfvars o terraform.tfvars.example"
     echo "Copia el ejemplo y configura tus credenciales:"
     echo "  cp terraform.tfvars.example terraform.tfvars"
     echo "  # Edita terraform.tfvars con tus credenciales"
@@ -28,15 +28,15 @@ if [ ! -f "terraform.tfvars" ] && [ ! -f "terraform.tfvars.example" ]; then
 fi
 
 if [ ! -f "terraform.tfvars" ]; then
-    echo "⚠️  Advertencia: No se encuentra terraform.tfvars"
+    echo "⚠️  warning: No se encuentra terraform.tfvars"
     echo "Usando terraform.tfvars.example como base..."
     cp terraform.tfvars.example terraform.tfvars
-    echo "✅ Creado terraform.tfvars desde ejemplo"
+    echo "✅ created terraform.tfvars desde ejemplo"
     echo "⚠️  IMPORTANTE: Edita terraform.tfvars con tus credenciales reales"
     read -p "¿Continuar? (s/n): " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Ss]$ ]]; then
-        echo "❌ Cancelado por el usuario"
+        echo "❌ cancelled por el user"
         exit 0
     fi
 fi
@@ -53,14 +53,14 @@ terraform plan
 
 # Confirmar
 echo ""
-read -p "¿Crear infraestructura? (s/n): " -n 1 -r
+read -p "¿create infraestructura? (s/n): " -n 1 -r
 echo
 if [[ ! $REPLY =~ ^[Ss]$ ]]; then
-    echo "❌ Cancelado por el usuario"
+    echo "❌ cancelled por el user"
     exit 0
 fi
 
-# Paso 3: Aplicar configuración
+# Paso 3: Aplicar configuration
 echo ""
 echo "3️⃣  Creando infraestructura..."
 terraform apply -auto-approve
@@ -70,7 +70,7 @@ echo ""
 echo "4️⃣  Mostrando outputs de Terraform..."
 terraform output
 
-# Paso 5: Obtener IP pública
+# Paso 5: get IP pública
 echo ""
 echo "5️⃣  Obteniendo IP pública del ECS..."
 ECS_IP=$(terraform output -raw application_url | sed 's|http://||' | sed 's|/||')
@@ -89,10 +89,10 @@ if [ -n "$ECS_IP" ]; then
         
         # Probar puerto 80
         if timeout 5 curl -s -f "http://$ECS_IP/" > /dev/null; then
-            echo "✅ Servicio HTTP (puerto 80) funcionando"
+            echo "✅ service HTTP (puerto 80) funcionando"
             echo "🌐 URL: http://$ECS_IP/"
         else
-            echo "⚠️  Servicio HTTP no disponible aún (puede tardar unos minutos)"
+            echo "⚠️  service HTTP no disponible aún (puede tardar unos minutos)"
         fi
     else
         echo "⚠️  Servidor no responde a ping (puede estar iniciando)"
@@ -108,7 +108,7 @@ if [ -n "$ECS_IP" ]; then
         echo "Usa la clave SSH configurada en Huawei Cloud"
     fi
 else
-    echo "⚠️  No se pudo obtener la IP pública"
+    echo "⚠️  No se pudo get la IP pública"
 fi
 
 # Paso 8: Instrucciones para desplegar aplicación
@@ -119,7 +119,7 @@ echo "Una vez que el servidor esté listo:"
 echo "1. Conectar al servidor:"
 echo "   ssh -i pulse-expends-key.pem root@$ECS_IP"
 echo ""
-echo "2. Clonar/actualizar aplicación:"
+echo "2. Clonar/update aplicación:"
 echo "   cd /opt"
 echo "   git clone https://github.com/dssr1012/PulseExpends.git || cd PulseExpends && git pull"
 echo ""
@@ -136,16 +136,16 @@ echo ""
 echo "9️⃣  Configurar RDS PostgreSQL (opcional):"
 echo ""
 echo "Si quieres usar RDS PostgreSQL:"
-echo "1. Crear archivo de configuración:"
+echo "1. create archivo de configuration:"
 echo "   cp rds-example.tfvars rds.auto.tfvars"
 echo "   # Editar rds.auto.tfvars con credenciales"
 echo ""
-echo "2. Aplicar configuración RDS:"
+echo "2. Aplicar configuration RDS:"
 echo "   terraform apply -var-file=\"rds.auto.tfvars\""
 echo ""
 echo "3. Configurar aplicación para usar RDS:"
 echo "   # En el servidor ECS:"
-echo "   echo \"DATABASE_URL=postgresql://usuario:contraseña@rds-endpoint:5432/pulseexpends\" > /opt/PulseExpends/backend/auth/.env"
+echo "   echo \"DATABASE_URL=postgresql://user:password@rds-endpoint:5432/pulseexpends\" > /opt/PulseExpends/backend/auth/.env"
 echo "   sudo systemctl restart pulseexpends-auth.service"
 
 echo ""
@@ -162,7 +162,7 @@ echo "- VPC: 10.0.0.0/16"
 echo ""
 echo "⚠️  Recordatorios:"
 echo "1. Configurar DuckDNS con la nueva IP"
-echo "2. Actualizar scripts de despliegue si la IP cambió"
+echo "2. update scripts de despliegue si la IP cambió"
 echo "3. Verificar que todos los servicios estén corriendo"
 echo ""
 echo "🚀 Para probar la aplicación:"

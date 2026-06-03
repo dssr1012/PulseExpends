@@ -1,6 +1,6 @@
 # Guía de Despliegue en ECS Huawei Cloud
 
-Esta guía explica cómo desplegar PulseExpends en la instancia ECS de Huawei Cloud con configuración de subdominios.
+Esta guía explica cómo desplegar PulseExpends en la instancia ECS de Huawei Cloud con configuration de subdominios.
 
 ## 📋 Prerrequisitos
 
@@ -16,19 +16,19 @@ Esta guía explica cómo desplegar PulseExpends en la instancia ECS de Huawei Cl
 ssh -i pulse-expends-key.pem ubuntu@182.160.24.205
 ```
 
-### 2. Clonar el repositorio
+### 2. Clonar el repository
 ```bash
 cd /opt
 sudo git clone https://github.com/dssr1012/PulseExpends.git
 cd PulseExpends
 ```
 
-### 3. Ejecutar script de configuración automática
+### 3. Ejecutar script de configuration automática
 ```bash
 # Hacer el script ejecutable
 chmod +x setup-ecs-subdomains.sh
 
-# Ejecutar configuración (sin token DuckDNS)
+# Ejecutar configuration (sin token DuckDNS)
 sudo ./setup-ecs-subdomains.sh
 
 # O con token DuckDNS (recomendado)
@@ -41,19 +41,19 @@ sudo ./setup-ecs-subdomains.sh
 # Editar el script con tu token
 nano duckdns-config.sh
 
-# Ejecutar configuración DNS
+# Ejecutar configuration DNS
 ./duckdns-config.sh
 ```
 
-## 🌐 Configuración de Subdominios
+## 🌐 configuration de Subdominios
 
 Una vez configurado, los servicios estarán disponibles en:
 
-| Servicio | URL | Puerto | Descripción |
+| service | URL | Puerto | Descripción |
 |----------|-----|--------|-------------|
 | **Frontend Principal** | `http://pulseexpends.duckdns.org` | 80 | Aplicación web completa |
-| **API MCP Server** | `http://api.pulseexpends.duckdns.org` | 8080 | API REST para transacciones |
-| **PDF Parser API** | `http://pdf.pulseexpends.duckdns.org` | 8000 | Procesamiento de PDFs |
+| **api MCP Server** | `http://api.pulseexpends.duckdns.org` | 8080 | api REST para transactiones |
+| **PDF Parser api** | `http://pdf.pulseexpends.duckdns.org` | 8000 | Procesamiento de PDFs |
 | **Status Dashboard** | `http://status.pulseexpends.duckdns.org` | 8081 | Panel de monitoreo |
 
 ## 🔧 Verificación de Servicios
@@ -74,7 +74,7 @@ sudo journalctl -fu pulseexpends-pdf-parser
 # Frontend
 curl -I http://localhost/
 
-# API MCP Server
+# api MCP Server
 curl http://localhost:8080/health
 
 # PDF Parser
@@ -91,8 +91,8 @@ curl http://localhost:8081/
 ├── frontend/                    # Código del frontend
 ├── backend/                     # Código del backend
 ├── deploy-subdomains.sh         # Script de despliegue de subdominios
-├── duckdns-config.sh           # Configuración de DuckDNS
-├── setup-ecs-subdomains.sh     # Configuración automática completa
+├── duckdns-config.sh           # configuration de DuckDNS
+├── setup-ecs-subdomains.sh     # configuration automática completa
 └── ECS-DEPLOYMENT-GUIDE.md    # Esta guía
 
 /var/www/
@@ -100,7 +100,7 @@ curl http://localhost:8081/
 └── pulseexpends-status/        # Dashboard de status
 
 /etc/nginx/sites-available/
-└── pulseexpends               # Configuración de Nginx con subdominios
+└── pulseexpends               # configuration de Nginx con subdominios
 
 /etc/systemd/system/
 ├── pulseexpends-mcp-server.service
@@ -134,7 +134,7 @@ sudo systemctl restart pulseexpends-mcp-server pulseexpends-pdf-parser
 
 ### Puertos abiertos:
 - **80/tcp** - HTTP (Nginx)
-- **443/tcp** - HTTPS (pendiente de configurar SSL)
+- **443/tcp** - HTTPS (pending de configurar SSL)
 - **22/tcp** - SSH
 
 ### Configurar firewall (si es necesario):
@@ -167,14 +167,14 @@ go version
 python3 --version
 pip3 list | grep -E "fastapi|uvicorn|pymupdf"
 
-# Ver logs específicos del servicio
+# Ver logs específicos del service
 sudo journalctl -u pulseexpends-mcp-server --no-pager -n 50
 sudo journalctl -u pulseexpends-pdf-parser --no-pager -n 50
 ```
 
 ### 3. Problemas con DuckDNS
 ```bash
-# Actualizar manualmente
+# update manualmente
 curl "https://www.duckdns.org/update?domains=pulseexpends&token=TU_TOKEN&ip=$(curl -s https://api.ipify.org)"
 
 # Verificar resolución DNS
@@ -197,7 +197,7 @@ sudo chown -R ubuntu:ubuntu /opt/PulseExpends
 ### Dashboard de Status:
 Accede a `http://status.pulseexpends.duckdns.org` para ver:
 - Estado de todos los servicios
-- Información del sistema
+- information del sistema
 - URLs de acceso
 - Comandos útiles
 
@@ -211,7 +211,7 @@ curl http://pdf.pulseexpends.duckdns.org/health
 
 ## 🔄 Actualizaciones
 
-### Actualizar desde GitHub:
+### update desde GitHub:
 ```bash
 cd /opt/PulseExpends
 sudo git pull origin main
@@ -220,7 +220,7 @@ sudo git pull origin main
 sudo ./setup-ecs-subdomains.sh
 ```
 
-### Actualizar configuración de Nginx:
+### update configuration de Nginx:
 ```bash
 sudo cp /opt/PulseExpends/backend/nginx-config/nginx-subdomains.conf /etc/nginx/sites-available/pulseexpends
 sudo nginx -t
@@ -231,20 +231,20 @@ sudo systemctl reload nginx
 
 ### Logs importantes:
 - Nginx: `/var/log/nginx/access.log` y `/var/log/nginx/error.log`
-- Systemd: `sudo journalctl -u [servicio] -f`
+- Systemd: `sudo journalctl -u [service] -f`
 - Aplicación: `/opt/PulseExpends/logs/` (si está configurado)
 
 ### Recursos:
-- **Repositorio**: https://github.com/dssr1012/PulseExpends
-- **Documentación**: Ver README.md en el repositorio
+- **repository**: https://github.com/dssr1012/PulseExpends
+- **Documentación**: Ver README.md en el repository
 - **Issues**: Reportar problemas en GitHub Issues
 
 ## ✅ Verificación Final
 
-Después del despliegue, verifica que todo funcione:
+Después del despliegue, verifica que TODO functione:
 
 1. ✅ Frontend: http://pulseexpends.duckdns.org
-2. ✅ API MCP: http://api.pulseexpends.duckdns.org/health
+2. ✅ api MCP: http://api.pulseexpends.duckdns.org/health
 3. ✅ PDF Parser: http://pdf.pulseexpends.duckdns.org/health
 4. ✅ Status: http://status.pulseexpends.duckdns.org
 5. ✅ Servicios systemd activos

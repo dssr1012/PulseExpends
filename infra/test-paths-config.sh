@@ -1,17 +1,17 @@
 #!/bin/bash
 
-# Script para probar la configuración con paths
+# Script para probar la configuration con paths
 
 set -e
 
 echo "========================================="
-echo "Prueba de Configuración con Paths"
+echo "Prueba de configuration con Paths"
 echo "========================================="
 
 DOMAIN="pulseexpends.duckdns.org"
 LOCAL_IP="127.0.0.1"
 
-echo "🔍 Probando configuración local..."
+echo "🔍 Probando configuration local..."
 echo ""
 
 # Verificar que Nginx esté corriendo
@@ -23,14 +23,14 @@ else
     echo "   Ejecuta: sudo systemctl start nginx"
 fi
 
-# Verificar configuración Nginx
+# Verificar configuration Nginx
 echo ""
-echo "2. Verificando configuración Nginx..."
+echo "2. Verificando configuration Nginx..."
 sudo nginx -t 2>&1 | grep -q "test is successful"
 if [ $? -eq 0 ]; then
     echo "   ✅ Sintaxis Nginx OK"
 else
-    echo "   ❌ Error en sintaxis Nginx"
+    echo "   ❌ error en sintaxis Nginx"
     sudo nginx -t
     exit 1
 fi
@@ -69,9 +69,9 @@ for endpoint in "${ENDPOINTS[@]}"; do
     fi
 done
 
-# Probar configuración de paths
+# Probar configuration de paths
 echo ""
-echo "5. Probando configuración de paths via Nginx..."
+echo "5. Probando configuration de paths via Nginx..."
 echo ""
 
 PATHS=(
@@ -93,7 +93,7 @@ for path in "${PATHS[@]}"; do
     elif [ "$STATUS" = "404" ] && [ "$path" = "/" ]; then
         echo "   ⚠️  HTTP 404 (Frontend no instalado aún)"
     elif [ "$STATUS" = "000" ]; then
-        echo "   ❌ No responde (servicio puede no estar corriendo)"
+        echo "   ❌ No responde (service puede no estar corriendo)"
     else
         echo "   ⚠️  HTTP $STATUS"
     fi
@@ -117,12 +117,12 @@ fi
 # Resumen
 echo ""
 echo "========================================="
-echo "RESUMEN DE LA CONFIGURACIÓN"
+echo "RESUMEN DE LA configuration"
 echo "========================================="
 echo ""
 echo "🌐 URLs de acceso (cuando DNS esté configurado):"
 echo "   Frontend Principal: http://$DOMAIN/"
-echo "   API MCP Server:     http://$DOMAIN/mcp/"
+echo "   api MCP Server:     http://$DOMAIN/mcp/"
 echo "   PDF Parser:         http://$DOMAIN/pdf/"
 echo "   Status Dashboard:   http://$DOMAIN/status/"
 echo ""
@@ -144,4 +144,4 @@ echo "   2. Configurar DuckDNS con IP pública"
 echo "   3. Ejecutar: sudo ./infra/deploy-with-paths.sh"
 echo "   4. Verificar con: curl http://$DOMAIN/health"
 echo ""
-echo "✅ Configuración con paths lista para usar."
+echo "✅ configuration con paths lista para usar."
