@@ -1,0 +1,58 @@
+# Simplified terraform.tfvars for deployment with current IAM permissions
+access_key = "HPUAROTGVH59W0I1IFQL"
+secret_key = "Hk7zOT6Ef6mE1nGx8Sf9bigOmL3tOzHBO8pu6v7s"
+project_id = "1c42334636a749199423adad7a2d6ea3"
+
+# Region & Environment Configuration
+region = "la-south-2"
+environment = "dev"
+project_name = "pulseexpends"
+
+# Enterprise Project Configuration
+enable_enterprise_project = false
+
+# Domain Configuration
+enable_domain = true
+domain_name = "pulseexpends.duckdns.org"
+create_dns_record = false
+domain_bandwidth_size = 100
+
+# SSL Configuration
+enable_ssl = false
+
+# Network Configuration
+vpc_cidr = "10.0.0.0/16"
+public_subnets = ["10.0.1.0/24"]
+
+# Compute Configuration (Optimized for 10 concurrent users)
+ecs_instance_type = "s6.large.2"
+ecs_instance_count = 1
+ecs_disk_size = 40
+ecs_disk_type = "SAS"
+ecs_image_id = ""
+ecs_key_pair = "pulse-expends-key"
+
+# Database Configuration (RDS PostgreSQL) - Disabled due to IAM permissions
+enable_rds = false
+
+# Storage Configuration (OBS) - Disabled due to IAM permissions
+enable_obs = false
+
+# Load Balancer Configuration
+enable_elb = false
+
+# Monitoring Configuration
+enable_monitoring = false
+
+# Security Configuration
+allowed_ssh_ips = ["0.0.0.0/0"]
+allowed_http_ips = ["0.0.0.0/0"]
+allowed_https_ips = ["0.0.0.0/0"]
+
+# Tags
+additional_tags = {
+  Owner       = "DevOps"
+  Department  = "Engineering"
+  CostCenter  = "PulseExpends"
+  Environment = "Development"
+}

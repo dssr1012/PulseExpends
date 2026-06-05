@@ -1,104 +1,230 @@
-# Huawei Cloud Credentials
-# ========================
-# RENOMBRAR ESTE ARCHIVO A terraform.tfvars Y AGREGAR TUS CREDENCIALES REALES
-# NUNCA COMMITEAR terraform.tfvars AL REPOSITORIO PÚBLICO
-# USAR VARIABLES DE ENTORNO O SISTEMA DE SECRETS EN PRODUCCIÓN
+# ============================================================================
+# Huawei Cloud Credentials (DO NOT COMMIT THIS FILE)
+# ============================================================================
 
-# Credenciales de Huawei Cloud (OBLIGATORIAS)
-access_key = "TU_ACCESS_KEY_AQUI"
-secret_key = "TU_SECRET_KEY_AQUI"
-project_id = "TU_PROJECT_ID_AQUI"
+# IMPORTANT: Never commit actual credentials to version control
+# Use environment variables or a secrets manager instead
+# 
+# Option 1: Environment variables (recommended)
+# export TF_VAR_access_key="your_access_key"
+# export TF_VAR_secret_key="your_secret_key"
+# export TF_VAR_project_id="your_project_id"
+#
+# Option 2: Create terraform.tfvars file locally (excluded from git)
+# access_key = "your_access_key"
+# secret_key = "your_secret_key"
+# project_id = "your_project_id"
 
-# Configuración de región
-region = "la-south-2"  # Santiago, Chile
+# Required: Huawei Cloud credentials
+access_key = "YOUR_ACCESS_KEY_HERE"
+secret_key = "YOUR_SECRET_KEY_HERE"
+project_id = "YOUR_PROJECT_ID_HERE"
 
-# Configuración de instancia ECS
-instance_type = "c6.large.2"
-availability_zone = "la-south-2a"
-image_id = "your-image-id"  # Ubuntu 22.04 recommended
-vpc_id = "your-vpc-id"
-subnet_id = "your-subnet-id"
-security_group_id = "your-security-group-id"
-key_pair_name = "pulse-expends-key-ed25519"  # Nombre del key pair en Huawei Cloud
+# ============================================================================
+# Region & Environment Configuration
+# ============================================================================
 
-# Configuración de almacenamiento
-system_disk_type = "SSD"
-system_disk_size = 40  # GB
-data_disk_type = "SSD"
-data_disk_size = 100   # GB
+# Huawei Cloud region (la-south-2 = Santiago, Chile)
+region = "la-south-2"
 
-# Configuración RDS (opcional - habilitar solo si necesitas base de datos gestionada)
-enable_rds = false
-rds_instance_type = "rds.pg.c2.medium"
-rds_storage = 100
+# Environment name (dev, staging, prod)
+environment = "dev"
+
+# Project name for resource naming
+project_name = "pulseexpends"
+
+# ============================================================================
+# Enterprise Project Configuration
+# ============================================================================
+
+# Enable Enterprise Project (requires Enterprise Project permissions)
+enable_enterprise_project = false
+
+# Enterprise Project name (only used if enable_enterprise_project = true)
+enterprise_project_name = "pulse-expends"
+
+# Enterprise Project type (prod, poc, dev)
+enterprise_project_type = "prod"
+
+# ============================================================================
+# Domain Configuration
+# ============================================================================
+
+# Enable custom domain
+enable_domain = true
+
+# Domain name (e.g., pulseexpends.duckdns.org)
+domain_name = "pulseexpends.duckdns.org"
+
+# Set to true if using Huawei Cloud DNS, false for external DNS like DuckDNS
+create_dns_record = false
+
+# DNS zone ID (required if create_dns_record is true)
+dns_zone_id = ""
+
+# Maximum bandwidth size in Mbps (bandwidth cap when using traffic billing)
+domain_bandwidth_size = 100  # Reduced from 300 for 10 users
+
+# ============================================================================
+# SSL Configuration
+# ============================================================================
+
+# Enable SSL/TLS (requires valid certificate)
+enable_ssl = false
+
+# SSL certificate content (PEM format)
+# ssl_certificate = ""
+
+# SSL private key content (PEM format)
+# ssl_private_key = ""
+
+# ============================================================================
+# Network Configuration
+# ============================================================================
+
+# VPC CIDR block
+vpc_cidr = "10.0.0.0/16"
+
+# Public subnets (for ECS instances with public IPs)
+public_subnets = ["10.0.1.0/24"]
+
+# Private subnets (for RDS and internal services)
+private_subnets = ["10.0.101.0/24"]
+
+# Enable NAT Gateway for private subnets
+enable_nat_gateway = false  # Disabled for cost optimization
+
+# Use single NAT Gateway for all private subnets
+single_nat_gateway = true
+
+# Enable VPC Flow Logs (for network traffic monitoring)
+enable_flow_logs = true
+
+# OBS bucket name for VPC Flow Logs
+flow_log_bucket = "pulseexpends-flow-logs"
+
+# ============================================================================
+# Compute Configuration (Optimized for 10 concurrent users)
+# ============================================================================
+
+# ECS instance type (optimized for 10 users)
+ecs_instance_type = "s6.large.2"  # 2 vCPUs, 4GB RAM, general purpose
+
+# Number of ECS instances
+ecs_instance_count = 1  # Single instance sufficient for 10 users
+
+# ECS instance disk size (GB)
+ecs_disk_size = 40
+
+# ECS instance disk type
+ecs_disk_type = "SSD"
+
+# ECS instance image ID (Ubuntu 22.04 LTS)
+ecs_image_id = ""
+
+# ECS instance key pair name
+ecs_key_pair = "pulse-expends-key"
+
+# ============================================================================
+# Database Configuration (RDS PostgreSQL)
+# ============================================================================
+
+# Enable RDS PostgreSQL database
+enable_rds = true
+
+# RDS instance type (optimized for 10 users)
+rds_instance_type = "rds.pg.n1.large.2"  # 2 vCPUs, 4GB RAM
+
+# RDS engine version
+rds_engine_version = "15"
+
+# RDS storage size (GB)
+rds_storage = 50
+
+# RDS backup window (UTC)
+rds_backup_window = "02:00-03:00"
+
+# RDS backup retention period (days)
+rds_backup_retention = 7
+
+# RDS database name
+rds_database_name = "pulseexpends"
+
+# RDS username
 rds_username = "pulseexpends_admin"
-rds_password = "CONTRASEÑA_SEGURA_AQUI_MÍNIMO_16_CARACTERES"
-rds_availability_zone = "la-south-2a"
 
-# Configuración de red
-eip_bandwidth_size = 5  # Mbps
-eip_charge_mode = "traffic"  # "traffic" or "bandwidth"
+# RDS password (will be generated if not provided)
+rds_password = ""
 
-# Tags para recursos
-tags = {
-  Project     = "PulseExpends"
-  Environment = "development"
-  Owner       = "InfrastructureTeam"
-  CostCenter  = "Engineering"
-}
+# RDS HA replication mode (async or semisync)
+rds_ha_replication_mode = "async"
 
-# Configuración de nombres
-instance_name = "pulseexpends-dev-ecs"
-rds_instance_name = "pulseexpends-dev-rds"
-vpc_name = "pulseexpends-vpc"
-subnet_name = "pulseexpends-subnet"
-security_group_name = "pulseexpends-sg"
+# ============================================================================
+# Storage Configuration (OBS)
+# ============================================================================
 
-# Configuración de puertos a abrir
-open_ports = [
-  22,   # SSH
-  80,   # HTTP
-  443,  # HTTPS
-  8080, # MCP Server
-  8081, # Status Dashboard
-  8082, # Auth API
-  8083, # Main API
-  8000, # PDF Parser
-  5432, # PostgreSQL (solo interno)
-]
+# Enable OBS bucket for document storage
+enable_obs = true
 
-# Configuración de usuario
-admin_username = "ubuntu"
-admin_password = ""  # Dejar vacío si usas solo SSH key
+# OBS bucket name
+obs_bucket_name = "pulseexpends-documents"
 
-# Enterprise Project (opcional - solo si usas Huawei Cloud Enterprise)
-enterprise_project_id = ""
+# OBS bucket storage class (STANDARD, WARM, COLD)
+obs_storage_class = "STANDARD"
 
-# Auto-scaling (opcional)
-enable_auto_scaling = false
-min_instance_count = 1
-max_instance_count = 3
-cool_down_time = 300  # seconds
-cpu_utilization_threshold = 70  # percentage
+# OBS bucket versioning
+obs_versioning = true
 
-# Monitoring (opcional)
+# ============================================================================
+# Load Balancer Configuration
+# ============================================================================
+
+# Enable Elastic Load Balancer
+enable_elb = false  # Disabled for 10 users to reduce costs
+
+# ELB bandwidth size (Mbps)
+elb_bandwidth_size = 5
+
+# ELB listener protocol (HTTP or HTTPS)
+elb_listener_protocol = "HTTP"
+
+# ELB listener port
+elb_listener_port = 80
+
+# ============================================================================
+# Monitoring Configuration
+# ============================================================================
+
+# Enable Cloud Eye monitoring
 enable_monitoring = true
-monitoring_interval = 300  # seconds
-alarm_actions = []  # Lista de URLs para notificaciones
 
-# Backup (opcional)
-enable_backup = false
-backup_frequency = "daily"
-backup_retention_days = 7
+# Cloud Eye alarm notification email
+monitoring_email = ""
+
+# Cloud Eye alarm notification phone
+monitoring_phone = ""
 
 # ============================================================================
-# INSTRUCCIONES:
-# 1. Copia este archivo a terraform.tfvars: cp terraform.tfvars.example terraform.tfvars
-# 2. Edita terraform.tfvars con tus credenciales REALES
-# 3. NUNCA commitees terraform.tfvars al repositorio
-# 4. Agrega terraform.tfvars a .gitignore
-# 5. Usa variables de entorno en CI/CD: 
-#    export TF_VAR_access_key="tu_access_key"
-#    export TF_VAR_secret_key="tu_secret_key"
-#    export TF_VAR_project_id="tu_project_id"
+# Security Configuration
 # ============================================================================
+
+# Allowed SSH IP ranges (restrict to specific IPs)
+allowed_ssh_ips = ["0.0.0.0/0"]  # WARNING: Change this to your IP!
+
+# Allowed HTTP IP ranges
+allowed_http_ips = ["0.0.0.0/0"]
+
+# Allowed HTTPS IP ranges
+allowed_https_ips = ["0.0.0.0/0"]
+
+# ============================================================================
+# Tags
+# ============================================================================
+
+# Additional tags for all resources
+additional_tags = {
+  Owner       = "DevOps"
+  Department  = "Engineering"
+  CostCenter  = "PulseExpends"
+  Environment = "Development"
+}

@@ -1,139 +1,82 @@
-# Huawei Cloud Credentials
-access_key = "HPUAELE34ORKBY58ROT4"
-secret_key = "Ab4OYYfiMnhAPt8R2fdagz29y0yK5OmrCHHaO439"
+# Huawei Cloud Credentials (DO NOT COMMIT THIS FILE)
+access_key = "HPUAROTGVH59W0I1IFQL"
+secret_key = "Hk7zOT6Ef6mE1nGx8Sf9bigOmL3tOzHBO8pu6v7s"
 project_id = "1c42334636a749199423adad7a2d6ea3"
 
-# Region
-region = "la-south-2"  # Santiago, Chile
-
-# Environment
-environment = "dev"  # dev, staging, prod
+# Region & Environment Configuration
+region       = "la-south-2"
+environment  = "dev"
 project_name = "pulseexpends"
 
 # Enterprise Project Configuration
-enable_enterprise_project = false
-enterprise_project_name = "pulse-expendss"
-enterprise_project_type = "prod"  # prod, poc, dev
+enable_enterprise_project = true
+enterprise_project_id     = "9d731c5b-e130-430b-b88d-66f312596926"
 
 # Domain Configuration
-enable_domain = true
-domain_name = "pulseexpends.duckdns.org"
-create_dns_record = false  # Set to true if using Huawei Cloud DNS, false for external DNS like DuckDNS
-dns_zone_id = ""  # Required if create_dns_record is true
-domain_bandwidth_size = 300  # Mbps (pago por uso)
+enable_domain         = true
+domain_name           = "pulseexpends.duckdns.org"
+create_dns_record     = false
+dns_zone_id           = ""
+domain_bandwidth_size = 300
 
 # SSL Configuration
-enable_ssl = false  # Set to true when you have SSL certificate
-# ssl_certificate = ""  # Uncomment and add SSL certificate when enable_ssl = true
-# ssl_private_key = ""  # Uncomment and add SSL private key when enable_ssl = true
+enable_ssl = false
 
 # Network Configuration
-vpc_cidr = "10.0.0.0/16"
-public_subnets = ["10.0.1.0/24", "10.0.2.0/24"]
-private_subnets = ["10.0.101.0/24", "10.0.102.0/24"]
-enable_nat_gateway = true
+vpc_cidr           = "10.0.0.0/16"
+public_subnets     = ["10.0.1.0/24"]
+private_subnets    = ["10.0.101.0/24"]
+enable_nat_gateway = false
 single_nat_gateway = true
-enable_flow_logs = true
+enable_flow_logs   = true
+flow_log_bucket    = "pulseexpends-flow-logs"
 
-# Compute Configuration (Phase 1: ECS only)
-ecs_instance_type = "s6.large.2"  # 2 vCPUs, 4GB RAM - Compatible with Ubuntu
-ecs_key_pair = "pulse-expends-key"
+# Compute Configuration (Optimized for 10 concurrent users)
+ecs_instance_type  = "s6.large.2"
 ecs_instance_count = 1
-enable_load_balancer = false  # Enable for production
-lb_listener_port = 80
-lb_protocol = "HTTP"
-application_port = 8080
+ecs_disk_size      = 40
+ecs_disk_type      = "SSD"
+ecs_image_id       = ""
+ecs_key_pair       = "pulse-expends-key"
 
-# Auto Scaling (for production)
-enable_auto_scaling = false
-min_size = 1
-max_size = 3
-desired_capacity = 1
+# Database Configuration (RDS PostgreSQL) - UPDATED TO LATEST AVAILABLE 17.9
+enable_rds              = true
+rds_instance_type       = "rds.pg.n1.large.2"
+rds_engine_version      = "17" # Updated to PostgreSQL 17.9 (confirmed available)
+rds_storage             = 50
+rds_backup_window       = "02:00-03:00"
+rds_backup_retention    = 7
+rds_database_name       = "pulseexpends"
+rds_username            = "pulseexpends_admin"
+rds_password            = "" # Will be generated during deployment
+rds_ha_replication_mode = "async"
 
-# Storage Configuration (Phase 1: OBS only)
-obs_encryption_enabled = true
-obs_versioning_enabled = true
+# Storage Configuration (OBS)
+enable_obs        = true
+obs_bucket_name   = "pulseexpends-documents"
+obs_storage_class = "STANDARD"
+obs_versioning    = true
 
-# OBS Buckets Configuration
-obs_buckets = {
-  main = {
-    name          = "pulse-expends-data-dev"
-    storage_class = "STANDARD"
-    versioning    = true
-    encryption    = true
-    lifecycle_rules = [
-      {
-        name    = "temp-files"
-        prefix  = "temp/"
-        enabled = true
-        expiration_days = 7
-      },
-      {
-        name    = "logs"
-        prefix  = "logs/"
-        enabled = true
-        transition_days = 30
-        transition_storage_class = "GLACIER"
-      }
-    ]
-  },
-  documents = {
-    name          = "pulse-expends-documents-dev"
-    storage_class = "STANDARD"
-    versioning    = true
-    encryption    = true
-  }
-}
-
-# Database Configuration
-enable_database = true
-enable_rds = true
-database_engine = "postgresql"
-database_version = "13"
-database_instance_class = "rds.pg.n1.large.2"
-database_storage = 100
-database_backup_retention = 7
-
-# Redis Configuration (Phase 2 - disabled for now)
-enable_redis = false
-redis_instance_class = "redis.ha.xu1.large.r2.2"
-redis_engine_version = "5.0"
+# Load Balancer Configuration
+enable_elb            = false
+elb_bandwidth_size    = 5
+elb_listener_protocol = "HTTP"
+elb_listener_port     = 80
 
 # Monitoring Configuration
-alert_recipients = ["your-email@example.com"]  # Add your email for alerts
-enable_dashboards = true
+enable_monitoring = true
+monitoring_email  = ""
+monitoring_phone  = ""
 
 # Security Configuration
-enable_kms = false  # Temporarily disabled due to KMS key state issue
-kms_key_alias = "alias/pulse-expends"
-enable_waf = false  # Enable for production
-enable_antiddos = true
+allowed_ssh_ips   = ["0.0.0.0/0"]
+allowed_http_ips  = ["0.0.0.0/0"]
+allowed_https_ips = ["0.0.0.0/0"]
 
-# IAM Configuration (optional)
-iam_users = []
-iam_groups = []
-iam_policies = []
-
-# Application Configuration
-obs_endpoint = "https://obs.la-south-2.myhuaweicloud.com"
-obs_access_key = "HPUAELE34ORKBY58ROT4"  # Same as access_key for OBS
-obs_secret_key = "Ab4OYYfiMnhAPt8R2fdagz29y0yK5OmrCHHaO439"  # Same as secret_key for OBS
-obs_bucket_name = "pulse-expends-data-dev"
-python_service_url = "http://localhost:8000"
-jwt_secret = "pulse-expends-jwt-secret-prod-2024-change-me"  # Secure JWT secret for authentication
-
-# RDS Configuration
-rds_password = "pptKH9g8dWXDYnPKdCRTJzY46COSvLI"
-rds_database_name = "pulseexpends_auth"       # Auth service database
-rds_core_database_name = "pulseexpends_core"  # MCP/Core service database
-
-# DuckDNS Configuration (for automatic DNS updates)
-duckdns_token = ""  # Add your DuckDNS token here after deployment
-duckdns_domain = "pulseexpends.duckdns.org"
-
-# Custom Endpoints (for private cloud or custom regions)
-custom_endpoints = {}
-
-# Agency Configuration (optional - for cross-account access)
-agency_name = ""
-agency_domain_name = ""
+# Tags
+additional_tags = {
+  Owner       = "DevOps"
+  Department  = "Engineering"
+  CostCenter  = "PulseExpends"
+  Environment = "Development"
+}

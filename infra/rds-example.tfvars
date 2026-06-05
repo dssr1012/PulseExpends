@@ -17,27 +17,27 @@ rds_engine_version = "15"
 
 # Database credentials
 rds_username = "pulseexpends_admin"
-rds_password = "ChangeMe123!"  # CHANGE THIS TO A SECURE PASSWORD
+rds_password = "ChangeMe123!" # CHANGE THIS TO A SECURE PASSWORD
 
 # Database name
 rds_database_name = "pulseexpends"
 
 # Backup configuration
-rds_backup_retention = 7  # Days to keep backups
-rds_backup_window = "03:00-04:00"  # UTC time
+rds_backup_retention = 7             # Days to keep backups
+rds_backup_window    = "03:00-04:00" # UTC time
 
 # Maintenance window (UTC)
 rds_maintenance_window = "sun:04:00-sun:05:00"
 
 # High availability
-rds_high_availability = true
+rds_high_availability   = true
 rds_ha_replication_mode = "async"
 
 # Network access
-enable_rds_public_access = false  # Set to true if you need public access
+enable_rds_public_access = false # Set to true if you need public access
 rds_allowed_cidr_blocks = [
-  "10.0.0.0/16",  # VPC CIDR
-  "0.0.0.0/0"     # Allow from anywhere (use with caution)
+  "10.0.0.0/16", # VPC CIDR
+  "0.0.0.0/0"    # Allow from anywhere (use with caution)
 ]
 
 # Example for production:
