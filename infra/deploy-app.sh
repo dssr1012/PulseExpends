@@ -5,8 +5,8 @@
 
 set -e
 
-KEY_FILE="pulse-expends-key.pem"
-IP="182.160.24.205"
+KEY_FILE="/opt/accessKeys/pulse-expends-key.pem"
+IP="159.138.118.60"
 APP_SOURCE="/root/PulseExpends"
 APP_DEST="/opt/pulse-expends"
 
